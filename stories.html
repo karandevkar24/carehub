@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Auth Guard: immediate synchronous check before DOM render -->
+  <script>
+    (function() {
+      try {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) { window.location.replace('login.html'); }
+      } catch (e) { window.location.replace('login.html'); }
+    })();
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) window.location.replace('login.html');
+      }
+    });
+  </script>
+  <!-- FOUC Prevention -->
+  <style id="auth-hide">body{display:none!important}</style>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+    window.addEventListener('load', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareHub – Story Time</title>
+  <meta name="description" content="Multilingual story time for memory care — short stories with audio narration and gentle comprehension questions in Hindi, English, Marathi, and Telugu." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #fef3c7 0%, #fff7ed 40%, #fdf4ff 100%);
+      min-height: 100vh;
+      color: #1e293b;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────── */
+    .page-header {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 24px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .ph-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; gap: 16px; height: 60px;
+    }
+    .back-btn {
+      display: flex; align-items: center; gap: 7px;
+      color: #64748b; text-decoration: none;
+      font-size: 0.85rem; font-weight: 600;
+      padding: 6px 14px; border-radius: 99px;
+      border: 1px solid #e2e8f0; transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+    .ph-title { font-size: 1rem; font-weight: 800; color: #0f172a; flex: 1; }
+    .avatar-sm {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #fb923c);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: white; flex-shrink: 0;
+    }
+
+    /* ── HERO ───────────────────────────────────────────── */
+    .page-hero {
+      background: linear-gradient(135deg, #f59e0b 0%, #fb923c 45%, #ec4899 100%);
+      padding: 52px 24px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .page-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='30' cy='30' r='20' stroke='white' stroke-opacity='0.06' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") repeat;
+      pointer-events: none;
+    }
+    .page-hero h1 { font-size: clamp(1.8rem,4vw,2.4rem); font-weight: 900; color: white; margin-bottom: 8px; position: relative; }
+    .page-hero p  { color: rgba(255,255,255,0.88); font-size: 0.95rem; position: relative; }
+
+    .page-content { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* ── VIEWS ──────────────────────────────────────────── */
+    .view { display: none; animation: fadeSlideIn 0.35s ease; }
+    .view.active { display: block; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── STORY LIBRARY ──────────────────────────────────── */
+    .library-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+    }
+    .library-header h2 {
+      font-size: 1.4rem; font-weight: 800; color: #0f172a;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .story-count-badge {
+      background: linear-gradient(135deg, #f59e0b, #fb923c);
+      color: white; font-size: 0.72rem; font-weight: 800;
+      padding: 3px 10px; border-radius: 99px;
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .story-card {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(245,158,11,0.2);
+      border-radius: 22px;
+      padding: 28px 24px 22px;
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1),
+                  box-shadow 0.25s, border-color 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .story-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: var(--card-stripe, linear-gradient(90deg, #f59e0b, #fb923c));
+      opacity: 0; transition: opacity 0.25s;
+      border-radius: 22px 22px 0 0;
+    }
+    .story-card:hover { transform: translateY(-6px); box-shadow: 0 20px 56px rgba(245,158,11,0.18); border-color: rgba(245,158,11,0.4); }
+    .story-card:hover::before { opacity: 1; }
+
+    .story-card-icon {
+      width: 64px; height: 64px; border-radius: 18px;
+      background: var(--card-icon-bg, #fffbeb);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin-bottom: 16px;
+      transition: transform 0.25s;
+    }
+    .story-card:hover .story-card-icon { transform: scale(1.1) rotate(-5deg); }
+    .story-card-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    .story-card-langs {
+      display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 16px;
+    }
+    .lang-chip {
+      font-size: 0.7rem; font-weight: 700;
+      background: #fef3c7; color: #92400e;
+      padding: 2px 8px; border-radius: 99px;
+    }
+    .story-card-cta {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 14px; border-top: 1px solid #fef3c7;
+    }
+    .story-card-cta-text { font-size: 0.84rem; font-weight: 700; color: #d97706; }
+    .story-card-cta-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #fef3c7;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: #d97706; transition: transform 0.2s;
+    }
+    .story-card:hover .story-card-cta-icon { transform: translateX(4px); }
+
+    /* ── LANGUAGE SELECTOR ──────────────────────────────── */
+    .lang-select-wrap {
+      max-width: 560px; margin: 0 auto; text-align: center;
+    }
+    .lang-select-back-row {
+      display: flex; align-items: center; margin-bottom: 28px;
+    }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: none; border: 1.5px solid #e2e8f0;
+      border-radius: 99px; padding: 7px 16px;
+      font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 600;
+      color: #64748b; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: #d97706; color: #d97706; background: #fffbeb; }
+
+    .lang-select-story-title {
+      font-size: 1.5rem; font-weight: 900; color: #0f172a; margin-bottom: 6px;
+    }
+    .lang-select-subtitle {
+      font-size: 0.9rem; color: #64748b; margin-bottom: 32px;
+    }
+    .lang-buttons {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 14px; margin-bottom: 24px;
+    }
+    .lang-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 20px 16px; border-radius: 18px;
+      border: 2.5px solid #e2e8f0;
+      background: rgba(255,255,255,0.85);
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all 0.22s; position: relative;
+    }
+    .lang-btn:hover {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(245,158,11,0.18);
+    }
+    .lang-btn.selected {
+      border-color: #f59e0b;
+      background: linear-gradient(135deg, #fffbeb, #fff7ed);
+      box-shadow: 0 4px 16px rgba(245,158,11,0.2);
+    }
+    .lang-btn.selected::after {
+      content: '✓';
+      position: absolute; top: 8px; right: 10px;
+      font-size: 0.8rem; font-weight: 900; color: #d97706;
+    }
+    .lang-btn-flag { font-size: 2rem; }
+    .lang-btn-name { font-size: 1rem; font-weight: 800; color: #0f172a; }
+    .lang-btn-sub  { font-size: 0.72rem; color: #64748b; font-weight: 500; }
+
+    .btn-start-story {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px; border-radius: 99px;
+      background: linear-gradient(135deg, #f59e0b, #fb923c);
+      color: white; font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 800; border: none;
+      cursor: pointer; transition: all 0.22s;
+      box-shadow: 0 4px 18px rgba(245,158,11,0.35);
+    }
+    .btn-start-story:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245,158,11,0.45); }
+    .btn-start-story:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── STORY READER ───────────────────────────────────── */
+    .reader-wrap { max-width: 780px; margin: 0 auto; }
+
+    .reader-top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+    }
+    .reader-title-group { display: flex; flex-direction: column; gap: 3px; }
+    .reader-story-title { font-size: 1.3rem; font-weight: 900; color: #0f172a; }
+    .reader-lang-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.75rem; font-weight: 700;
+      background: linear-gradient(135deg, #fef3c7, #ffedd5);
+      color: #92400e; padding: 3px 10px; border-radius: 99px;
+      border: 1px solid #fde68a;
+    }
+    .font-controls {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .font-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1.5px solid #e2e8f0; background: white;
+      font-family: 'Inter', sans-serif; font-weight: 800;
+      font-size: 0.82rem; cursor: pointer; color: #475569;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .font-btn:hover { border-color: #f59e0b; color: #d97706; background: #fffbeb; }
+
+    /* Voice availability banner */
+    .voice-banner {
+      display: none; align-items: center; gap: 10px;
+      padding: 10px 16px; border-radius: 12px;
+      background: #fffbeb; border: 1.5px solid #fde68a;
+      font-size: 0.81rem; color: #92400e; font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .voice-banner.show { display: flex; }
+    .voice-banner i { color: #f59e0b; flex-shrink: 0; }
+
+    /* Audio controls */
+    .audio-controls-card {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(245,158,11,0.2);
+      border-radius: 18px; padding: 18px 20px;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(245,158,11,0.08);
+    }
+    .audio-play-pause {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #fb923c);
+      border: none; color: white; font-size: 17px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
+      box-shadow: 0 3px 12px rgba(245,158,11,0.4);
+    }
+    .audio-play-pause:hover { transform: scale(1.08); }
+    .audio-stop-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #f1f5f9; border: 1.5px solid #e2e8f0;
+      color: #64748b; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .audio-stop-btn:hover { background: #fee2e2; border-color: #fecaca; color: #ef4444; }
+    .audio-info { flex: 1; min-width: 120px; }
+    .audio-status-text { font-size: 0.78rem; font-weight: 700; color: #d97706; margin-bottom: 2px; }
+    .audio-progress-bar {
+      height: 4px; background: #fef3c7; border-radius: 99px; overflow: hidden;
+    }
+    .audio-progress-fill {
+      height: 100%; background: linear-gradient(90deg, #f59e0b, #fb923c);
+      border-radius: 99px; transition: width 0.3s ease; width: 0%;
+    }
+    .volume-group {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .volume-icon { color: #f59e0b; font-size: 14px; }
+    .volume-slider {
+      -webkit-appearance: none;
+      width: 80px; height: 4px;
+      border-radius: 99px; background: #fde68a;
+      outline: none; cursor: pointer;
+    }
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #f59e0b; cursor: pointer;
+      box-shadow: 0 1px 4px rgba(245,158,11,0.4);
+    }
+    .volume-slider::-moz-range-thumb {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #f59e0b; cursor: pointer; border: none;
+    }
+    .lang-switch-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.76rem; font-weight: 700;
+      background: #fffbeb; border: 1.5px solid #fde68a;
+      border-radius: 99px; padding: 5px 12px;
+      color: #92400e; cursor: pointer; transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .lang-switch-btn:hover { background: #fef3c7; }
+
+    /* Story text */
+    .story-text-card {
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(245,158,11,0.15);
+      border-radius: 22px; padding: 36px 40px;
+      box-shadow: 0 8px 32px rgba(245,158,11,0.08);
+      margin-bottom: 20px;
+    }
+    .story-text {
+      font-family: 'Lora', Georgia, serif;
+      font-size: var(--story-font-size, 1.2rem);
+      line-height: 1.95;
+      color: #1e293b;
+    }
+    .story-text .sentence {
+      transition: background 0.3s, color 0.3s;
+      border-radius: 4px;
+      padding: 1px 3px;
+      display: inline;
+    }
+    .story-text .sentence.active {
+      background: linear-gradient(135deg, #fef3c7, #ffedd5);
+      color: #92400e;
+    }
+
+    .reader-actions {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 24px;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px; border-radius: 99px;
+      background: linear-gradient(135deg, #f59e0b, #fb923c);
+      color: white; font-family: 'Inter', sans-serif;
+      font-size: 0.95rem; font-weight: 800; border: none;
+      cursor: pointer; transition: all 0.22s;
+      box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,158,11,0.45); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 24px; border-radius: 99px;
+      background: rgba(255,255,255,0.85); border: 1.5px solid #fde68a;
+      color: #92400e; font-family: 'Inter', sans-serif;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      transition: all 0.22s;
+    }
+    .btn-secondary:hover { background: #fffbeb; border-color: #f59e0b; transform: translateY(-1px); }
+
+    /* ── QUESTIONS VIEW ──────────────────────────────────── */
+    .questions-wrap { max-width: 680px; margin: 0 auto; }
+    .questions-header {
+      text-align: center; margin-bottom: 32px;
+    }
+    .questions-header h2 {
+      font-size: 1.4rem; font-weight: 900; color: #0f172a; margin-bottom: 6px;
+    }
+    .questions-header p { font-size: 0.9rem; color: #64748b; }
+
+    .question-progress {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+      justify-content: center;
+    }
+    .q-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #e2e8f0; transition: all 0.3s;
+    }
+    .q-dot.done { background: #10b981; transform: scale(1.15); }
+    .q-dot.current { background: #f59e0b; transform: scale(1.25); }
+
+    .question-card {
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(245,158,11,0.15);
+      border-radius: 22px; padding: 32px 32px 28px;
+      box-shadow: 0 6px 24px rgba(245,158,11,0.08);
+      margin-bottom: 20px;
+      transition: box-shadow 0.3s;
+    }
+    .question-card.correct { box-shadow: 0 0 0 3px rgba(16,185,129,0.35), 0 8px 32px rgba(16,185,129,0.1); }
+    .question-card.wrong   { box-shadow: 0 0 0 3px rgba(139,92,246,0.3), 0 8px 32px rgba(139,92,246,0.08); }
+
+    .question-num  { font-size: 0.78rem; font-weight: 700; color: #f59e0b; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .question-text { font-size: 1.1rem; font-weight: 700; color: #0f172a; line-height: 1.5; margin-bottom: 22px; }
+
+    .options-list { display: flex; flex-direction: column; gap: 10px; }
+    .option-btn {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px; border-radius: 14px;
+      border: 2px solid #e2e8f0; background: rgba(255,255,255,0.85);
+      cursor: pointer; text-align: left;
+      font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600;
+      color: #1e293b; transition: all 0.2s;
+      width: 100%;
+    }
+    .option-btn:hover:not(:disabled) { border-color: #f59e0b; background: #fffbeb; transform: translateX(4px); }
+    .option-btn:disabled { cursor: default; }
+    .option-btn.selected-correct {
+      border-color: #10b981; background: linear-gradient(135deg, #d1fae5, #ecfdf5);
+      color: #065f46;
+    }
+    .option-btn.selected-wrong {
+      border-color: #8b5cf6; background: linear-gradient(135deg, #f3e8ff, #ede9fe);
+      color: #5b21b6;
+    }
+    .option-btn.reveal-correct { border-color: #10b981; background: #f0fdf4; color: #065f46; }
+    .option-letter {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: #f1f5f9; color: #64748b;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 800; flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .option-btn.selected-correct .option-letter { background: #10b981; color: white; }
+    .option-btn.selected-wrong   .option-letter { background: #8b5cf6; color: white; }
+    .option-btn.reveal-correct   .option-letter { background: #10b981; color: white; }
+
+    .feedback-box {
+      margin-top: 14px; padding: 12px 16px; border-radius: 12px;
+      font-size: 0.88rem; font-weight: 700;
+      display: none; align-items: center; gap: 10px;
+    }
+    .feedback-box.show { display: flex; }
+    .feedback-correct { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .feedback-wrong   { background: #f3e8ff; color: #5b21b6; border: 1px solid #d8b4fe; }
+
+    .q-nav-row {
+      display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+    }
+
+    /* ── COMPLETION VIEW ─────────────────────────────────── */
+    .completion-wrap {
+      max-width: 540px; margin: 0 auto; text-align: center;
+    }
+    .completion-icon {
+      font-size: 5rem; margin-bottom: 20px;
+      animation: celebratePop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes celebratePop {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .completion-title { font-size: 2rem; font-weight: 900; color: #0f172a; margin-bottom: 10px; }
+    .completion-subtitle { font-size: 1rem; color: #64748b; line-height: 1.65; margin-bottom: 28px; }
+    .score-card {
+      background: rgba(255,255,255,0.9);
+      border: 1.5px solid rgba(245,158,11,0.2);
+      border-radius: 22px; padding: 28px;
+      display: flex; gap: 0; margin-bottom: 32px;
+      box-shadow: 0 6px 24px rgba(245,158,11,0.1);
+    }
+    .score-pill {
+      flex: 1; text-align: center; padding: 8px;
+    }
+    .score-pill + .score-pill { border-left: 1px solid #f1f5f9; }
+    .score-pill-val { font-size: 1.8rem; font-weight: 900; color: #d97706; }
+    .score-pill-label { font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 3px; }
+    .completion-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .story-text-card { padding: 24px 20px; }
+      .lang-buttons { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .lang-btn { padding: 16px 10px; }
+      .audio-controls-card { flex-wrap: wrap; }
+      .volume-group { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="ph-inner">
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    <span class="ph-title"><i class="fas fa-book-open" style="color:#f59e0b;margin-right:6px;"></i>Story Time</span>
+    <div class="avatar-sm" id="header-avatar"></div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <h1>📖 Story Time</h1>
+  <p>Short stories with audio narration &amp; comprehension questions — in 4 languages</p>
+</div>
+
+<div class="page-content">
+
+  <!-- ── VIEW 1: STORY LIBRARY ─────────────────────────── -->
+  <div class="view active" id="view-library">
+    <div class="library-header">
+      <h2>
+        <i class="fas fa-book-open" style="color:#f59e0b;"></i>
+        Story Library
+        <span class="story-count-badge" id="story-count-badge">2 Stories</span>
+      </h2>
+    </div>
+    <div class="story-grid" id="story-grid">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+  <!-- ── VIEW 2: LANGUAGE SELECTOR ─────────────────────── -->
+  <div class="view" id="view-lang">
+    <div class="lang-select-wrap">
+      <div class="lang-select-back-row">
+        <button class="btn-ghost" id="btn-back-to-library">
+          <i class="fas fa-arrow-left"></i> Story Library
+        </button>
+      </div>
+      <div id="lang-select-story-icon" style="font-size:3.5rem;margin-bottom:12px;"></div>
+      <div class="lang-select-story-title" id="lang-select-story-title">Story Title</div>
+      <div class="lang-select-subtitle">Choose a language to hear the story</div>
+
+      <div class="lang-buttons" id="lang-buttons">
+        <!-- Injected by JS -->
+      </div>
+
+      <button class="btn-start-story" id="btn-start-story" disabled>
+        <i class="fas fa-play"></i> Start Story
+      </button>
+    </div>
+  </div>
+
+  <!-- ── VIEW 3: STORY READER ───────────────────────────── -->
+  <div class="view" id="view-reader">
+    <div class="reader-wrap">
+
+      <!-- Top bar -->
+      <div class="reader-top-bar">
+        <div>
+          <button class="btn-ghost" id="btn-reader-back" style="margin-bottom:8px;">
+            <i class="fas fa-arrow-left"></i> Choose Language
+          </button>
+          <div class="reader-title-group">
+            <div class="reader-story-title" id="reader-story-title">Story Title</div>
+            <div class="reader-lang-tag" id="reader-lang-tag">🇬🇧 English</div>
+          </div>
+        </div>
+        <div class="font-controls" title="Adjust font size">
+          <button class="font-btn" id="font-decrease" title="Decrease font size">A-</button>
+          <span style="font-size:0.75rem;color:#94a3b8;font-weight:600;" id="font-size-label">Medium</span>
+          <button class="font-btn" id="font-increase" title="Increase font size">A+</button>
+        </div>
+      </div>
+
+      <!-- Voice availability notice -->
+      <div class="voice-banner" id="voice-banner">
+        <i class="fas fa-info-circle"></i>
+        <span id="voice-banner-text">No native voice found for this language — using closest available voice.</span>
+      </div>
+
+      <!-- Audio controls -->
+      <div class="audio-controls-card">
+        <button class="audio-play-pause" id="audio-play-pause" title="Play / Pause">
+          <i class="fas fa-play" id="play-pause-icon"></i>
+        </button>
+        <button class="audio-stop-btn" id="audio-stop" title="Stop narration">
+          <i class="fas fa-stop"></i>
+        </button>
+        <div class="audio-info">
+          <div class="audio-status-text" id="audio-status-text">Press play to begin narration</div>
+          <div class="audio-progress-bar">
+            <div class="audio-progress-fill" id="audio-progress-fill"></div>
+          </div>
+        </div>
+        <div class="volume-group">
+          <i class="fas fa-volume-up volume-icon"></i>
+          <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.05" value="0.9" title="Volume" />
+        </div>
+        <button class="lang-switch-btn" id="lang-switch-btn">
+          <i class="fas fa-language"></i> Change Language
+        </button>
+      </div>
+
+      <!-- Story text -->
+      <div class="story-text-card">
+        <div class="story-text" id="story-text-display">
+          <!-- Injected by JS as sentence spans -->
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="reader-actions" id="reader-actions">
+        <button class="btn-primary" id="btn-to-questions" style="display:none;">
+          <i class="fas fa-question-circle"></i> Answer Questions
+        </button>
+        <button class="btn-secondary" id="btn-restart-story">
+          <i class="fas fa-redo"></i> Replay Story
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VIEW 4: QUESTIONS ──────────────────────────────── -->
+  <div class="view" id="view-questions">
+    <div class="questions-wrap">
+      <div class="questions-header">
+        <h2 id="questions-story-title">🌟 Let's Answer Some Questions!</h2>
+        <p>Take your time — there's no rush. Just do your best!</p>
+      </div>
+      <div class="question-progress" id="q-progress"></div>
+      <div id="question-container">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VIEW 5: COMPLETION ─────────────────────────────── -->
+  <div class="view" id="view-completion">
+    <div class="completion-wrap">
+      <div class="completion-icon" id="completion-icon">🌟</div>
+      <div class="completion-title" id="completion-title">Well Done!</div>
+      <div class="completion-subtitle" id="completion-subtitle">
+        You finished the story and answered all the questions. Keep it up!
+      </div>
+      <div class="score-card">
+        <div class="score-pill">
+          <div class="score-pill-val" id="cp-correct">–</div>
+          <div class="score-pill-label">Correct</div>
+        </div>
+        <div class="score-pill">
+          <div class="score-pill-val" id="cp-total">–</div>
+          <div class="score-pill-label">Total Questions</div>
+        </div>
+        <div class="score-pill">
+          <div class="score-pill-val" id="cp-score">–</div>
+          <div class="score-pill-label">Score</div>
+        </div>
+      </div>
+      <div class="completion-actions">
+        <button class="btn-primary" id="btn-read-another">
+          <i class="fas fa-book-open"></i> Read Another Story
+        </button>
+        <button class="btn-secondary" id="btn-retry-questions">
+          <i class="fas fa-redo"></i> Try Questions Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-content -->
+
+<script type="module">
+  import { getSession, populateHeader, showToast } from './js/ui.js';
+  import { saveScore } from './js/firebase.js';
+  import { STORIES, LANG_CONFIG } from './js/stories-data.js';
+  import { speak, pauseNarration, resumeNarration, stopNarration, isSpeaking, isPaused, setVolume } from './js/story-tts.js';
+
+  // ─── AUTH ────────────────────────────────────────────────
+  const user = await getSession();
+  if (user) populateHeader(user);
+  document.getElementById('auth-hide')?.remove();
+  document.body.style.display = '';
+
+  // ─── STATE ───────────────────────────────────────────────
+  const LANG_KEY    = 'careHub_storyLang';
+  const FONT_KEY    = 'careHub_storyFontSize';
+  const FONT_SIZES  = [1.0, 1.15, 1.25, 1.4, 1.6];
+  const FONT_LABELS = ['Small', 'Medium', 'Large', 'X-Large', 'XX-Large'];
+
+  let selectedStory  = null;
+  let selectedLang   = localStorage.getItem(LANG_KEY) || 'en';
+  let currentFontIdx = parseInt(localStorage.getItem(FONT_KEY) || '1', 10);
+  let sentences      = [];
+  let currentSentIdx = 0;
+  let totalSentences = 0;
+  let storyFinished  = false;
+  let questions      = [];
+  let currentQIdx    = 0;
+  let correctCount   = 0;
+  let sessionStart   = null;
+  let currentVolume  = 0.9;
+
+  // ─── VIEW MANAGEMENT ────────────────────────────────────
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ─── FONT SIZE ───────────────────────────────────────────
+  function applyFontSize() {
+    document.documentElement.style.setProperty('--story-font-size', FONT_SIZES[currentFontIdx] + 'rem');
+    document.getElementById('font-size-label').textContent = FONT_LABELS[currentFontIdx];
+    localStorage.setItem(FONT_KEY, String(currentFontIdx));
+  }
+  applyFontSize();
+
+  document.getElementById('font-increase').addEventListener('click', () => {
+    if (currentFontIdx < FONT_SIZES.length - 1) { currentFontIdx++; applyFontSize(); }
+  });
+  document.getElementById('font-decrease').addEventListener('click', () => {
+    if (currentFontIdx > 0) { currentFontIdx--; applyFontSize(); }
+  });
+
+  // ─── BUILD STORY LIBRARY ─────────────────────────────────
+  function buildLibrary() {
+    const grid = document.getElementById('story-grid');
+    const badge = document.getElementById('story-count-badge');
+    badge.textContent = STORIES.length + ' Stories';
+    grid.innerHTML = '';
+
+    STORIES.forEach(story => {
+      const langNames = Object.keys(LANG_CONFIG).map(k => LANG_CONFIG[k].label).join(' · ');
+      const card = document.createElement('div');
+      card.className = 'story-card';
+      card.style.setProperty('--card-stripe', story.color);
+      card.innerHTML = `
+        <div class="story-card-icon">${story.icon}</div>
+        <div class="story-card-title">${story.en.title}</div>
+        <div class="story-card-langs">
+          ${Object.keys(LANG_CONFIG).map(k =>
+            `<span class="lang-chip">${LANG_CONFIG[k].flag} ${LANG_CONFIG[k].label}</span>`
+          ).join('')}
+        </div>
+        <div class="story-card-cta">
+          <span class="story-card-cta-text">Read this story</span>
+          <div class="story-card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        </div>`;
+      card.addEventListener('click', () => openLangSelector(story));
+      grid.appendChild(card);
+    });
+  }
+
+  // ─── LANGUAGE SELECTOR ───────────────────────────────────
+  function openLangSelector(story) {
+    selectedStory = story;
+    stopNarration();
+
+    document.getElementById('lang-select-story-icon').textContent  = story.icon;
+    document.getElementById('lang-select-story-title').textContent = story.en.title;
+
+    buildLangButtons();
+    showView('view-lang');
+  }
+
+  function buildLangButtons() {
+    const container = document.getElementById('lang-buttons');
+    container.innerHTML = '';
+    Object.keys(LANG_CONFIG).forEach(code => {
+      const cfg = LANG_CONFIG[code];
+      const btn = document.createElement('button');
+      btn.className = 'lang-btn' + (code === selectedLang ? ' selected' : '');
+      btn.innerHTML = `
+        <div class="lang-btn-flag">${cfg.flag}</div>
+        <div class="lang-btn-name">${cfg.label}</div>
+        <div class="lang-btn-sub">${cfg.bcp47}</div>`;
+      btn.addEventListener('click', () => {
+        selectedLang = code;
+        localStorage.setItem(LANG_KEY, code);
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('btn-start-story').disabled = false;
+      });
+      container.appendChild(btn);
+    });
+    document.getElementById('btn-start-story').disabled = false;
+  }
+
+  document.getElementById('btn-back-to-library').addEventListener('click', () => {
+    showView('view-library');
+  });
+
+  document.getElementById('btn-start-story').addEventListener('click', () => {
+    openReader();
+  });
+
+  // ─── STORY READER ────────────────────────────────────────
+  function openReader() {
+    const data = selectedStory[selectedLang];
+    const cfg  = LANG_CONFIG[selectedLang];
+    storyFinished = false;
+    currentSentIdx = 0;
+
+    document.getElementById('reader-story-title').textContent = data.title;
+    document.getElementById('reader-lang-tag').innerHTML = `${cfg.flag} ${cfg.label}`;
+    document.getElementById('btn-to-questions').style.display = 'none';
+    document.getElementById('audio-progress-fill').style.width = '0%';
+    document.getElementById('audio-status-text').textContent = 'Press ▶ to begin narration';
+    updatePlayPauseIcon(false);
+    document.getElementById('voice-banner').classList.remove('show');
+
+    renderStoryText(data.storyText);
+    showView('view-reader');
+    sessionStart = Date.now();
+  }
+
+  function renderStoryText(text) {
+    // Split into sentences and wrap each in a span
+    sentences = splitSentences(text);
+    totalSentences = sentences.length;
+
+    const display = document.getElementById('story-text-display');
+    display.innerHTML = sentences.map((s, i) =>
+      `<span class="sentence" data-idx="${i}">${s} </span>`
+    ).join('');
+    highlightSentence(-1);
+  }
+
+  function splitSentences(text) {
+    return text.match(/[^.!?।]+[.!?।]+(\s|$)?/g)?.map(s => s.trim()).filter(Boolean) || [text];
+  }
+
+  function highlightSentence(idx) {
+    document.querySelectorAll('#story-text-display .sentence').forEach((el, i) => {
+      el.classList.toggle('active', i === idx);
+    });
+    // Auto-scroll to active sentence
+    if (idx >= 0) {
+      const activeEl = document.querySelector(`#story-text-display .sentence[data-idx="${idx}"]`);
+      if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  function updatePlayPauseIcon(playing) {
+    const icon = document.getElementById('play-pause-icon');
+    icon.className = playing ? 'fas fa-pause' : 'fas fa-play';
+  }
+
+  // Audio play/pause
+  document.getElementById('audio-play-pause').addEventListener('click', () => {
+    if (!isSpeaking() && !isPaused()) {
+      // Start fresh
+      startNarration();
+    } else if (isSpeaking() && !isPaused()) {
+      pauseNarration();
+      updatePlayPauseIcon(false);
+      document.getElementById('audio-status-text').textContent = 'Paused';
+    } else if (isPaused()) {
+      resumeNarration();
+      updatePlayPauseIcon(true);
+      document.getElementById('audio-status-text').textContent = 'Playing…';
+    }
+  });
+
+  document.getElementById('audio-stop').addEventListener('click', () => {
+    stopNarration();
+    updatePlayPauseIcon(false);
+    highlightSentence(-1);
+    document.getElementById('audio-progress-fill').style.width = '0%';
+    document.getElementById('audio-status-text').textContent = 'Stopped';
+  });
+
+  // Volume
+  document.getElementById('volume-slider').addEventListener('input', (e) => {
+    currentVolume = parseFloat(e.target.value);
+    setVolume(currentVolume);
+  });
+
+  // Language switch from reader
+  document.getElementById('lang-switch-btn').addEventListener('click', () => {
+    stopNarration();
+    buildLangButtons();
+    showView('view-lang');
+  });
+
+  document.getElementById('btn-reader-back').addEventListener('click', () => {
+    stopNarration();
+    showView('view-lang');
+  });
+
+  function startNarration() {
+    const data = selectedStory[selectedLang];
+    updatePlayPauseIcon(true);
+    document.getElementById('audio-status-text').textContent = 'Loading voice…';
+
+    speak(data.storyText, selectedLang, {
+      volume: currentVolume,
+      rate: 0.85,
+      onVoiceStatus: (status, langUsed) => {
+        const banner = document.getElementById('voice-banner');
+        const bannerText = document.getElementById('voice-banner-text');
+        if (status === 'none') {
+          banner.classList.add('show');
+          bannerText.textContent = 'Text-to-speech is not available in your browser for this language.';
+          updatePlayPauseIcon(false);
+          document.getElementById('audio-status-text').textContent = 'TTS unavailable';
+        } else if (status === 'partial') {
+          banner.classList.add('show');
+          bannerText.textContent = `No native ${LANG_CONFIG[selectedLang]?.label} voice found — using closest available voice (${langUsed}).`;
+          document.getElementById('audio-status-text').textContent = 'Playing (fallback voice)…';
+        } else {
+          banner.classList.remove('show');
+          document.getElementById('audio-status-text').textContent = 'Playing…';
+        }
+      },
+      onSentence: (idx, total, sents) => {
+        currentSentIdx = idx;
+        totalSentences  = total;
+        highlightSentence(idx);
+        const pct = total > 1 ? Math.round((idx / (total - 1)) * 100) : 100;
+        document.getElementById('audio-progress-fill').style.width = pct + '%';
+      },
+      onEnd: () => {
+        updatePlayPauseIcon(false);
+        highlightSentence(-1);
+        document.getElementById('audio-progress-fill').style.width = '100%';
+        document.getElementById('audio-status-text').textContent = 'Narration complete ✓';
+        if (!storyFinished) {
+          storyFinished = true;
+          document.getElementById('btn-to-questions').style.display = 'inline-flex';
+          showToast('Story finished! Ready to answer questions 🌟', 'success');
+        }
+      }
+    });
+  }
+
+  document.getElementById('btn-restart-story').addEventListener('click', () => {
+    stopNarration();
+    updatePlayPauseIcon(false);
+    highlightSentence(-1);
+    document.getElementById('audio-progress-fill').style.width = '0%';
+    document.getElementById('audio-status-text').textContent = 'Press ▶ to begin narration';
+    storyFinished = false;
+    document.getElementById('btn-to-questions').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.getElementById('btn-to-questions').addEventListener('click', () => {
+    stopNarration();
+    openQuestions();
+  });
+
+  // ─── QUESTIONS ───────────────────────────────────────────
+  function openQuestions() {
+    const data = selectedStory[selectedLang];
+    questions = data.questions;
+    currentQIdx = 0;
+    correctCount = 0;
+
+    document.getElementById('questions-story-title').textContent = `🌟 Questions about "${data.title}"`;
+    buildProgressDots();
+    renderQuestion(0);
+    showView('view-questions');
+  }
+
+  function buildProgressDots() {
+    const prog = document.getElementById('q-progress');
+    prog.innerHTML = questions.map((_, i) =>
+      `<div class="q-dot${i === 0 ? ' current' : ''}" id="qdot-${i}"></div>`
+    ).join('');
+  }
+
+  function updateProgressDots(doneIdx, nextIdx) {
+    document.querySelectorAll('.q-dot').forEach(d => d.classList.remove('current', 'done'));
+    for (let i = 0; i <= doneIdx; i++) {
+      document.getElementById(`qdot-${i}`)?.classList.add('done');
+    }
+    if (nextIdx < questions.length) {
+      document.getElementById(`qdot-${nextIdx}`)?.classList.add('current');
+    }
+  }
+
+  function renderQuestion(idx) {
+    const q = questions[idx];
+    const LETTERS = ['A', 'B', 'C', 'D', 'E'];
+    const container = document.getElementById('question-container');
+
+    container.innerHTML = `
+      <div class="question-card" id="q-card">
+        <div class="question-num">Question ${idx + 1} of ${questions.length}</div>
+        <div class="question-text">${q.q}</div>
+        <div class="options-list" id="options-list">
+          ${q.options.map((opt, i) => `
+            <button class="option-btn" data-idx="${i}">
+              <span class="option-letter">${LETTERS[i]}</span>
+              ${opt}
+            </button>`).join('')}
+        </div>
+        <div class="feedback-box" id="feedback-box"></div>
+      </div>
+      <div class="q-nav-row" id="q-nav-row" style="margin-top:16px;"></div>`;
+
+    document.querySelectorAll('#options-list .option-btn').forEach(btn => {
+      btn.addEventListener('click', () => handleAnswer(btn, q, idx));
+    });
+  }
+
+  function handleAnswer(btn, q, qIdx) {
+    const chosen = parseInt(btn.dataset.idx, 10);
+    const isCorrect = chosen === q.answer;
+
+    // Disable all options
+    document.querySelectorAll('#options-list .option-btn').forEach((b, i) => {
+      b.disabled = true;
+      if (i === q.answer) b.classList.add('reveal-correct');
+    });
+
+    btn.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+    const card = document.getElementById('q-card');
+    card.classList.add(isCorrect ? 'correct' : 'wrong');
+
+    const feedback = document.getElementById('feedback-box');
+    feedback.className = 'feedback-box show ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong');
+    feedback.innerHTML = isCorrect
+      ? `<i class="fas fa-check-circle"></i> <span>Wonderful! That's right! 🌟</span>`
+      : `<i class="fas fa-lightbulb"></i> <span>Good try! The correct answer is highlighted above. Keep going!</span>`;
+
+    if (isCorrect) correctCount++;
+
+    // Show next button
+    const navRow = document.getElementById('q-nav-row');
+    const isLast = qIdx === questions.length - 1;
+
+    if (isLast) {
+      navRow.innerHTML = `<button class="btn-primary" id="btn-finish-questions">
+        <i class="fas fa-trophy"></i> See Your Results
+      </button>`;
+      document.getElementById('btn-finish-questions').addEventListener('click', () => {
+        openCompletion();
+      });
+    } else {
+      navRow.innerHTML = `<button class="btn-primary" id="btn-next-question">
+        <i class="fas fa-arrow-right"></i> Next Question
+      </button>`;
+      document.getElementById('btn-next-question').addEventListener('click', () => {
+        currentQIdx = qIdx + 1;
+        updateProgressDots(qIdx, currentQIdx);
+        renderQuestion(currentQIdx);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+    updateProgressDots(qIdx, qIdx + 1);
+  }
+
+  // ─── COMPLETION ──────────────────────────────────────────
+  function openCompletion() {
+    const total = questions.length;
+    const pct   = Math.round((correctCount / total) * 100);
+    const durationSecs = Math.round((Date.now() - (sessionStart || Date.now())) / 1000);
+
+    const icon  = pct === 100 ? '🏆' : pct >= 60 ? '🌟' : '💪';
+    const title = pct === 100 ? 'Perfect Score!' : pct >= 60 ? 'Great Job!' : 'Well Done!';
+    const sub   = pct === 100
+      ? 'You got every question right. You have an excellent memory!'
+      : pct >= 60
+        ? `You answered ${correctCount} out of ${total} questions correctly. Wonderful effort!`
+        : `You answered ${correctCount} out of ${total} questions. Every session helps — keep it up!`;
+
+    document.getElementById('completion-icon').textContent = icon;
+    document.getElementById('completion-title').textContent = title;
+    document.getElementById('completion-subtitle').textContent = sub;
+    document.getElementById('cp-correct').textContent = correctCount;
+    document.getElementById('cp-total').textContent   = total;
+    document.getElementById('cp-score').textContent   = pct + '%';
+
+    showView('view-completion');
+    logStoryScore(pct, durationSecs);
+  }
+
+  async function logStoryScore(scorePercent, durationSecs) {
+    try {
+      await saveScore('story', {
+        score: scorePercent,
+        duration: durationSecs,
+        storyId: selectedStory.id,
+        lang: selectedLang,
+        date: new Date().toISOString().split('T')[0]
+      });
+    } catch (e) {
+      // Offline/demo fallback — store locally
+      const key   = 'careHub_scores_story';
+      const local = JSON.parse(localStorage.getItem(key) || '[]');
+      local.push({
+        score: scorePercent, duration: durationSecs,
+        storyId: selectedStory.id, lang: selectedLang,
+        date: new Date().toISOString().split('T')[0],
+        playedAt: Date.now()
+      });
+      localStorage.setItem(key, JSON.stringify(local.slice(-50)));
+    }
+  }
+
+  document.getElementById('btn-read-another').addEventListener('click', () => {
+    stopNarration();
+    selectedStory = null;
+    showView('view-library');
+  });
+
+  document.getElementById('btn-retry-questions').addEventListener('click', () => {
+    openQuestions();
+  });
+
+  // ─── INIT ────────────────────────────────────────────────
+  buildLibrary();
+  showView('view-library');
+
+  // Stop TTS when navigating away
+  window.addEventListener('beforeunload', () => stopNarration());
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pauseNarration();
+  });
+</script>
+
+</body>
+</html>

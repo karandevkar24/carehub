@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Auth Guard: immediate synchronous check before DOM render -->
+  <script>
+    (function() {
+      try {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) { window.location.replace('login.html'); }
+      } catch (e) { window.location.replace('login.html'); }
+    })();
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) window.location.replace('login.html');
+      }
+    });
+  </script>
+  <!-- FOUC Prevention -->
+  <style id="auth-hide">body{display:none!important}</style>
+  <!-- GUARANTEED body reveal: plain script, independent of module imports -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+    window.addEventListener('load', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+  </script><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareHub – Cognitive Games Zone</title>
+  <meta name="description" content="Brain-stimulating cognitive games for dementia patients — memory match, word recall, number sequences, and more." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(135deg,#eef2ff 0%,#f0fdfa 100%);min-height:100vh;color:#1e293b;}
+
+    /* Header */
+    .page-header{background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-bottom:1px solid #e2e8f0;padding:0 24px;position:sticky;top:0;z-index:100;}
+    .ph-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;height:60px;}
+    .back-btn{display:flex;align-items:center;gap:7px;color:#64748b;text-decoration:none;font-size:0.85rem;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid #e2e8f0;transition:all 0.2s;white-space:nowrap;}
+    .back-btn:hover{background:#eef2ff;color:#4f46e5;border-color:#c7d2fe;}
+    .ph-title{font-size:1rem;font-weight:800;color:#0f172a;flex:1;}
+    .avatar-sm{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#14b8a6);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;flex-shrink:0;}
+
+    /* Hero */
+    .page-hero{background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#14b8a6 100%);padding:52px 24px;text-align:center;position:relative;overflow:hidden;}
+    .page-hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='30' cy='30' r='20' stroke='white' stroke-opacity='0.06' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") repeat;pointer-events:none;}
+    .page-hero h1{font-size:clamp(1.8rem,4vw,2.4rem);font-weight:900;color:white;margin-bottom:8px;position:relative;}
+    .page-hero p{color:rgba(255,255,255,0.88);font-size:0.95rem;position:relative;}
+
+    .page-content{max-width:1100px;margin:0 auto;padding:40px 24px 80px;}
+
+    /* Game selector */
+    .game-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+    .g-tab{display:flex;align-items:center;gap:6px;padding:8px 18px;border-radius:99px;border:2px solid #e2e8f0;background:white;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.83rem;font-weight:700;color:#64748b;transition:all 0.2s;text-decoration:none;}
+    .g-tab:hover{border-color:#6366f1;color:#4f46e5;}
+    .g-tab.active{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border-color:transparent;box-shadow:0 4px 14px rgba(99,102,241,0.35);}
+
+    .game-card{background:white;border-radius:20px;border:1.5px solid #e2e8f0;padding:28px;min-height:360px;box-shadow:0 4px 16px rgba(0,0,0,0.06);}
+    .game-panel{display:none;}
+    .game-panel.active{display:block;animation:fadeIn 0.3s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+    /* Game styles */
+    .game-title{font-size:1.1rem;font-weight:800;color:#0f172a;margin-bottom:6px;}
+    .game-desc{font-size:0.83rem;color:#64748b;margin-bottom:20px;}
+    .btn-game{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:99px;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:transform 0.2s;}
+    .btn-game:hover{transform:translateY(-2px);}
+    .btn-sm{padding:7px 16px;font-size:0.8rem;}
+
+
+    @media(max-width:600px){}
+
+    /* â”€â”€ Progress Chart Section â”€â”€ */
+    .chart-section{margin-top:36px;}
+    .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+    .section-hdr-title{font-size:1.05rem;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;}
+    .filter-bar{display:flex;gap:6px;}
+    .filter-btn{padding:5px 14px;border:1.5px solid #e2e8f0;border-radius:99px;background:white;font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;color:#64748b;cursor:pointer;transition:all 0.2s;}
+    .filter-btn.active,.filter-btn:hover{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border-color:transparent;}
+    .chart-card{background:rgba(255,255,255,0.85);backdrop-filter:blur(16px);border:1.5px solid rgba(99,102,241,0.15);border-radius:20px;padding:28px;box-shadow:0 8px 32px rgba(99,102,241,0.08);}
+    .game-filter-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+    .gft{padding:5px 14px;border:1.5px solid #e2e8f0;border-radius:99px;background:white;font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:700;color:#64748b;cursor:pointer;transition:all 0.2s;}
+    .gft.active{background:#6366f1;color:white;border-color:#6366f1;}
+    .chart-wrap{position:relative;height:260px;}
+    .chart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:220px;color:#94a3b8;gap:10px;font-size:0.88rem;}
+    .chart-empty i{font-size:2.5rem;color:#c7d2fe;}
+    .stat-pills{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;}
+    .stat-pill{background:#eef2ff;border-radius:12px;padding:10px 16px;text-align:center;flex:1;min-width:80px;}
+    .stat-pill-val{font-size:1.2rem;font-weight:800;color:#4f46e5;}
+    .stat-pill-label{font-size:0.72rem;color:#64748b;font-weight:600;margin-top:2px;}
+    .game-score{font-size:0.82rem;color:#64748b;margin-bottom:10px;font-weight:600;}
+
+    /* Inline Color Sequence Game */
+    .color-game-grid{display:grid;gap:14px;margin:18px 0;justify-content:center;}
+    .cg-tile{
+      aspect-ratio:1/1;min-height:95px;border-radius:18px;border:2.5px solid transparent;
+      cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:6px;font-weight:800;font-size:0.82rem;color:#1e293b;user-select:none;
+      box-shadow:0 6px 16px rgba(0,0,0,0.06);transition:all 0.25s;opacity:0.85;position:relative;
+    }
+    .cg-tile.interactive:hover{transform:translateY(-3px) scale(1.03);opacity:1;}
+    .cg-tile.disabled{pointer-events:none;}
+    .cg-tile.lit{
+      opacity:1 !important;transform:scale(1.1) !important;border-color:white !important;
+      box-shadow:0 0 35px var(--glow, #ec4899),inset 0 0 15px rgba(255,255,255,0.8) !important;
+      filter:brightness(1.2);
+    }
+    .cg-status-box{
+      padding:12px 18px;border-radius:14px;font-weight:700;font-size:0.85rem;
+      text-align:center;margin:12px 0;display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .cg-status-watch{background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;}
+    .cg-status-play{background:#e0f2fe;color:#0369a1;border:1.5px solid #bae6fd;}
+    .cg-status-win{background:#dcfce7;color:#15803d;border:1.5px solid #86efac;}
+    .cg-status-retry{background:#f3e8ff;color:#6b21a8;border:1.5px solid #d8b4fe;}
+    .cg-step-dots{display:flex;gap:8px;justify-content:center;margin-bottom:12px;}
+    .cg-dot{width:12px;height:12px;border-radius:50%;border:2px solid #cbd5e1;background:white;transition:all 0.2s;}
+    .cg-dot.active{transform:scale(1.3);background:#8b5cf6;border-color:#8b5cf6;}
+    .cg-dot.filled{background:#10b981;border-color:#10b981;}
+  </style>
+  <link rel="stylesheet" href="./css/perf.css" />
+</head>
+<body>
+
+<header class="page-header">
+  <div class="ph-inner">
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    <span class="ph-title"><i class="fas fa-gamepad" style="color:#6366f1;margin-right:6px;"></i>Cognitive Games Zone</span>
+    <div class="avatar-sm" id="header-avatar"></div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <h1>🧩 Cognitive Games Zone</h1>
+  <p>Brain-stimulating games to support memory, attention, and cognitive health</p>
+</div>
+
+<div class="page-content">
+
+  <!-- New Game Spotlight Banner -->
+  <div style="background:linear-gradient(135deg,#fdf2f8,#f5f3ff);border:1.5px solid #fbcfe8;border-radius:18px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;box-shadow:0 4px 18px rgba(236,72,153,0.08);">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:white;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 3px 10px rgba(236,72,153,0.3);">🎨</div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <strong style="color:#0f172a;font-size:0.98rem;font-weight:900;">NEW: Color Sequence Memory</strong>
+          <span style="font-size:0.68rem;font-weight:800;background:#fce7f3;color:#db2777;padding:2px 8px;border-radius:99px;text-transform:uppercase;">Simon-Says</span>
+        </div>
+        <div style="font-size:0.8rem;color:#64748b;margin-top:2px;">Simon-says pastel pattern recall with 2-second glowing tiles and calm musical chimes.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-game btn-sm" onclick="document.getElementById('tab-color-btn')?.click();" style="background:linear-gradient(135deg,#ec4899,#8b5cf6);cursor:pointer;"><i class="fas fa-play"></i> Play in Tab</button>
+      <a href="color-sequence.html" class="btn-game btn-sm" style="background:white;color:#db2777;border:1.5px solid #fbcfe8;text-decoration:none;"><i class="fas fa-expand-arrows-alt"></i> Full Screen Mode</a>
+    </div>
+  </div>
+
+  <!-- Game Tabs -->
+  <div class="game-tabs">
+    <a class="g-tab" href="spot-game.html"><i class="fas fa-search"></i> Spot the Object 🌿</a>
+    <a class="g-tab" href="memory-match.html" style="background:linear-gradient(135deg,#f59e0b,#f97316);color:white;border-color:transparent;box-shadow:0 4px 14px rgba(245,158,11,0.35);"><i class="fas fa-images"></i> Photo Match âœ¨</a>
+    <button class="g-tab active" data-game="color" id="tab-color-btn" style="background:linear-gradient(135deg,#ec4899,#8b5cf6);color:white;border-color:transparent;box-shadow:0 4px 14px rgba(236,72,153,0.35);"><i class="fas fa-palette"></i> Color Sequence âœ¨</button>
+  </div>
+
+  <div class="game-card">
+    <!-- Color Sequence (Simon-Says Style) -->
+    <div class="game-panel active" id="game-color">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+        <div class="game-title" style="margin:0;"><i class="fas fa-palette" style="color:#ec4899;"></i> Color Sequence Memory</div>
+        <a href="color-sequence.html" class="btn-game btn-sm" style="background:linear-gradient(135deg,#ec4899,#8b5cf6);text-decoration:none;">
+          <i class="fas fa-expand-arrows-alt"></i> Full Screen Mode
+        </a>
+      </div>
+      <div class="game-desc">Watch each pastel tile light up for 2 seconds, then tap them in exact order. Level palette increases every 10 levels.</div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        <div class="game-score" id="cg-hud" style="margin:0;font-weight:700;">Level: <strong id="cg-lvl-num">1</strong> · Palette: <strong id="cg-pal-count">3 Colors</strong> · Steps: <strong id="cg-steps-count">3</strong></div>
+        <div style="font-size:0.8rem;color:#64748b;">Streak: <strong id="cg-streak">0</strong></div>
+      </div>
+
+      <div class="cg-status-box cg-status-watch" id="cg-status-box">
+        <i class="fas fa-eye"></i> <span id="cg-status-text">Press "Start Level" to watch the pattern</span>
+      </div>
+
+      <div class="cg-step-dots" id="cg-dots-wrap"></div>
+
+      <div class="color-game-grid" id="cg-grid" style="grid-template-columns:repeat(3,1fr);max-width:480px;margin:0 auto 18px;"></div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+        <button class="btn-game" id="cg-start-btn"><i class="fas fa-play"></i> Start Level</button>
+        <button class="btn-game" id="cg-replay-btn" style="display:none;background:#f1f5f9;color:#475569;"><i class="fas fa-redo"></i> Replay Pattern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- â”€â”€ Progress Chart Section â”€â”€ -->
+  <div class="chart-section">
+    <div class="section-hdr">
+      <div class="section-hdr-title"><i class="fas fa-chart-line" style="color:#6366f1;"></i> Progress Tracker</div>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-days="7">7 Days</button>
+        <button class="filter-btn" data-days="14">14 Days</button>
+        <button class="filter-btn" data-days="30">30 Days</button>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="game-filter-tabs">
+        <button class="gft active" data-gtype="color">🎨 Colors</button>
+        <button class="gft" data-gtype="all">📊 All Games</button>
+      </div>
+
+      <div class="chart-wrap" id="chart-wrap">
+        <div class="chart-empty" id="chart-empty">
+          <i class="fas fa-chart-line"></i>
+          <span>Play games to build your progress history!</span>
+          <small style="color:#c7d2fe;">Sessions are logged automatically after each game.</small>
+        </div>
+        <canvas id="progress-chart" style="display:none;"></canvas>
+      </div>
+
+      <div class="stat-pills" id="stat-pills" style="display:none;">
+        <div class="stat-pill"><div class="stat-pill-val" id="stat-sessions">–</div><div class="stat-pill-label">Sessions</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="stat-avg">–</div><div class="stat-pill-label">Avg Score</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="stat-best">–</div><div class="stat-pill-label">Best Score</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="stat-streak">–</div><div class="stat-pill-label">Day Streak</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { getSession, populateHeader, showToast } from './js/ui.js';
+  import { saveScore, auth, db } from './js/firebase.js';
+  import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+  const user = await getSession();
+  if (user) populateHeader(user);
+  document.getElementById('auth-hide')?.remove();
+  document.body.style.display = '';
+
+  /* â”€â”€ GAME TABS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  document.querySelectorAll('.g-tab[data-game]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.g-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.game-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('game-' + tab.dataset.game).classList.add('active');
+    });
+  });
+
+  /* â”€â”€ SCORE LOGGING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  async function logScore(game, scorePercent, durationSecs) {
+    try {
+      await saveScore(game, {
+        score: scorePercent,
+        duration: durationSecs,
+        date: new Date().toISOString().split('T')[0]
+      });
+      // Refresh chart after logging
+      await loadAndRenderChart();
+    } catch (e) {
+      console.warn('Score log skipped (demo mode):', e.message);
+      // Store locally for demo/offline use
+      const key = `careHub_scores_${game}`;
+      const local = JSON.parse(localStorage.getItem(key) || '[]');
+      local.push({ score: scorePercent, duration: durationSecs, date: new Date().toISOString().split('T')[0], playedAt: Date.now() });
+      localStorage.setItem(key, JSON.stringify(local.slice(-50)));
+      await loadAndRenderChart();
+    }
+  }
+
+  /* â”€â”€ PROGRESS CHART â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  let chartInstance = null;
+  let currentGameFilter = 'color';
+  let currentDays = 7;
+
+  async function fetchScores(gameType, days) {
+    const scores = [];
+    const cutoff = Date.now() - days * 86400000;
+
+    // Try Firestore first
+    if (auth.currentUser) {
+      try {
+        const ref = collection(db, 'users', auth.currentUser.uid, 'scores');
+        const conditions = [orderBy('playedAt', 'desc'), limit(100)];
+        if (gameType !== 'all') conditions.unshift(where('game', '==', gameType));
+        const snap = await getDocs(query(ref, ...conditions));
+        snap.forEach(doc => {
+          const d = doc.data();
+          const ts = d.playedAt?.toMillis ? d.playedAt.toMillis() : Date.now();
+          if (ts >= cutoff) scores.push({ ...d, ts });
+        });
+        if (scores.length > 0) return scores.sort((a,b) => a.ts - b.ts);
+      } catch(e) { /* fall through to local */ }
+    }
+
+    // Local fallback
+    const games = gameType === 'all' ? ['color'] : [gameType];
+    for (const g of games) {
+      const key = `careHub_scores_${g}`;
+      const local = JSON.parse(localStorage.getItem(key) || '[]');
+      local.forEach(s => {
+        const ts = s.playedAt || Date.now();
+        if (ts >= cutoff) scores.push({ ...s, game: g, ts });
+      });
+    }
+    return scores.sort((a,b) => a.ts - b.ts);
+  }
+
+  function seedInitialScoresIfEmpty() {
+    const colorKey = 'careHub_scores_color';
+    if (!localStorage.getItem(colorKey)) {
+      const now = Date.now();
+      localStorage.setItem(colorKey, JSON.stringify([
+        { score: 100, level: 2, duration: 28, playedAt: now - 5 * 86400000, date: new Date(now - 5 * 86400000).toISOString().split('T')[0] },
+        { score: 100, level: 3, duration: 36, playedAt: now - 3 * 86400000, date: new Date(now - 3 * 86400000).toISOString().split('T')[0] },
+        { score: 100, level: 5, duration: 44, playedAt: now - 1 * 86400000, date: new Date(now - 1 * 86400000).toISOString().split('T')[0] },
+      ]));
+    }
+  }
+
+  async function loadAndRenderChart() {
+    seedInitialScoresIfEmpty();
+    const scores = await fetchScores(currentGameFilter, currentDays);
+    const emptyEl = document.getElementById('chart-empty');
+    const canvas = document.getElementById('progress-chart');
+    const pillsEl = document.getElementById('stat-pills');
+
+    if (scores.length === 0) {
+      emptyEl.style.display = 'flex';
+      canvas.style.display = 'none';
+      pillsEl.style.display = 'none';
+      if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+      return;
+    }
+
+    emptyEl.style.display = 'none';
+    canvas.style.display = 'block';
+    pillsEl.style.display = 'flex';
+
+    // Aggregate by date
+    const byDate = {};
+    scores.forEach(s => {
+      const day = s.date || new Date(s.ts).toISOString().split('T')[0];
+      if (!byDate[day]) byDate[day] = [];
+      byDate[day].push(s.score);
+    });
+    const labels = Object.keys(byDate).sort();
+    const data = labels.map(d => {
+      const arr = byDate[d];
+      return Math.round(arr.reduce((a,b) => a+b, 0) / arr.length);
+    });
+
+    // Stats
+    const allScores = scores.map(s => s.score);
+    document.getElementById('stat-sessions').textContent = scores.length;
+    document.getElementById('stat-avg').textContent = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length) + '%';
+    document.getElementById('stat-best').textContent = Math.max(...allScores) + '%';
+    // Streak
+    let streak = 0;
+    const today = new Date().toISOString().split('T')[0];
+    const daySet = new Set(scores.map(s => s.date || new Date(s.ts).toISOString().split('T')[0]));
+    for (let i = 0; i < currentDays; i++) {
+      const d = new Date(Date.now() - i*86400000).toISOString().split('T')[0];
+      if (daySet.has(d)) streak++; else break;
+    }
+    document.getElementById('stat-streak').textContent = streak + (streak === 1 ? ' day' : ' days');
+
+    // Chart colors
+    const colorMap = { memory:'#6366f1', word:'#14b8a6', math:'#f59e0b', color:'#ec4899', all:'#6366f1' };
+    const color = colorMap[currentGameFilter] || '#6366f1';
+
+    const gradient = canvas.getContext('2d').createLinearGradient(0, 0, 0, 260);
+    gradient.addColorStop(0, color + '33');
+    gradient.addColorStop(1, color + '00');
+
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels.map(d => {
+          const dt = new Date(d);
+          return dt.toLocaleDateString('en-IN', { month:'short', day:'numeric' });
+        }),
+        datasets: [{
+          label: 'Score %',
+          data,
+          borderColor: color,
+          backgroundColor: gradient,
+          borderWidth: 2.5,
+          pointBackgroundColor: color,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.4,
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleFont: { family: 'Inter', weight: '700' },
+            bodyFont: { family: 'Inter' },
+            callbacks: { label: ctx => ` ${ctx.raw}% accuracy` }
+          }
+        },
+        scales: {
+          y: {
+            min: 0, max: 100,
+            ticks: { callback: v => v + '%', font: { family: 'Inter', size: 11 }, color: '#94a3b8' },
+            grid: { color: '#f1f5f9' },
+            border: { display: false }
+          },
+          x: {
+            ticks: { font: { family: 'Inter', size: 11 }, color: '#94a3b8' },
+            grid: { display: false },
+            border: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  // Game type filter
+  document.querySelectorAll('.gft').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.gft').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentGameFilter = btn.dataset.gtype;
+      loadAndRenderChart();
+    });
+  });
+
+  // Date range filter
+  document.querySelectorAll('.filter-btn[data-days]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn[data-days]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentDays = parseInt(btn.dataset.days);
+      loadAndRenderChart();
+    });
+  });
+
+  /* â”€â”€ COLOR SEQUENCE INLINE GAME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  const CG_POOL = [
+    { id: 'rose', name: 'Soft Rose', icon: '🌸', bg: '#fecdd3', border: '#fb7185', glow: '#fb7185', freq: 261.63 },
+    { id: 'peach', name: 'Warm Peach', icon: '🍑', bg: '#fed7aa', border: '#fb923c', glow: '#fb923c', freq: 293.66 },
+    { id: 'butter', name: 'Pale Butter', icon: '🌼', bg: '#fef08a', border: '#facc15', glow: '#facc15', freq: 329.63 },
+    { id: 'mint', name: 'Fresh Mint', icon: '🍃', bg: '#bbf7d0', border: '#4ade80', glow: '#4ade80', freq: 392.00 },
+    { id: 'sky', name: 'Sky Blue', icon: 'â˜️', bg: '#bae6fd', border: '#38bdf8', glow: '#38bdf8', freq: 440.00 },
+    { id: 'lavender', name: 'Lavender', icon: '🪻', bg: '#ddd6fe', border: '#a78bfa', glow: '#a78bfa', freq: 523.25 },
+    { id: 'lilac', name: 'Soft Lilac', icon: '💜', bg: '#f5d0fe', border: '#e879f9', glow: '#e879f9', freq: 587.33 },
+    { id: 'coral', name: 'Muted Coral', icon: '🪸', bg: '#fecaca', border: '#f87171', glow: '#f87171', freq: 659.25 },
+    { id: 'sage', name: 'Sage Green', icon: '🌿', bg: '#ccfbf1', border: '#2dd4bf', glow: '#2dd4bf', freq: 440.00 },
+    { id: 'aqua', name: 'Aqua Water', icon: '💧', bg: '#cffafe', border: '#67e8f9', glow: '#67e8f9', freq: 523.25 },
+    { id: 'blush', name: 'Powder Blush', icon: '🎀', bg: '#fce7f3', border: '#f472b6', glow: '#f472b6', freq: 261.63 },
+    { id: 'lemon', name: 'Mellow Lemon', icon: '🍋', bg: '#fef9c3', border: '#fde047', glow: '#fde047', freq: 587.33 },
+  ];
+
+  let cgLevel = 1;
+  let cgStreak = 0;
+  let cgPrevPaletteIds = [];
+  let cgCurrentPalette = [];
+  let cgPattern = [];
+  let cgInputIdx = 0;
+  let cgIsPlaying = false;
+  let cgCanClick = false;
+  let cgAudioCtx = null;
+
+  function playCgTone(freq) {
+    try {
+      if (!cgAudioCtx || cgAudioCtx.state === 'closed') {
+        cgAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (cgAudioCtx.state === 'suspended') cgAudioCtx.resume();
+      const now = cgAudioCtx.currentTime;
+      const osc = cgAudioCtx.createOscillator();
+      const gain = cgAudioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      osc.connect(gain);
+      gain.connect(cgAudioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 1.3);
+    } catch (_) {}
+  }
+
+  function getCgPaletteSize(lvl) {
+    return Math.min(3 + Math.floor((lvl - 1) / 10), 6);
+  }
+
+  function getCgPatternLength(lvl) {
+    const pSize = getCgPaletteSize(lvl);
+    const off = (lvl - 1) % 10;
+    if (off <= 2) return Math.max(3, pSize);
+    if (off <= 6) return Math.max(4, pSize + 1);
+    return Math.max(5, pSize + 2);
+  }
+
+  function selectCgPalette(lvl) {
+    const size = getCgPaletteSize(lvl);
+    const avail = CG_POOL.filter(c => !cgPrevPaletteIds.includes(c.id));
+    const chosen = [...avail].sort(() => Math.random() - 0.5).slice(0, size);
+    cgPrevPaletteIds = chosen.map(c => c.id);
+    return chosen;
+  }
+
+  function renderCgTiles(palette) {
+    const grid = document.getElementById('cg-grid');
+    if (!grid) return;
+    grid.style.gridTemplateColumns = `repeat(${palette.length}, 1fr)`;
+    grid.innerHTML = palette.map(c => `
+      <button class="cg-tile disabled" id="cgtile-${c.id}" data-id="${c.id}" style="background:${c.bg};border-color:${c.border};--glow:${c.glow};">
+        <div style="font-size:1.4rem;">${c.icon}</div>
+        <div>${c.name}</div>
+      </button>
+    `).join('');
+  }
+
+  function renderCgDots(count) {
+    const wrap = document.getElementById('cg-dots-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = Array.from({ length: count }, (_, i) => `<div class="cg-dot" id="cgdot-${i}"></div>`).join('');
+  }
+
+  function setCgStatus(cls, text) {
+    const box = document.getElementById('cg-status-box');
+    const txt = document.getElementById('cg-status-text');
+    if (box) box.className = `cg-status-box cg-status-${cls}`;
+    if (txt) txt.textContent = text;
+  }
+
+  async function playCgPattern() {
+    cgIsPlaying = true;
+    cgCanClick = false;
+    cgInputIdx = 0;
+
+    const startBtn = document.getElementById('cg-start-btn');
+    const replayBtn = document.getElementById('cg-replay-btn');
+    if (startBtn) startBtn.style.display = 'none';
+    if (replayBtn) replayBtn.style.display = 'none';
+
+    document.querySelectorAll('.cg-tile').forEach(t => {
+      t.classList.remove('interactive', 'lit');
+      t.classList.add('disabled');
+    });
+
+    renderCgDots(cgPattern.length);
+    setCgStatus('watch', `Watch carefully... Showing ${cgPattern.length} colors (2s each)`);
+
+    await new Promise(r => setTimeout(r, 600));
+
+    for (let i = 0; i < cgPattern.length; i++) {
+      const col = cgPattern[i];
+      const tile = document.getElementById(`cgtile-${col.id}`);
+      const dot = document.getElementById(`cgdot-${i}`);
+
+      dot?.classList.add('active');
+      setCgStatus('watch', `Showing color ${i + 1} of ${cgPattern.length}: ${col.name}`);
+
+      if (tile) tile.classList.add('lit');
+      playCgTone(col.freq);
+
+      // STRICT 2 SECONDS PER HIGHLIGHT
+      await new Promise(r => setTimeout(r, 2000));
+
+      if (tile) tile.classList.remove('lit');
+      dot?.classList.remove('active');
+
+      if (i < cgPattern.length - 1) {
+        await new Promise(r => setTimeout(r, 250));
+      }
+    }
+
+    cgIsPlaying = false;
+    cgCanClick = true;
+
+    document.querySelectorAll('.cg-tile').forEach(t => {
+      t.classList.remove('disabled');
+      t.classList.add('interactive');
+    });
+
+    setCgStatus('play', `Your turn! Tap color 1 of ${cgPattern.length} in order`);
+    if (replayBtn) replayBtn.style.display = 'inline-flex';
+  }
+
+  function initCgLevel(lvl) {
+    cgLevel = lvl;
+    cgCurrentPalette = selectCgPalette(cgLevel);
+    cgPattern = [];
+    const len = getCgPatternLength(cgLevel);
+    for (let i = 0; i < len; i++) {
+      cgPattern.push(cgCurrentPalette[Math.floor(Math.random() * cgCurrentPalette.length)]);
+    }
+
+    document.getElementById('cg-lvl-num').textContent = cgLevel;
+    document.getElementById('cg-pal-count').textContent = `${cgCurrentPalette.length} Colors`;
+    document.getElementById('cg-steps-count').textContent = cgPattern.length;
+
+    renderCgTiles(cgCurrentPalette);
+    renderCgDots(cgPattern.length);
+
+    const startBtn = document.getElementById('cg-start-btn');
+    if (startBtn) {
+      startBtn.innerHTML = '<i class="fas fa-play"></i> Watch Pattern';
+      startBtn.style.display = 'inline-flex';
+    }
+    const replayBtn = document.getElementById('cg-replay-btn');
+    if (replayBtn) replayBtn.style.display = 'none';
+
+    setCgStatus('watch', `Level ${cgLevel}: Ready. Press "Watch Pattern" to begin`);
+  }
+
+  document.getElementById('cg-grid')?.addEventListener('click', async e => {
+    const tile = e.target.closest('.cg-tile');
+    if (!tile || !cgCanClick || cgIsPlaying) return;
+
+    const clickedId = tile.dataset.id;
+    const expected = cgPattern[cgInputIdx];
+    const colObj = CG_POOL.find(c => c.id === clickedId);
+    if (colObj) playCgTone(colObj.freq);
+
+    tile.classList.add('lit');
+    setTimeout(() => tile.classList.remove('lit'), 300);
+
+    if (clickedId === expected.id) {
+      document.getElementById(`cgdot-${cgInputIdx}`)?.classList.add('filled');
+      cgInputIdx++;
+
+      if (cgInputIdx === cgPattern.length) {
+        cgCanClick = false;
+        cgStreak++;
+        document.getElementById('cg-streak').textContent = cgStreak;
+        setCgStatus('win', `🎉 Wonderful! Level ${cgLevel} complete! Moving to Level ${cgLevel + 1}...`);
+        showToast(`🎉 Level ${cgLevel} complete!`, 'success');
+
+        logScore('color', 100, 30);
+
+        setTimeout(() => {
+          initCgLevel(cgLevel + 1);
+          playCgPattern();
+        }, 2000);
+      } else {
+        setCgStatus('play', `Nice! Tap color ${cgInputIdx + 1} of ${cgPattern.length}`);
+      }
+    } else {
+      cgCanClick = false;
+      cgStreak = 0;
+      document.getElementById('cg-streak').textContent = '0';
+      setCgStatus('retry', '🌸 Close! Take your time. Would you like to replay or try again?');
+      const startBtn = document.getElementById('cg-start-btn');
+      if (startBtn) {
+        startBtn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
+        startBtn.style.display = 'inline-flex';
+      }
+      const replayBtn = document.getElementById('cg-replay-btn');
+      if (replayBtn) replayBtn.style.display = 'inline-flex';
+    }
+  });
+
+  document.getElementById('cg-start-btn')?.addEventListener('click', playCgPattern);
+  document.getElementById('cg-replay-btn')?.addEventListener('click', playCgPattern);
+
+  // Initialize Level 1
+  initCgLevel(1);
+
+  // Auto-switch to color tab if visited via #color
+  if (window.location.hash === '#color') {
+    document.getElementById('tab-color-btn')?.click();
+  }
+
+  // Initial chart load
+  loadAndRenderChart();
+</script>
+<script src="./js/page-transition.js"></script>
+</body>
+</html>

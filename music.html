@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Auth Guard: immediate synchronous check before DOM render -->
+  <script>
+    (function() {
+      try {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) {
+          window.location.replace('login.html');
+        }
+      } catch (e) {
+        window.location.replace('login.html');
+      }
+    })();
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) window.location.replace('login.html');
+      }
+    });
+  </script>
+
+  <!-- FOUC Prevention: hide body until auth confirmed -->
+  <style id="auth-hide">body{display:none!important}</style>
+  <!-- GUARANTEED body reveal: plain script, independent of module imports -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+    window.addEventListener('load', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+  </script><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareHub – Music Therapy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>" />
+  <!-- Auth Guard handled by Firebase in the module script below -->
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',system-ui,sans-serif;background:linear-gradient(160deg,#0f172a 0%,#1e1a2e 40%,#0c1f1a 100%);min-height:100vh;color:#1e293b;}
+
+    /* Header */
+    .page-header{background:rgba(15,23,42,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.07);padding:0 24px;position:sticky;top:0;z-index:100;}
+    .ph-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;height:60px;}
+    .back-btn{display:flex;align-items:center;gap:7px;color:rgba(255,255,255,0.6);text-decoration:none;font-size:0.85rem;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.12);transition:all 0.2s;white-space:nowrap;}
+    .back-btn:hover{background:rgba(255,255,255,0.08);color:white;}
+    .ph-title{font-size:1rem;font-weight:800;color:white;flex:1;}
+    .avatar-sm{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#ec4899);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;flex-shrink:0;}
+
+    /* Hero */
+    .page-hero{background:linear-gradient(135deg,#1e1030 0%,#2d1b69 50%,#0f2d1a 100%);padding:52px 24px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .page-hero h1{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;color:white;margin-bottom:10px;}
+    .page-hero p{color:rgba(255,255,255,0.65);font-size:0.95rem;}
+
+    .page-content{max-width:1000px;margin:0 auto;padding:36px 24px 80px;}
+
+    /* â”€â”€ Category sections â”€â”€ */
+    .cat-label{font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.4);margin-bottom:10px;margin-top:28px;display:flex;align-items:center;gap:8px;}
+    .cat-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+
+    /* â”€â”€ Track list â”€â”€ */
+    .track-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:28px;}
+    .track-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid rgba(255,255,255,0.08);border-radius:16px;cursor:pointer;transition:all 0.22s;background:rgba(255,255,255,0.04);position:relative;overflow:hidden;}
+    .track-item:hover{border-color:rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);transform:translateY(-2px);}
+    .track-item.active{border-color:rgba(139,92,246,0.7);background:rgba(139,92,246,0.12);}
+    .track-item.active::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#8b5cf6,#ec4899);}
+    .track-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+    .track-name{font-size:0.86rem;font-weight:700;color:white;}
+    .track-desc{font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px;line-height:1.4;}
+
+    /* â”€â”€ Player card â”€â”€ */
+    .player-card{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);border-radius:24px;padding:30px;margin-bottom:28px;backdrop-filter:blur(10px);}
+
+    /* Now playing */
+    .now-playing{text-align:center;margin:20px 0;}
+    .np-eyebrow{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.3);font-weight:700;margin-bottom:4px;}
+    .np-icon{font-size:2.8rem;margin:8px 0;}
+    .np-title{font-size:1.25rem;font-weight:800;color:white;}
+    .np-desc{font-size:0.82rem;color:rgba(255,255,255,0.5);margin-top:4px;}
+    .np-tag{display:inline-block;margin-top:8px;padding:3px 12px;border-radius:99px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;}
+
+    /* Visualizer */
+    .viz{display:flex;align-items:flex-end;gap:3px;height:48px;justify-content:center;margin:20px 0;}
+    .vbar{width:5px;border-radius:3px;animation:vizBounce 0.8s ease-in-out infinite alternate;}
+    .vbar.paused{animation-play-state:paused;}
+    .vbar:nth-child(2n){animation-duration:1.1s;} .vbar:nth-child(3n){animation-duration:0.9s;} .vbar:nth-child(4n){animation-duration:1.3s;}
+    @keyframes vizBounce{0%{height:5px;}100%{height:44px;}}
+
+    /* Controls */
+    .controls{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px 0;}
+    .ctrl{width:46px;height:46px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;}
+    .ctrl:hover{background:rgba(255,255,255,0.15);color:white;}
+    .ctrl.play{width:62px;height:62px;background:linear-gradient(135deg,#8b5cf6,#ec4899);color:white;font-size:24px;box-shadow:0 4px 22px rgba(139,92,246,0.5);}
+    .ctrl.play:hover{transform:scale(1.08);}
+    .ctrl.loop-on{background:rgba(139,92,246,0.3);color:#c4b5fd;}
+
+    /* Volume */
+    .vol-row{display:flex;align-items:center;gap:12px;margin-top:14px;}
+    .vol-row i{color:rgba(255,255,255,0.35);font-size:14px;}
+    #vol-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;outline:none;cursor:pointer;background:linear-gradient(to right,#8b5cf6 30%,rgba(255,255,255,0.15) 30%);}
+    #vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#8b5cf6;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);}
+
+    /* Headphones note */
+    .headphones-note{text-align:center;padding:11px 20px;background:rgba(139,92,246,0.12);border-radius:12px;border:1px solid rgba(139,92,246,0.25);font-size:0.8rem;color:#c4b5fd;font-weight:500;margin-top:20px;}
+
+    /* Info cards */
+    .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:32px;}
+    .info-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;transition:border-color 0.2s;}
+    .info-card:hover{border-color:rgba(255,255,255,0.15);}
+    .info-card-icon{font-size:1.8rem;margin-bottom:10px;}
+    .info-card h4{font-size:0.88rem;font-weight:700;color:white;margin-bottom:6px;}
+    .info-card p{font-size:0.8rem;color:rgba(255,255,255,0.5);line-height:1.6;}
+
+    @media(max-width:600px){.track-list{grid-template-columns:1fr;}.controls{gap:10px;}}
+  </style>
+  <link rel="stylesheet" href="./css/perf.css" />
+</head>
+<body>
+
+<header class="page-header">
+  <div class="ph-inner">
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    <span class="ph-title"><i class="fas fa-music" style="color:#8b5cf6;margin-right:6px;"></i>Music Therapy</span>
+    <div class="avatar-sm" id="header-avatar"></div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <h1>🎵 Caregiver Music Therapy</h1>
+  <p>Soft nature voices · Healing tones · Binaural beats — all generated live in your browser</p>
+</div>
+
+<div class="page-content">
+
+  <!-- Devotional & Nature -->
+  <div class="cat-label"><i class="fas fa-om"></i> Devotional & Nature</div>
+  <div class="track-list" id="track-list-devotional"></div>
+
+  <!-- Player Card -->
+  <div class="player-card">
+    <div class="now-playing">
+      <div class="np-eyebrow">Now Playing</div>
+      <div class="np-icon" id="np-icon">🎵</div>
+      <div class="np-title" id="np-title">Select a track to begin</div>
+      <div class="np-desc"  id="np-desc">Choose any track above or below, then press play</div>
+      <div class="np-tag" id="np-tag" style="background:rgba(139,92,246,0.2);color:#c4b5fd;">Ready</div>
+    </div>
+
+    <div class="viz" id="viz">
+      <div class="vbar paused" style="height:6px;animation-delay:0s;background:linear-gradient(to top,#f59e0b,#fde68a);"></div>
+      <div class="vbar paused" style="height:14px;animation-delay:.1s;background:linear-gradient(to top,#8b5cf6,#ec4899);"></div>
+      <div class="vbar paused" style="height:22px;animation-delay:.2s;background:linear-gradient(to top,#10b981,#34d399);"></div>
+      <div class="vbar paused" style="height:32px;animation-delay:.05s;background:linear-gradient(to top,#8b5cf6,#ec4899);"></div>
+      <div class="vbar paused" style="height:20px;animation-delay:.15s;background:linear-gradient(to top,#f59e0b,#fde68a);"></div>
+      <div class="vbar paused" style="height:28px;animation-delay:.25s;background:linear-gradient(to top,#0891b2,#38bdf8);"></div>
+      <div class="vbar paused" style="height:12px;animation-delay:.3s;background:linear-gradient(to top,#8b5cf6,#ec4899);"></div>
+      <div class="vbar paused" style="height:38px;animation-delay:.08s;background:linear-gradient(to top,#10b981,#34d399);"></div>
+      <div class="vbar paused" style="height:24px;animation-delay:.18s;background:linear-gradient(to top,#f59e0b,#fde68a);"></div>
+      <div class="vbar paused" style="height:30px;animation-delay:.22s;background:linear-gradient(to top,#8b5cf6,#ec4899);"></div>
+      <div class="vbar paused" style="height:9px;animation-delay:.12s;background:linear-gradient(to top,#0891b2,#38bdf8);"></div>
+      <div class="vbar paused" style="height:26px;animation-delay:.35s;background:linear-gradient(to top,#10b981,#34d399);"></div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl" id="prev-btn" title="Previous"><i class="fas fa-step-backward"></i></button>
+      <button class="ctrl play" id="play-btn" title="Play/Pause"><i class="fas fa-play"></i></button>
+      <button class="ctrl" id="next-btn" title="Next"><i class="fas fa-step-forward"></i></button>
+      <button class="ctrl loop-on" id="loop-btn" title="Loop"><i class="fas fa-redo-alt"></i></button>
+    </div>
+
+    <div class="vol-row">
+      <i class="fas fa-volume-down"></i>
+      <input type="range" id="vol-slider" min="0" max="100" value="30" />
+      <i class="fas fa-volume-up"></i>
+    </div>
+    <div class="headphones-note">🎧 Use headphones for the best experience · All audio generated locally — no internet needed</div>
+  </div>
+
+  <!-- Science & Waves -->
+  <div class="cat-label"><i class="fas fa-wave-square"></i> Science & Brainwave Therapy</div>
+  <div class="track-list" id="track-list-science"></div>
+
+  <!-- Info Cards -->
+  <div class="info-grid">
+
+    <div class="info-card">
+      <div class="info-card-icon">🐦</div>
+      <h4>Nature Voices</h4>
+      <p>Algorithmically generated koyal calls, sparrow chirps, cricket ambiance, and a swaying forest breeze — proven to lower cortisol and reduce caregiver burnout.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">🔔</div>
+      <h4>Soft Healing Tunes</h4>
+      <p>Pentatonic harp arpeggios and singing-bowl bell tones with natural decay harmonics. The pentatonic scale is universally calming across all cultures.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">🎵</div>
+      <h4>Binaural Beats</h4>
+      <p>Two slightly different frequencies in each ear create a perceived "beat" that entrains brainwaves — 40Hz gamma reduces anxiety, 2Hz delta aids deep sleep.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">🌊</div>
+      <h4>432Hz Waves</h4>
+      <p>Tuned to a natural resonant frequency linked to calmness and reduced overthinking. Many musicians and therapists prefer 432Hz over the standard 440Hz concert pitch.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-card-icon">🌧️</div>
+      <h4>Brown Noise Rain</h4>
+      <p>Low-frequency brown noise mimics heavy rain and ocean waves — more effective than white noise at masking intrusive thoughts and improving sustained focus.</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { getSession } from './js/ui.js';
+import { auth, db } from './js/firebase.js';
+
+// â”€â”€ Auth guard + header avatar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const _mu = await getSession();
+if (_mu) {
+  document.getElementById('auth-hide')?.remove();
+  document.body.style.display = '';
+  const av = document.getElementById('header-avatar');
+  const ini = _mu.name.trim().split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  if (av) av.textContent = ini;
+}
+
+// â”€â”€ Track definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+var TRACKS = [
+  // Devotional & Nature
+  { id:'nature',  cat:'devotional', name:'Soft Nature Voices',    description:'Morning birds, koyal call, breeze & forest ambiance',       icon:'🐦', bg:'linear-gradient(135deg,#dcfce7,#4ade80)', tag:'Forest Calm',  tagBg:'rgba(16,185,129,0.2)', tagColor:'#4ade80', type:'nature'   },
+  { id:'tunes',   cat:'devotional', name:'Soft Healing Tunes',    description:'Gentle harp arpeggios & singing-bowl bells',                icon:'🔔', bg:'linear-gradient(135deg,#fdf4ff,#c084fc)', tag:'Pentatonic',   tagBg:'rgba(139,92,246,0.2)', tagColor:'#c4b5fd', type:'softtunes'},
+  // Science
+  { id:'binaural',cat:'science',    name:'Deep Binaural Beats',   description:'Stress & anxiety reduction – 40Hz gamma waves',             icon:'🎵', bg:'linear-gradient(135deg,#ddd6fe,#818cf8)', tag:'40Hz Gamma',   tagBg:'rgba(99,102,241,0.2)', tagColor:'#818cf8', type:'binaural', freqLeft:200, freqRight:240 },
+  { id:'calm432', cat:'science',    name:'432Hz Calm Waves',       description:'Overthinking & mental exhaustion relief',                   icon:'🌊', bg:'linear-gradient(135deg,#ccfbf1,#38bdf8)', tag:'432Hz',        tagBg:'rgba(8,145,178,0.2)',  tagColor:'#38bdf8', type:'sine',     freqLeft:432, freqRight:432 },
+  { id:'rain',    cat:'science',    name:'Ambient Rain',           description:'Gentle brown noise for deep relaxation & focus',            icon:'🌧️', bg:'linear-gradient(135deg,#e0f2fe,#86efac)', tag:'Brown Noise',  tagBg:'rgba(16,185,129,0.2)', tagColor:'#86efac', type:'noise'    },
+  { id:'delta',   cat:'science',    name:'Delta Wave Sleep Aid',   description:'Deep sleep preparation – 0.5–4Hz delta waves',              icon:'🌙', bg:'linear-gradient(135deg,#fae8ff,#a855f7)', tag:'2Hz Delta',    tagBg:'rgba(139,92,246,0.2)', tagColor:'#a855f7', type:'binaural', freqLeft:100, freqRight:102 },
+  { id:'theta',   cat:'science',    name:'Theta Meditation',       description:'Meditation & creativity – 4–8Hz theta waves',               icon:'🧘', bg:'linear-gradient(135deg,#fef3c7,#fb923c)', tag:'6Hz Theta',    tagBg:'rgba(249,115,22,0.2)', tagColor:'#fb923c', type:'binaural', freqLeft:200, freqRight:206 },
+];
+
+// â”€â”€ Audio Engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+var audioCtx = null;
+var gainNode = null;
+var currentSources = [];
+var scheduledTimers = [];
+var isPlaying = false;
+var currentTrackIndex = 0;
+var loopEnabled = true;
+
+function getCtx() {
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0.3;
+    gainNode.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function stopAll() {
+  scheduledTimers.forEach(function(t){ clearTimeout(t); });
+  scheduledTimers = [];
+  currentSources.forEach(function(s){ try { s.stop(); } catch(e){} });
+  currentSources = [];
+  isPlaying = false;
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// 1. SOFT NATURE VOICES
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function playNature() {
+  var ctx = getCtx();
+
+  // Gentle forest breeze (filtered brown noise)
+  var bSize = ctx.sampleRate * 4;
+  var bBuf = ctx.createBuffer(2, bSize, ctx.sampleRate);
+  for (var c = 0; c < 2; c++) {
+    var data = bBuf.getChannelData(c);
+    var last = 0;
+    for (var i = 0; i < bSize; i++) {
+      var w = Math.random() * 2 - 1;
+      data[i] = (last + 0.02 * w) / 1.02;
+      last = data[i];
+      data[i] *= 2.2;
+    }
+  }
+  var breeze = ctx.createBufferSource();
+  breeze.buffer = bBuf; breeze.loop = true;
+  var bFilter = ctx.createBiquadFilter();
+  bFilter.type = 'bandpass'; bFilter.frequency.value = 550; bFilter.Q.value = 0.35;
+  var bGain = ctx.createGain(); bGain.gain.value = 0.18;
+  // Slow sway LFO
+  var swayLFO = ctx.createOscillator();
+  var swayLFOG = ctx.createGain();
+  swayLFO.frequency.value = 0.1;
+  swayLFOG.gain.value = 0.08;
+  swayLFO.connect(swayLFOG);
+  swayLFOG.connect(bGain.gain);
+  breeze.connect(bFilter); bFilter.connect(bGain); bGain.connect(gainNode);
+  breeze.start(); swayLFO.start();
+  currentSources.push(breeze, swayLFO);
+
+  // Koyal (cuckoo) bird call — descending two-note
+  function scheduleKoyal() {
+    if (!isPlaying) return;
+    var delay = 5000 + Math.random() * 8000;
+    scheduledTimers.push(setTimeout(function() {
+      if (!isPlaying) return;
+      var now = ctx.currentTime;
+      [0, 0.48].forEach(function(offset, i) {
+        var hz = i === 0 ? 680 : 560;
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(hz, now + offset);
+        o.frequency.linearRampToValueAtTime(hz * 0.96, now + offset + 0.32);
+        g.gain.setValueAtTime(0, now + offset);
+        g.gain.linearRampToValueAtTime(0.16, now + offset + 0.07);
+        g.gain.linearRampToValueAtTime(0.09, now + offset + 0.28);
+        g.gain.linearRampToValueAtTime(0, now + offset + 0.4);
+        o.connect(g); g.connect(gainNode);
+        o.start(now + offset); o.stop(now + offset + 0.45);
+        currentSources.push(o);
+      });
+      scheduleKoyal();
+    }, delay));
+  }
+  scheduleKoyal();
+
+  // Sparrow chirps — short random bursts
+  function scheduleSparrow() {
+    if (!isPlaying) return;
+    var delay = 2000 + Math.random() * 5000;
+    scheduledTimers.push(setTimeout(function() {
+      if (!isPlaying) return;
+      var now = ctx.currentTime;
+      var base = 2400 + Math.random() * 700;
+      var count = 2 + Math.floor(Math.random() * 3);
+      for (var ci = 0; ci < count; ci++) {
+        (function(idx) {
+          var t = now + idx * 0.1;
+          var o = ctx.createOscillator();
+          var g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.setValueAtTime(base, t);
+          o.frequency.linearRampToValueAtTime(base * 1.1, t + 0.06);
+          o.frequency.linearRampToValueAtTime(base, t + 0.09);
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(0.11, t + 0.02);
+          g.gain.linearRampToValueAtTime(0, t + 0.09);
+          o.connect(g); g.connect(gainNode);
+          o.start(t); o.stop(t + 0.12);
+          currentSources.push(o);
+        })(ci);
+      }
+      scheduleSparrow();
+    }, delay));
+  }
+  scheduleSparrow();
+
+  // Distant morning dove — low soft coo
+  function scheduleDove() {
+    if (!isPlaying) return;
+    var delay = 9000 + Math.random() * 12000;
+    scheduledTimers.push(setTimeout(function() {
+      if (!isPlaying) return;
+      var now = ctx.currentTime;
+      var hz = 340;
+      [0, 0.35, 0.7].forEach(function(offset, i) {
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        var vol = i === 1 ? 0.12 : 0.08;
+        o.type = 'sine';
+        o.frequency.setValueAtTime(hz + (i===1?10:0), now + offset);
+        o.frequency.linearRampToValueAtTime(hz - 5, now + offset + 0.3);
+        g.gain.setValueAtTime(0, now + offset);
+        g.gain.linearRampToValueAtTime(vol, now + offset + 0.1);
+        g.gain.linearRampToValueAtTime(0, now + offset + 0.35);
+        o.connect(g); g.connect(gainNode);
+        o.start(now + offset); o.stop(now + offset + 0.4);
+        currentSources.push(o);
+      });
+      scheduleDove();
+    }, delay));
+  }
+  scheduleDove();
+
+  // Soft cricket hum (barely audible texture)
+  var cricket = ctx.createOscillator();
+  var cGain = ctx.createGain();
+  cricket.type = 'square';
+  cricket.frequency.value = 3900;
+  cGain.gain.value = 0.008;
+  var cLFO = ctx.createOscillator();
+  var cLFOG = ctx.createGain();
+  cLFO.frequency.value = 20;
+  cLFOG.gain.value = 0.007;
+  cLFO.connect(cLFOG); cLFOG.connect(cGain.gain);
+  var cFilter = ctx.createBiquadFilter();
+  cFilter.type = 'bandpass'; cFilter.frequency.value = 3900; cFilter.Q.value = 10;
+  cricket.connect(cFilter); cFilter.connect(cGain); cGain.connect(gainNode);
+  cricket.start(); cLFO.start();
+  currentSources.push(cricket, cLFO);
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// 3. SOFT HEALING TUNES — Harp & Bell pentatonic
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+var PENTA = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
+
+function makeBell(ctx, hz, t, vol) {
+  vol = vol || 0.18;
+  var g = ctx.createGain();
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 3.2);
+
+  var o1 = ctx.createOscillator(); o1.type='sine'; o1.frequency.value=hz;
+  var o2 = ctx.createOscillator(); o2.type='sine'; o2.frequency.value=hz*2.756;
+  var o3 = ctx.createOscillator(); o3.type='sine'; o3.frequency.value=hz*5.404;
+  var g2 = ctx.createGain(); g2.gain.value=0.13;
+  var g3 = ctx.createGain(); g3.gain.value=0.05;
+
+  o1.connect(g); g.connect(gainNode);
+  o2.connect(g2); g2.connect(gainNode);
+  o3.connect(g3); g3.connect(gainNode);
+  o1.start(t); o1.stop(t+3.5);
+  o2.start(t); o2.stop(t+2.5);
+  o3.start(t); o3.stop(t+1.5);
+  return [o1, o2, o3];
+}
+
+function makeHarp(ctx, hz, t, vol) {
+  vol = vol || 0.22;
+  var g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+
+  var o = ctx.createOscillator(); o.type='triangle'; o.frequency.value=hz;
+  var o2= ctx.createOscillator(); o2.type='sine';    o2.frequency.value=hz*2;
+  var g2= ctx.createGain(); g2.gain.value=0.1;
+
+  o.connect(g); g.connect(gainNode);
+  o2.connect(g2); g2.connect(gainNode);
+  o.start(t); o.stop(t+2);
+  o2.start(t); o2.stop(t+1.5);
+  return [o, o2];
+}
+
+function playSoftTunes() {
+  var ctx = getCtx();
+
+  // Soft root drone pad
+  var pad = ctx.createOscillator();
+  var padG = ctx.createGain();
+  var padF = ctx.createBiquadFilter();
+  pad.type='sine'; pad.frequency.value=261.63;
+  padF.type='lowpass'; padF.frequency.value=380;
+  padG.gain.value=0.06;
+  pad.connect(padF); padF.connect(padG); padG.connect(gainNode);
+  pad.start();
+  currentSources.push(pad);
+
+  // Bell every 8–15s
+  function bell() {
+    if (!isPlaying) return;
+    var d = 8000 + Math.random() * 7000;
+    scheduledTimers.push(setTimeout(function() {
+      if (!isPlaying) return;
+      var hz = PENTA[1 + Math.floor(Math.random()*5)];
+      var srcs = makeBell(ctx, hz, ctx.currentTime);
+      currentSources = currentSources.concat(srcs);
+      bell();
+    }, d));
+  }
+  bell();
+
+  // Harp arpeggio runs every 5–12s
+  function arpeggio() {
+    if (!isPlaying) return;
+    var d = 5000 + Math.random() * 7000;
+    scheduledTimers.push(setTimeout(function() {
+      if (!isPlaying) return;
+      var root = PENTA[Math.floor(Math.random()*4)];
+      var notes = PENTA.filter(function(n){ return n>=root; }).slice(0,5);
+      if (Math.random() > 0.4) notes = notes.slice().reverse();
+      notes.forEach(function(hz, i) {
+        var t = ctx.currentTime + i * 0.2;
+        var srcs = makeHarp(ctx, hz, t, 0.18);
+        currentSources = currentSources.concat(srcs);
+      });
+      arpeggio();
+    }, d));
+  }
+  arpeggio();
+}
+
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// 4–8. SCIENCE TRACKS
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function playBinaural(track) {
+  var ctx = getCtx();
+  var oscL = ctx.createOscillator();
+  var oscR = ctx.createOscillator();
+  oscL.type='sine'; oscL.frequency.value=track.freqLeft;
+  oscR.type='sine'; oscR.frequency.value=track.freqRight;
+  var panL = ctx.createStereoPanner(); panL.pan.value=-1;
+  var panR = ctx.createStereoPanner(); panR.pan.value= 1;
+  oscL.connect(panL); panL.connect(gainNode);
+  oscR.connect(panR); panR.connect(gainNode);
+  oscL.start(); oscR.start();
+  currentSources.push(oscL, oscR);
+}
+
+function playSine(track) {
+  var ctx = getCtx();
+  var osc = ctx.createOscillator();
+  osc.type='sine'; osc.frequency.value=track.freqLeft;
+  var g = ctx.createGain(); g.gain.value=0.4;
+  osc.connect(g); g.connect(gainNode);
+  var osc2 = ctx.createOscillator();
+  osc2.type='sine'; osc2.frequency.value=track.freqLeft*2;
+  var g2 = ctx.createGain(); g2.gain.value=0.1;
+  osc2.connect(g2); g2.connect(gainNode);
+  osc.start(); osc2.start();
+  currentSources.push(osc, osc2);
+}
+
+function playNoise() {
+  var ctx = getCtx();
+  var bSize = ctx.sampleRate*3;
+  var buf = ctx.createBuffer(2,bSize,ctx.sampleRate);
+  for (var c=0;c<2;c++) {
+    var data=buf.getChannelData(c); var last=0;
+    for (var i=0;i<bSize;i++) {
+      var w=Math.random()*2-1;
+      data[i]=(last+0.02*w)/1.02; last=data[i]; data[i]*=3.5;
+    }
+  }
+  var src=ctx.createBufferSource(); src.buffer=buf; src.loop=true;
+  var f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=800;
+  src.connect(f); f.connect(gainNode); src.start();
+  currentSources.push(src);
+}
+
+function playTrack(index) {
+  try {
+    stopAll();
+    currentTrackIndex = index;
+    var track = TRACKS[index];
+    if (!track) return;
+    if      (track.type==='nature')    playNature();
+    else if (track.type==='softtunes') playSoftTunes();
+    else if (track.type==='binaural')  playBinaural(track);
+    else if (track.type==='sine')      playSine(track);
+    else if (track.type==='noise')     playNoise();
+    isPlaying = true;
+  } catch(err) { console.error('Playback error:', err); }
+}
+
+function pauseTrack()  { if (audioCtx&&audioCtx.state==='running') { audioCtx.suspend(); isPlaying=false; } }
+function resumeAudio() { if (audioCtx&&audioCtx.state==='suspended') { audioCtx.resume(); isPlaying=true; } }
+function setVolume(v)  { getCtx(); if(gainNode) gainNode.gain.value=Math.max(0,Math.min(1,v)); }
+
+// â”€â”€ UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+var npIcon  = document.getElementById('np-icon');
+var npTitle = document.getElementById('np-title');
+var npDesc  = document.getElementById('np-desc');
+var npTag   = document.getElementById('np-tag');
+var playBtn = document.getElementById('play-btn');
+var prevBtn = document.getElementById('prev-btn');
+var nextBtn = document.getElementById('next-btn');
+var loopBtn = document.getElementById('loop-btn');
+var volSlider = document.getElementById('vol-slider');
+var vizBars = document.querySelectorAll('.vbar');
+
+function setViz(on) { vizBars.forEach(function(b){ b.classList.toggle('paused',!on); }); }
+
+function updateNP(i) {
+  var t = TRACKS[i];
+  npIcon.textContent  = t.icon;
+  npTitle.textContent = t.name;
+  npDesc.textContent  = t.description;
+  npTag.textContent   = t.tag;
+  npTag.style.background = t.tagBg;
+  npTag.style.color      = t.tagColor;
+  document.querySelectorAll('.track-item').forEach(function(el,idx){
+    el.classList.toggle('active', idx===i);
+  });
+}
+
+// Render track lists
+function renderTracks(cat, containerId) {
+  var el = document.getElementById(containerId);
+  var filtered = TRACKS.filter(function(t){ return t.cat===cat; });
+  el.innerHTML = filtered.map(function(t) {
+    var globalIdx = TRACKS.indexOf(t);
+    return '<div class="track-item" data-idx="'+globalIdx+'">'
+      + '<div class="track-ico" style="background:'+t.bg+'">'+t.icon+'</div>'
+      + '<div><div class="track-name">'+t.name+'</div>'
+      + '<div class="track-desc">'+t.description+'</div></div>'
+      + '</div>';
+  }).join('');
+}
+renderTracks('devotional', 'track-list-devotional');
+renderTracks('science',    'track-list-science');
+
+function handleTrackClick(e) {
+  var item = e.target.closest('.track-item');
+  if (!item) return;
+  var i = parseInt(item.dataset.idx);
+  playTrack(i); updateNP(i); setViz(true);
+  playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+}
+document.getElementById('track-list-devotional').addEventListener('click', handleTrackClick);
+document.getElementById('track-list-science').addEventListener('click', handleTrackClick);
+
+playBtn.addEventListener('click', function() {
+  if (isPlaying) {
+    pauseTrack(); playBtn.innerHTML='<i class="fas fa-play"></i>'; setViz(false);
+  } else {
+    if (audioCtx && audioCtx.state==='suspended') resumeAudio();
+    else playTrack(currentTrackIndex);
+    updateNP(currentTrackIndex);
+    playBtn.innerHTML='<i class="fas fa-pause"></i>'; setViz(true);
+  }
+});
+
+prevBtn.addEventListener('click', function() {
+  var i=(currentTrackIndex-1+TRACKS.length)%TRACKS.length;
+  playTrack(i); updateNP(i); setViz(true);
+  playBtn.innerHTML='<i class="fas fa-pause"></i>';
+});
+
+nextBtn.addEventListener('click', function() {
+  var i=(currentTrackIndex+1)%TRACKS.length;
+  playTrack(i); updateNP(i); setViz(true);
+  playBtn.innerHTML='<i class="fas fa-pause"></i>';
+});
+
+loopBtn.addEventListener('click', function() {
+  loopEnabled=!loopEnabled;
+  loopBtn.classList.toggle('loop-on',loopEnabled);
+});
+
+volSlider.addEventListener('input', function() {
+  setVolume(volSlider.value/100);
+  volSlider.style.background='linear-gradient(to right,#8b5cf6 '+volSlider.value+'%,rgba(255,255,255,0.15) '+volSlider.value+'%)';
+});
+
+updateNP(0);
+</script>
+<script src="./js/page-transition.js"></script>
+</body>
+</html>

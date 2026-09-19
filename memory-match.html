@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Auth Guard: immediate synchronous check before DOM render -->
+  <script>
+    (function() {
+      try {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) { window.location.replace('login.html'); }
+      } catch (e) { window.location.replace('login.html'); }
+    })();
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) window.location.replace('login.html');
+      }
+    });
+  </script>
+
+  <!-- FOUC Prevention -->
+  <style id="auth-hide">body{display:none!important}</style>
+  <!-- GUARANTEED body reveal: plain script, independent of module imports -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+    window.addEventListener('load', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareHub – Memory Photo Match</title>
+  <meta name="description" content="Gentle photo-to-name memory matching game for dementia and memory care patients." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>" />
+
+  <style>
+    /* â”€â”€ Reset & Base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Nunito', system-ui, sans-serif;
+      /* Rich pastel tri-gradient — gives glass cards visual depth to blur against */
+      background:
+        radial-gradient(ellipse at 15% 20%, rgba(180,210,190,0.42) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 15%, rgba(200,190,230,0.36) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 85%, rgba(230,200,190,0.36) 0%, transparent 55%),
+        linear-gradient(160deg, #f4f9f6 0%, #f0ecfb 45%, #fbf3ef 100%);
+      min-height: 100vh;
+      color: #3d2b1f;
+    }
+
+    /* â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .page-header {
+      background: rgba(255,255,255,0.93);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid #fde8c8;
+      padding: 0 24px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .ph-inner {
+      max-width: 960px; margin: 0 auto;
+      display: flex; align-items: center; gap: 14px; height: 64px;
+    }
+    .back-btn {
+      display: flex; align-items: center; gap: 7px;
+      color: #92600a; text-decoration: none;
+      font-size: 0.88rem; font-weight: 700;
+      padding: 8px 16px; border-radius: 99px;
+      border: 1.5px solid #fde8c8; transition: all 0.2s;
+      white-space: nowrap; background: #fffbf5;
+    }
+    .back-btn:hover { background: #fef3c7; border-color: #fbbf24; }
+    .ph-title { font-size: 1.05rem; font-weight: 900; color: #1e1b0f; flex: 1; }
+    .ph-right { display: flex; align-items: center; gap: 10px; }
+
+    /* Audio toggle */
+    .audio-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 99px;
+      border: 1.5px solid #d1fae5; background: #f0fdf4;
+      color: #059669; font-family: 'Nunito', sans-serif;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .audio-btn:hover { background: #d1fae5; }
+    .audio-btn.muted { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
+
+    /* Settings btn */
+    .settings-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 1.5px solid #e2e8f0; background: white;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #64748b; font-size: 16px;
+      transition: all 0.2s;
+    }
+    .settings-btn:hover { background: #f5f3ff; color: #7c3aed; border-color: #c4b5fd; }
+
+    /* Avatar */
+    .avatar-sm {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; color: white; flex-shrink: 0;
+    }
+
+    /* â”€â”€ GAME AREA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .game-container {
+      max-width: 920px; margin: 0 auto; padding: 32px 20px 80px;
+    }
+
+    /* Level header */
+    .level-header {
+      text-align: center; margin-bottom: 28px;
+      animation: fadeSlideIn 0.5s ease;
+    }
+    .level-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: linear-gradient(135deg, #f59e0b22, #f97316111);
+      border: 1.5px solid #fde68a; padding: 5px 18px;
+      border-radius: 99px; font-size: 0.8rem; font-weight: 800;
+      color: #92400e; text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+    .level-title {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 900; color: #1c1917; margin-bottom: 6px;
+    }
+    .level-subtitle {
+      font-size: 1rem; color: #78716c; font-weight: 600;
+    }
+    .progress-wrap {
+      max-width: 320px; margin: 16px auto 0;
+    }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 0.78rem; font-weight: 700; color: #92600a;
+      margin-bottom: 6px;
+    }
+    .progress-track {
+      height: 8px; background: #fde8c8; border-radius: 99px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b, #f97316);
+      border-radius: 99px;
+      transition: width 0.6s ease;
+    }
+
+    /* â”€â”€ PHOTO GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    /* â”€â”€ GLASSMORPHISM BASE — photo/image cards (sage green tint) â”€â”€ */
+    .photo-card {
+      position: relative;
+      border-radius: 22px;
+      overflow: hidden;
+      cursor: pointer;
+      background: rgba(180, 210, 190, 0.20);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.38);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.50);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.35s ease;
+      aspect-ratio: 1 / 1;
+      user-select: none;
+    }
+    @supports not (backdrop-filter: blur(1px)) {
+      .photo-card { background: rgba(195,220,205,0.88); }
+    }
+    .photo-card:hover:not(.solved):not(.selected) {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 36px rgba(100,150,120,0.16), inset 0 1px 0 rgba(255,255,255,0.50);
+      border-color: rgba(255,255,255,0.55);
+    }
+    .photo-card.selected {
+      border-color: rgba(245,180,80,0.70);
+      box-shadow: 0 0 0 3px rgba(245,170,60,0.22), 0 10px 28px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.50);
+      transform: translateY(-4px) scale(1.02);
+      background: rgba(180,210,190,0.30);
+    }
+    .photo-card.solved {
+      background: rgba(155,210,185,0.32);
+      border-color: rgba(140,200,170,0.50);
+      cursor: default;
+      opacity: 0.84;
+    }
+    @supports not (backdrop-filter: blur(1px)) {
+      .photo-card.solved { background: rgba(175,225,205,0.90); }
+    }
+    /* Family photo cards — warm peach/blush glass tint */
+    .photo-card--family {
+      background: rgba(230,200,190,0.22);
+    }
+    @supports not (backdrop-filter: blur(1px)) {
+      .photo-card--family { background: rgba(240,215,205,0.90); }
+    }
+    .photo-card--family.solved {
+      background: rgba(200,220,205,0.32);
+    }
+    /* Wrong-match: dusty-rose tint, CSS animation fades back to sage */
+    @keyframes wrongFlashFade {
+      0%   { background: rgba(220,175,175,0.38); border-color: rgba(200,150,150,0.48); }
+      100% { background: rgba(180,210,190,0.20); border-color: rgba(255,255,255,0.38); }
+    }
+    .photo-card.wrong-flash {
+      animation: wrongFlashFade 0.9s ease forwards;
+    }
+    .photo-card.shake {
+      animation: shake 0.5s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      18% { transform: translateX(-6px) rotate(-0.8deg); }
+      36% { transform: translateX(6px) rotate(0.8deg); }
+      54% { transform: translateX(-4px); }
+      72% { transform: translateX(4px); }
+    }
+
+    /* Emoji tile fallback */
+    .emoji-tile {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      transition: transform 0.2s;
+    }
+    .photo-card:hover:not(.solved) .emoji-tile { transform: scale(1.1); }
+    .photo-card.selected .emoji-tile { transform: scale(1.12); }
+
+    /* Photo image */
+    .photo-img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 17px;
+    }
+
+    /* Solved overlay — soft mint glass wash, not bright green */
+    .solved-overlay {
+      position: absolute; inset: 0;
+      background: rgba(140,200,175,0.22);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 19px;
+      opacity: 0; transition: opacity 0.45s ease;
+      pointer-events: none;
+    }
+    .photo-card.solved .solved-overlay { opacity: 1; }
+    .solved-checkmark {
+      width: 44px; height: 44px;
+      background: rgba(100,175,145,0.80);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1.5px solid rgba(255,255,255,0.45);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 20px;
+      box-shadow: 0 4px 16px rgba(80,160,130,0.30);
+      transform: scale(0);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .photo-card.solved .solved-checkmark { transform: scale(1); }
+
+    /* Family badge — warm blush glass pill */
+    .family-badge {
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(210,165,145,0.75);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.45);
+      color: #5c2d1a;
+      border-radius: 99px; padding: 3px 9px;
+      font-size: 0.65rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+
+    /* â”€â”€ NAME LABELS ROW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .names-section {
+      margin-top: 4px;
+    }
+    .names-label {
+      text-align: center; font-size: 0.82rem; font-weight: 700;
+      color: #78716c; margin-bottom: 14px; text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .names-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    /* â”€â”€ GLASSMORPHISM — name/label chips (powder blue tint) â”€â”€ */
+    .name-chip {
+      padding: 12px 22px;
+      background: rgba(180,200,220,0.22);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.38);
+      border-radius: 20px;
+      font-size: 1rem; font-weight: 800;
+      /* Dark slate-blue — WCAG AA contrast on powder blue glass (ratio ~5.4:1) */
+      color: #2c3e5a;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      user-select: none;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.50);
+      min-width: 90px;
+      text-align: center;
+    }
+    @supports not (backdrop-filter: blur(1px)) {
+      .name-chip { background: rgba(195,215,235,0.90); }
+    }
+    .name-chip:hover:not(.name-solved):not(.name-selected) {
+      background: rgba(180,200,225,0.35);
+      border-color: rgba(255,255,255,0.55);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(100,140,190,0.14), inset 0 1px 0 rgba(255,255,255,0.55);
+    }
+    .name-chip.name-selected {
+      /* Soft periwinkle glow — distinct from photo amber glow */
+      background: rgba(175,195,230,0.40);
+      border-color: rgba(150,175,220,0.65);
+      color: #1e3058;
+      transform: translateY(-2px);
+      box-shadow: 0 0 0 3px rgba(150,175,220,0.22), 0 8px 22px rgba(80,110,180,0.14), inset 0 1px 0 rgba(255,255,255,0.55);
+    }
+    /* Wrong flash for name chip — dusty rose, removed by JS after timeout */
+    .name-chip.name-wrong {
+      background: rgba(215,175,175,0.36) !important;
+      border-color: rgba(195,145,145,0.50) !important;
+      color: #5c2c2c !important;
+    }
+    .name-chip.name-solved {
+      /* Soft mint glass — matches the paired photo card's solved tint */
+      background: rgba(155,210,185,0.28);
+      border-color: rgba(130,190,165,0.45);
+      color: #1a5c3a;
+      cursor: default;
+      opacity: 0.80;
+      text-decoration: line-through;
+    }
+    @supports not (backdrop-filter: blur(1px)) {
+      .name-chip.name-solved { background: rgba(185,230,210,0.90); }
+    }
+
+    /* â”€â”€ LEVEL COMPLETE OVERLAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .level-complete {
+      position: fixed; inset: 0;
+      /* Soft purple-tinted backdrop — calming, not harsh black */
+      background: rgba(60,50,80,0.38);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 500;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    .level-complete.show {
+      opacity: 1; pointer-events: all;
+    }
+    /* Lavender glass card — celebratory but calm */
+    .lc-card {
+      background: rgba(220,210,240,0.38);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.45);
+      border-radius: 26px;
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 380px;
+      width: 90%;
+      box-shadow:
+        0 24px 64px rgba(100,80,160,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.60);
+      transform: scale(0.85) translateY(20px);
+      transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @supports not (backdrop-filter: blur(1px)) {
+      .lc-card { background: rgba(228,220,248,0.95); }
+    }
+    .level-complete.show .lc-card { transform: scale(1) translateY(0); }
+    .lc-emoji { font-size: 4rem; margin-bottom: 16px; }
+    .lc-title {
+      font-size: 1.8rem; font-weight: 900;
+      color: #2e2050; margin-bottom: 8px;
+    }
+    .lc-sub {
+      font-size: 1rem; color: #5a4e72; font-weight: 600;
+      line-height: 1.6; margin-bottom: 28px;
+    }
+    .lc-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 36px; border-radius: 99px;
+      /* Soft lavender-periwinkle — calm, not orange */
+      background: linear-gradient(135deg, rgba(160,135,210,0.88), rgba(120,110,195,0.88));
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.40);
+      color: white; font-family: 'Nunito', sans-serif;
+      font-size: 1.05rem; font-weight: 900; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(130,110,190,0.30);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .lc-btn:hover { transform: scale(1.04); box-shadow: 0 12px 32px rgba(130,110,190,0.42); }
+
+    /* Confetti dots — soft pastel palette, no neon/bright colors */
+    .confetti-dot {
+      position: absolute;
+      border-radius: 50%;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 0.85; }
+      100% { transform: translateY(280px) rotate(340deg); opacity: 0; }
+    }
+
+    /* â”€â”€ LOADING STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .loading-screen {
+      text-align: center; padding: 80px 24px;
+    }
+    .spinner-warm {
+      width: 52px; height: 52px;
+      border: 4px solid #fde8c8;
+      border-top-color: #f59e0b;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-size: 1.1rem; font-weight: 700; color: #78716c;
+    }
+
+    /* â”€â”€ CAREGIVER SETTINGS PANEL — white glass â”€â”€â”€â”€â”€â”€â”€ */
+    .settings-overlay {
+      position: fixed; inset: 0;
+      background: rgba(40,35,60,0.40);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 600;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .settings-overlay.open { opacity: 1; pointer-events: all; }
+    .settings-panel {
+      background: rgba(250,248,255,0.28);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.40);
+      border-radius: 24px;
+      width: 90%; max-width: 480px; max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(80,60,140,0.14), inset 0 1px 0 rgba(255,255,255,0.60);
+      transform: translateY(30px) scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @supports not (backdrop-filter: blur(1px)) {
+      .settings-panel { background: rgba(245,242,255,0.96); }
+    }
+    .settings-overlay.open .settings-panel {
+      transform: translateY(0) scale(1);
+    }
+    .sp-header {
+      /* Soft periwinkle-lavender glass header */
+      background: rgba(175,160,220,0.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.38);
+      padding: 22px 24px; border-radius: 24px 24px 0 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sp-header h2 { color: #2e2050; font-size: 1.05rem; font-weight: 900; }
+    .sp-close {
+      background: rgba(255,255,255,0.30);
+      border: 1px solid rgba(255,255,255,0.45);
+      color: #2e2050; width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 15px; transition: background 0.2s;
+    }
+    .sp-close:hover { background: rgba(255,255,255,0.52); }
+    .sp-body { padding: 24px; }
+
+    .sp-section { margin-bottom: 24px; }
+    .sp-label {
+      font-size: 0.82rem; font-weight: 800; color: #7c3aed;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 7px;
+    }
+
+    /* PIN entry */
+    .pin-wrap { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .pin-input {
+      flex: 1; min-width: 120px; padding: 10px 14px;
+      border: 2px solid #e2e8f0; border-radius: 12px;
+      font-family: 'Nunito', sans-serif; font-size: 1.1rem; font-weight: 800;
+      text-align: center; letter-spacing: 0.3em; outline: none;
+    }
+    .pin-input:focus { border-color: #7c3aed; }
+    .pin-btn {
+      padding: 10px 18px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, #7c3aed, #6366f1);
+      color: white; font-family: 'Nunito', sans-serif;
+      font-size: 0.88rem; font-weight: 800; cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .pin-btn:hover { opacity: 0.9; }
+    .pin-locked { text-align: center; padding: 20px; }
+    .pin-lock-icon { font-size: 2.5rem; margin-bottom: 8px; }
+    .pin-locked p { color: #64748b; font-size: 0.9rem; font-weight: 600; }
+
+    /* Family photos list — peach/blush glass rows */
+    .family-list { display: flex; flex-direction: column; gap: 10px; }
+    .family-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px;
+      background: rgba(230,200,190,0.22);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.38);
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.50);
+    }
+    @supports not (backdrop-filter: blur(1px)) {
+      .family-item { background: rgba(242,220,210,0.92); }
+    }
+    .family-thumb {
+      width: 48px; height: 48px; border-radius: 12px;
+      object-fit: cover; flex-shrink: 0;
+      border: 1.5px solid rgba(255,255,255,0.50);
+    }
+    .family-emoji-thumb {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: rgba(245,220,200,0.50);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1.5px solid rgba(255,255,255,0.45);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; flex-shrink: 0;
+    }
+    .family-name { font-weight: 800; color: #3a2218; font-size: 0.9rem; flex: 1; }
+    .family-remove {
+      background: none; border: none; color: #b05060;
+      cursor: pointer; font-size: 16px; padding: 4px;
+      border-radius: 50%; transition: background 0.2s;
+    }
+    .family-remove:hover { background: rgba(220,180,180,0.35); }
+    .family-empty {
+      text-align: center; padding: 20px; color: #94a3b8;
+      font-size: 0.88rem; font-weight: 600;
+    }
+
+    /* Add family member form */
+    .add-family-form {
+      border: 2px dashed #c4b5fd; border-radius: 16px;
+      padding: 16px; margin-top: 12px;
+    }
+    .af-row { display: flex; flex-direction: column; gap: 10px; }
+    .af-label { font-size: 0.78rem; font-weight: 800; color: #7c3aed; margin-bottom: 3px; }
+    .af-input {
+      width: 100%; padding: 10px 12px;
+      border: 2px solid #e2e8f0; border-radius: 10px;
+      font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+      font-weight: 700; outline: none;
+    }
+    .af-input:focus { border-color: #7c3aed; }
+    .af-photo-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 12px; border-radius: 10px;
+      border: 2px solid #c4b5fd; background: #f5f3ff;
+      color: #7c3aed; font-family: 'Nunito', sans-serif;
+      font-size: 0.88rem; font-weight: 800; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .af-photo-btn:hover { background: #ede9fe; }
+    .af-preview {
+      width: 72px; height: 72px; border-radius: 14px;
+      object-fit: cover; border: 2px solid #c4b5fd;
+      display: none; margin: 0 auto;
+    }
+    .af-save {
+      width: 100%; padding: 12px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, #7c3aed, #6366f1);
+      color: white; font-family: 'Nunito', sans-serif;
+      font-size: 0.92rem; font-weight: 900; cursor: pointer;
+      transition: opacity 0.2s; margin-top: 4px;
+    }
+    .af-save:hover { opacity: 0.92; }
+
+    /* API key settings */
+    .api-row { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .api-select {
+      width: 100%; padding: 9px 12px;
+      border: 2px solid #e2e8f0; border-radius: 10px;
+      font-family: 'Nunito', sans-serif; font-size: 0.88rem;
+      font-weight: 700; outline: none; background: white;
+    }
+    .api-select:focus { border-color: #7c3aed; }
+    .api-key-input {
+      width: 100%; padding: 9px 12px;
+      border: 2px solid #e2e8f0; border-radius: 10px;
+      font-family: 'Nunito', sans-serif; font-size: 0.82rem;
+      font-weight: 700; outline: none;
+    }
+    .api-key-input:focus { border-color: #7c3aed; }
+    .api-save-btn {
+      padding: 9px 18px; border-radius: 10px; border: none;
+      background: #7c3aed; color: white;
+      font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 800;
+      cursor: pointer; align-self: flex-start;
+    }
+    .sp-toast {
+      padding: 10px 16px; background: #dcfce7; border-radius: 10px;
+      color: #15803d; font-size: 0.85rem; font-weight: 700;
+      display: none;
+    }
+    .sp-toast.show { display: block; animation: fadeSlideIn 0.3s ease; }
+
+    /* â”€â”€ ANIMATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* Soft mint/seafoam pulse on correct match — muted, not harsh bright green */
+    @keyframes solvedGlowPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(120,190,160,0.55), 0 8px 32px rgba(0,0,0,0.08); }
+      55%  { box-shadow: 0 0 0 14px rgba(120,190,160,0), 0 8px 32px rgba(0,0,0,0.08); }
+      100% { box-shadow: 0 0 0 0 rgba(120,190,160,0), 0 8px 32px rgba(0,0,0,0.08); }
+    }
+    .photo-card.just-matched {
+      animation: solvedGlowPulse 0.85s ease;
+    }
+
+    /* â”€â”€ RESPONSIVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    @media (max-width: 600px) {
+      .photos-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .name-chip { padding: 10px 16px; font-size: 0.9rem; }
+      .ph-title { display: none; }
+    }
+    @media (max-width: 380px) {
+      .photos-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<header class="page-header">
+  <div class="ph-inner">
+    <a class="back-btn" href="games.html">
+      <i class="fas fa-arrow-left"></i> Games
+    </a>
+    <span class="ph-title">
+      <i class="fas fa-images" style="color:#f59e0b;margin-right:6px;"></i>
+      Memory Photo Match
+    </span>
+    <div class="ph-right">
+      <button class="audio-btn" id="audio-btn" title="Background music">
+        <i class="fas fa-music"></i> <span id="audio-label">Music On</span>
+      </button>
+      <button class="settings-btn" id="settings-btn" title="Caregiver Settings">
+        <i class="fas fa-cog"></i>
+      </button>
+      <div class="avatar-sm" id="header-avatar"></div>
+    </div>
+  </div>
+</header>
+
+<!-- â”€â”€ GAME CONTAINER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<div class="game-container">
+  <!-- Level header -->
+  <div class="level-header" id="level-header">
+    <div class="level-badge">
+      <i class="fas fa-seedling"></i>
+      <span id="level-badge-text">Level 1</span>
+    </div>
+    <h1 class="level-title" id="level-title">Match the pictures to their names</h1>
+    <p class="level-subtitle" id="level-subtitle">
+      Tap a photo, then tap the name that matches it below 💛
+    </p>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-label">
+        <span>Progress</span>
+        <span id="progress-text">0 of 6 matched</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="spinner-warm"></div>
+    <p class="loading-text">Getting your photos ready…</p>
+  </div>
+
+  <!-- Photo grid -->
+  <div class="photos-grid" id="photos-grid" style="display:none;"></div>
+
+  <!-- Names row -->
+  <div class="names-section" id="names-section" style="display:none;">
+    <p class="names-label"><i class="fas fa-tag"></i> Tap the correct name below</p>
+    <div class="names-grid" id="names-grid"></div>
+  </div>
+</div>
+
+<!-- â”€â”€ LEVEL COMPLETE OVERLAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<div class="level-complete" id="level-complete">
+  <div class="lc-card">
+    <div class="lc-emoji" id="lc-emoji">🌟</div>
+    <h2 class="lc-title" id="lc-title">Wonderful!</h2>
+    <p class="lc-sub" id="lc-sub">You matched all the pictures. You're doing great!</p>
+    <button class="lc-btn" id="lc-next-btn">
+      <i class="fas fa-arrow-right"></i>
+      Next Level
+    </button>
+  </div>
+</div>
+
+<!-- â”€â”€ CAREGIVER SETTINGS PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<div class="settings-overlay" id="settings-overlay">
+  <div class="settings-panel">
+    <div class="sp-header">
+      <h2><i class="fas fa-cog" style="margin-right:8px;opacity:0.8;"></i>Caregiver Settings</h2>
+      <button class="sp-close" id="sp-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="sp-body">
+
+      <!-- PIN Lock section -->
+      <div id="pin-lock-section">
+        <div class="pin-locked">
+          <div class="pin-lock-icon">🔒</div>
+          <p>Enter the caregiver PIN to access settings</p>
+          <div class="pin-wrap" style="margin-top:14px;">
+            <input class="pin-input" id="pin-input" type="password" maxlength="8" placeholder="••••" />
+            <button class="pin-btn" id="pin-submit">Unlock</button>
+          </div>
+          <p id="pin-error" style="color:#f43f5e;font-size:0.82rem;font-weight:700;margin-top:8px;display:none;">
+            Incorrect PIN. Try again.
+          </p>
+        </div>
+      </div>
+
+      <!-- Settings body (shown after PIN unlock) -->
+      <div id="settings-content" style="display:none;">
+
+        <!-- Family Photos -->
+        <div class="sp-section">
+          <div class="sp-label">
+            <i class="fas fa-users"></i> Family Members
+          </div>
+          <p style="font-size:0.82rem;color:#64748b;font-weight:600;margin-bottom:12px;">
+            Add photos of family members. The game will show these alongside everyday objects for recognition practice.
+          </p>
+          <div class="family-list" id="family-list"></div>
+
+          <!-- Add member form -->
+          <div class="add-family-form" style="margin-top:14px;">
+            <div class="af-row">
+              <div>
+                <div class="af-label">Name of family member</div>
+                <input class="af-input" id="af-name" type="text" placeholder="e.g. Grandma Meena" maxlength="30" />
+              </div>
+              <img class="af-preview" id="af-preview" alt="Preview" />
+              <button class="af-photo-btn" id="af-photo-btn">
+                <i class="fas fa-camera"></i>
+                Choose a Photo
+              </button>
+              <input type="file" id="af-file" accept="image/*" style="display:none;" />
+              <button class="af-save" id="af-save">
+                <i class="fas fa-plus"></i> Add Family Member
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- API Settings -->
+        <div class="sp-section">
+          <div class="sp-label">
+            <i class="fas fa-image"></i> Photo Source
+          </div>
+          <p style="font-size:0.82rem;color:#64748b;font-weight:600;margin-bottom:8px;">
+            Choose where photos come from. "Built-in" works offline with no setup needed.
+          </p>
+          <div class="api-row">
+            <select class="api-select" id="api-source-select">
+              <option value="local">Built-in Tiles (No API key needed)</option>
+              <option value="unsplash">Unsplash (Real Photos)</option>
+              <option value="pexels">Pexels (Real Photos)</option>
+            </select>
+            <input class="api-key-input" id="api-key-input" type="text"
+              placeholder="Paste your API key here (for Unsplash/Pexels)" />
+            <button class="api-save-btn" id="api-save-btn">Save Settings</button>
+            <div class="sp-toast" id="sp-toast">âœ… Settings saved!</div>
+          </div>
+        </div>
+
+        <!-- PIN Change -->
+        <div class="sp-section">
+          <div class="sp-label">
+            <i class="fas fa-lock"></i> Change PIN
+          </div>
+          <div class="api-row">
+            <input class="api-key-input" id="new-pin-input" type="password"
+              placeholder="Enter new PIN (min 4 digits)" maxlength="8" />
+            <button class="api-save-btn" id="save-pin-btn">Change PIN</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { getSession, populateHeader } from './js/ui.js';
+import {
+  CONFIG, BUILT_IN_OBJECTS, shuffle, buildLevelItems,
+  loadFamilyPhotos, addFamilyPhoto, removeFamilyPhoto,
+  startPianoAmbient, stopPianoAmbient, setPianoVolume, isPianoPlaying,
+  playChime
+} from './js/memory-match.js';
+
+// â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const user = await getSession();
+if (user) populateHeader(user);
+document.getElementById('auth-hide')?.remove();
+document.body.style.display = '';
+
+// â”€â”€ Load stored config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function loadStoredConfig() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('careHub_matchConfig') || '{}');
+    if (stored.imageSource) CONFIG.IMAGE_SOURCE = stored.imageSource;
+    if (stored.unsplashKey) CONFIG.UNSPLASH_ACCESS_KEY = stored.unsplashKey;
+    if (stored.pexelsKey)   CONFIG.PEXELS_API_KEY    = stored.pexelsKey;
+    if (stored.pin)         CONFIG.CAREGIVER_PIN     = stored.pin;
+  } catch (_) {}
+}
+loadStoredConfig();
+
+// â”€â”€ Game State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let level = 1;
+let items = [];           // current level items [{id, label, imageUrl?, emoji, color, isFamily?}]
+let selectedPhotoId = null;
+let selectedNameId  = null;
+let solvedIds = new Set();
+let usedIds   = new Set();
+let musicOn   = true;
+
+// â”€â”€ AUDIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function initMusic() {
+  // Start music on first user interaction
+  document.body.addEventListener('click', function startOnce() {
+    if (musicOn) startPianoAmbient();
+    document.body.removeEventListener('click', startOnce);
+  }, { once: true });
+}
+initMusic();
+
+const audioBtn   = document.getElementById('audio-btn');
+const audioLabel = document.getElementById('audio-label');
+audioBtn.addEventListener('click', () => {
+  musicOn = !musicOn;
+  if (musicOn) {
+    startPianoAmbient();
+    audioBtn.classList.remove('muted');
+    audioLabel.textContent = 'Music On';
+  } else {
+    stopPianoAmbient();
+    audioBtn.classList.add('muted');
+    audioLabel.textContent = 'Music Off';
+  }
+});
+
+// â”€â”€ LEVEL BUILDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+async function loadLevel() {
+  // Show loading
+  document.getElementById('loading-screen').style.display = 'block';
+  document.getElementById('photos-grid').style.display = 'none';
+  document.getElementById('names-section').style.display = 'none';
+
+  // Update level UI
+  document.getElementById('level-badge-text').textContent = `Level ${level}`;
+  updateProgress(0, CONFIG.PAIRS_PER_LEVEL);
+
+  // Build items
+  items = await buildLevelItems(usedIds);
+  items.forEach(it => usedIds.add(it.id));
+  solvedIds.clear();
+  selectedPhotoId = null;
+  selectedNameId  = null;
+
+  renderPhotos();
+  renderNames();
+
+  // Hide loading, show game
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('photos-grid').style.display = 'grid';
+  document.getElementById('names-section').style.display = 'block';
+}
+
+// â”€â”€ RENDER PHOTOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderPhotos() {
+  const grid = document.getElementById('photos-grid');
+  const shuffled = shuffle([...items]);
+
+  grid.innerHTML = '';
+  shuffled.forEach(item => {
+    const card = document.createElement('div');
+    // Base class + optional family peach modifier
+    card.className = item.isFamily ? 'photo-card photo-card--family' : 'photo-card';
+    card.dataset.id = item.id;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', 'Photo of ' + item.label);
+    card.setAttribute('tabindex', '0');
+
+    if (item.imageUrl) {
+      // Real photo
+      const img = document.createElement('img');
+      img.className = 'photo-img';
+      img.alt = item.label;
+      img.src = item.imageUrl;
+      img.loading = 'lazy';
+      card.appendChild(img);
+    } else {
+      // Emoji tile — transparent bg so card's own glass tint reads through
+      const tile = document.createElement('div');
+      tile.className = 'emoji-tile';
+      tile.style.background = 'transparent';
+      tile.style.borderRadius = '19px';
+      tile.textContent = item.emoji || '🖼️';
+      card.appendChild(tile);
+    }
+
+    // Family badge
+    if (item.isFamily) {
+      const badge = document.createElement('div');
+      badge.className = 'family-badge';
+      badge.textContent = '👨‍👩‍👧 Family';
+      card.appendChild(badge);
+    }
+
+    // Solved overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'solved-overlay';
+    overlay.innerHTML = '<div class="solved-checkmark"><i class="fas fa-check"></i></div>';
+    card.appendChild(overlay);
+
+    card.addEventListener('click', () => onPhotoClick(item.id, card));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') onPhotoClick(item.id, card); });
+
+    grid.appendChild(card);
+  });
+}
+
+// â”€â”€ RENDER NAMES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderNames() {
+  const namesGrid = document.getElementById('names-grid');
+  const shuffled = shuffle([...items]);
+
+  namesGrid.innerHTML = '';
+  shuffled.forEach(item => {
+    const chip = document.createElement('div');
+    chip.className = 'name-chip';
+    chip.dataset.id = item.id;
+    chip.textContent = item.label;
+    chip.setAttribute('role', 'button');
+    chip.setAttribute('tabindex', '0');
+    chip.setAttribute('aria-label', item.label);
+
+    chip.addEventListener('click', () => onNameClick(item.id, chip));
+    chip.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') onNameClick(item.id, chip); });
+
+    namesGrid.appendChild(chip);
+  });
+}
+
+// â”€â”€ INTERACTION HANDLERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function onPhotoClick(id, cardEl) {
+  if (solvedIds.has(id)) return;
+
+  // Deselect previous photo
+  if (selectedPhotoId && selectedPhotoId !== id) {
+    const prev = document.querySelector(`.photo-card[data-id="${selectedPhotoId}"]`);
+    prev?.classList.remove('selected');
+  }
+
+  // Toggle this photo
+  if (selectedPhotoId === id) {
+    cardEl.classList.remove('selected');
+    selectedPhotoId = null;
+    return;
+  }
+
+  cardEl.classList.add('selected');
+  selectedPhotoId = id;
+
+  // Check match if name already selected
+  if (selectedNameId !== null) {
+    checkMatch();
+  }
+}
+
+function onNameClick(id, chipEl) {
+  if (solvedIds.has(id)) return;
+
+  // Deselect previous name
+  if (selectedNameId && selectedNameId !== id) {
+    const prev = document.querySelector(`.name-chip[data-id="${selectedNameId}"]`);
+    prev?.classList.remove('name-selected');
+  }
+
+  // Toggle
+  if (selectedNameId === id) {
+    chipEl.classList.remove('name-selected');
+    selectedNameId = null;
+    return;
+  }
+
+  chipEl.classList.add('name-selected');
+  selectedNameId = id;
+
+  // Check match if photo already selected
+  if (selectedPhotoId !== null) {
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  const photoId = selectedPhotoId;
+  const nameId  = selectedNameId;
+
+  const photoCard = document.querySelector(`.photo-card[data-id="${photoId}"]`);
+  const nameChip  = document.querySelector(`.name-chip[data-id="${nameId}"]`);
+
+  if (!photoCard || !nameChip) return;
+
+  // Clear selection state
+  selectedPhotoId = null;
+  selectedNameId  = null;
+  photoCard.classList.remove('selected');
+  nameChip.classList.remove('name-selected');
+
+  if (photoId === nameId) {
+    // âœ… CORRECT MATCH
+    playChime('correct');
+    solvedIds.add(photoId);
+
+    // Animate solved state
+    photoCard.classList.add('solved');
+    photoCard.classList.add('just-matched');
+    setTimeout(() => photoCard.classList.remove('just-matched'), 700);
+    nameChip.classList.add('name-solved');
+
+    // Show checkmark
+    const checkmark = photoCard.querySelector('.solved-checkmark');
+    if (checkmark) {
+      // Force reflow
+      checkmark.style.transform = 'scale(0)';
+      requestAnimationFrame(() => {
+        checkmark.style.transform = '';
+      });
+    }
+
+    updateProgress(solvedIds.size, items.length);
+
+    // Check level complete
+    if (solvedIds.size === items.length) {
+      setTimeout(showLevelComplete, 800);
+    }
+  } else {
+    // âŒ WRONG — gentle shake with dusty-rose glass tint (no harsh red)
+    playChime('wrong');
+    photoCard.classList.add('shake');
+    photoCard.classList.add('wrong-flash');
+    nameChip.classList.add('name-wrong');
+
+    setTimeout(() => {
+      photoCard.classList.remove('shake');
+      // wrongFlashFade CSS animation auto-fades over 900ms; remove class after it completes
+      setTimeout(() => photoCard.classList.remove('wrong-flash'), 900);
+      nameChip.classList.remove('name-wrong');
+    }, 500);
+  }
+}
+
+// â”€â”€ PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function updateProgress(solved, total) {
+  const pct = total > 0 ? (solved / total) * 100 : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${solved} of ${total} matched`;
+}
+
+// â”€â”€ LEVEL COMPLETE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const levelMessages = [
+  { emoji: '🌟', title: 'Wonderful!',    sub: 'You matched all the pictures. You\'re doing so well!' },
+  { emoji: '🎉', title: 'Amazing!',      sub: 'Every single one correct. Your memory is shining bright!' },
+  { emoji: '🌸', title: 'Beautiful!',    sub: 'That was lovely. Ready for a new set of pictures?' },
+  { emoji: '🌈', title: 'Superb!',       sub: 'You got them all! What a wonderful mind you have.' },
+  { emoji: '🦋', title: 'Brilliant!',    sub: 'Excellent work. Each level makes your memory stronger.' },
+  { emoji: '🌻', title: 'Well Done!',    sub: 'Perfect score! Take a moment to smile — you earned it.' },
+  { emoji: 'âœ¨', title: 'Marvelous!',    sub: 'All matched! You make this look easy.' },
+  { emoji: '🎵', title: 'Magnificent!',  sub: 'Perfectly done. Your care team would be so proud.' },
+];
+
+function showLevelComplete() {
+  playChime('levelup');
+  spawnConfetti();
+
+  const msg = levelMessages[level % levelMessages.length];
+  document.getElementById('lc-emoji').textContent = msg.emoji;
+  document.getElementById('lc-title').textContent = msg.title;
+  document.getElementById('lc-sub').textContent   = msg.sub;
+
+  const overlay = document.getElementById('level-complete');
+  overlay.classList.add('show');
+}
+
+function spawnConfetti() {
+  // Soft pastel palette — calming, no neon/bright primaries for elderly users
+  const colors = [
+    'rgba(160,200,175,0.82)',  // sage green
+    'rgba(175,195,228,0.82)',  // powder blue
+    'rgba(220,195,185,0.82)',  // blush peach
+    'rgba(200,188,228,0.82)',  // soft lavender
+    'rgba(245,222,182,0.82)',  // warm cream gold
+    'rgba(185,218,205,0.82)',  // seafoam mint
+    'rgba(228,205,222,0.82)',  // rose quartz
+  ];
+  const overlay = document.getElementById('level-complete');
+  for (let i = 0; i < 24; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'confetti-dot';
+    const size = 7 + Math.random() * 11;
+    dot.style.cssText = `
+      width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${Math.random()*100}%;
+      top:${-10 + Math.random()*10}px;
+      animation-duration:${1.8+Math.random()*1.6}s;
+      animation-delay:${Math.random()*0.6}s;
+    `;
+    overlay.appendChild(dot);
+    setTimeout(() => dot.remove(), 4000);
+  }
+}
+
+document.getElementById('lc-next-btn').addEventListener('click', () => {
+  const overlay = document.getElementById('level-complete');
+  overlay.classList.remove('show');
+  level++;
+  loadLevel();
+});
+
+// â”€â”€ CAREGIVER SETTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const settingsBtn    = document.getElementById('settings-btn');
+const settingsOverlay= document.getElementById('settings-overlay');
+const spClose        = document.getElementById('sp-close');
+const pinInput       = document.getElementById('pin-input');
+const pinSubmit      = document.getElementById('pin-submit');
+const pinError       = document.getElementById('pin-error');
+const pinLockSection = document.getElementById('pin-lock-section');
+const settingsContent= document.getElementById('settings-content');
+
+let pinUnlocked = false;
+
+settingsBtn.addEventListener('click', () => {
+  pinUnlocked = false;
+  pinLockSection.style.display = 'block';
+  settingsContent.style.display = 'none';
+  pinInput.value = '';
+  pinError.style.display = 'none';
+  settingsOverlay.classList.add('open');
+});
+spClose.addEventListener('click', () => settingsOverlay.classList.remove('open'));
+settingsOverlay.addEventListener('click', e => {
+  if (e.target === settingsOverlay) settingsOverlay.classList.remove('open');
+});
+
+pinSubmit.addEventListener('click', checkPin);
+pinInput.addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+
+function checkPin() {
+  if (pinInput.value === CONFIG.CAREGIVER_PIN) {
+    pinUnlocked = true;
+    pinLockSection.style.display = 'none';
+    settingsContent.style.display = 'block';
+    renderFamilyList();
+    loadApiSettings();
+  } else {
+    pinError.style.display = 'block';
+    pinInput.value = '';
+    pinInput.focus();
+  }
+}
+
+// Family list rendering
+function renderFamilyList() {
+  const list = document.getElementById('family-list');
+  const photos = loadFamilyPhotos();
+  if (!photos.length) {
+    list.innerHTML = '<div class="family-empty">No family members added yet.<br>Add someone below! 💛</div>';
+    return;
+  }
+  list.innerHTML = '';
+  photos.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'family-item';
+    item.innerHTML = `
+      ${p.dataUrl
+        ? `<img class="family-thumb" src="${p.dataUrl}" alt="${p.label}" />`
+        : `<div class="family-emoji-thumb">👤</div>`}
+      <span class="family-name">${p.label}</span>
+      <button class="family-remove" data-id="${p.id}" title="Remove">
+        <i class="fas fa-trash-alt"></i>
+      </button>
+    `;
+    item.querySelector('.family-remove').addEventListener('click', () => {
+      removeFamilyPhoto(p.id);
+      renderFamilyList();
+    });
+    list.appendChild(item);
+  });
+}
+
+// Photo upload
+let afDataUrl = null;
+document.getElementById('af-photo-btn').addEventListener('click', () => {
+  document.getElementById('af-file').click();
+});
+document.getElementById('af-file').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    afDataUrl = ev.target.result;
+    const preview = document.getElementById('af-preview');
+    preview.src = afDataUrl;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('af-save').addEventListener('click', () => {
+  const name = document.getElementById('af-name').value.trim();
+  if (!name) { alert('Please enter a name.'); return; }
+  addFamilyPhoto(name, afDataUrl || null);
+  document.getElementById('af-name').value = '';
+  document.getElementById('af-preview').style.display = 'none';
+  document.getElementById('af-file').value = '';
+  afDataUrl = null;
+  renderFamilyList();
+  showSpToast();
+});
+
+function showSpToast() {
+  const t = document.getElementById('sp-toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// API key settings
+function loadApiSettings() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('careHub_matchConfig') || '{}');
+    document.getElementById('api-source-select').value = stored.imageSource || 'local';
+    document.getElementById('api-key-input').value =
+      stored.imageSource === 'pexels' ? (stored.pexelsKey||'')
+      : stored.imageSource === 'unsplash' ? (stored.unsplashKey||'')
+      : '';
+  } catch (_) {}
+}
+
+document.getElementById('api-save-btn').addEventListener('click', () => {
+  const source = document.getElementById('api-source-select').value;
+  const key    = document.getElementById('api-key-input').value.trim();
+  try {
+    const stored = JSON.parse(localStorage.getItem('careHub_matchConfig') || '{}');
+    stored.imageSource = source;
+    if (source === 'unsplash') stored.unsplashKey = key;
+    if (source === 'pexels')   stored.pexelsKey   = key;
+    localStorage.setItem('careHub_matchConfig', JSON.stringify(stored));
+    CONFIG.IMAGE_SOURCE = source;
+    if (source === 'unsplash') CONFIG.UNSPLASH_ACCESS_KEY = key;
+    if (source === 'pexels')   CONFIG.PEXELS_API_KEY      = key;
+    showSpToast();
+  } catch (_) {}
+});
+
+document.getElementById('save-pin-btn').addEventListener('click', () => {
+  const newPin = document.getElementById('new-pin-input').value.trim();
+  if (newPin.length < 4) { alert('PIN must be at least 4 characters.'); return; }
+  try {
+    const stored = JSON.parse(localStorage.getItem('careHub_matchConfig') || '{}');
+    stored.pin = newPin;
+    localStorage.setItem('careHub_matchConfig', JSON.stringify(stored));
+    CONFIG.CAREGIVER_PIN = newPin;
+    document.getElementById('new-pin-input').value = '';
+    showSpToast();
+  } catch (_) {}
+});
+
+// â”€â”€ KICK OFF GAME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+loadLevel();
+</script>
+<script src="./js/page-transition.js"></script>
+</body>
+</html>

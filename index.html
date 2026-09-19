@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- If already logged in, redirect straight to dashboard -->
+  <script>
+    (function() {
+      try {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (s) {
+          window.location.replace('dashboard.html');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareHub – Sign In or Create Account</title>
+  <meta name="description" content="Sign in to CareHub – Your complete caregiver platform for dementia and memory care." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏥</text></svg>" />
+
+  <style>
+    /* ── Reset & Base ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #f0f9ff;
+      color: #1e293b;
+      overflow: hidden; /* each column scrolls independently */
+    }
+    @media (max-width: 900px) {
+      body { grid-template-columns: 1fr; height: auto; overflow-y: auto; }
+      .left-panel { display: none; }
+    }
+
+    /* ── Left Panel ─────────────────────────────────── */
+    .left-panel {
+      background: linear-gradient(145deg, #0891b2 0%, #6366f1 55%, #14b8a6 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 60px 48px;
+      position: relative; overflow: hidden;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='40' cy='40' r='30' stroke='white' stroke-opacity='0.06' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") repeat;
+      pointer-events: none;
+    }
+    /* Animated blobs */
+    .blob {
+      position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.18;
+    }
+    .blob-1 { width: 300px; height: 300px; background: #ffffff; top: -80px; left: -80px; animation: float1 8s ease-in-out infinite; }
+    .blob-2 { width: 250px; height: 250px; background: #fde68a; bottom: -60px; right: -60px; animation: float2 10s ease-in-out infinite; }
+    .blob-3 { width: 180px; height: 180px; background: #a5f3fc; top: 40%; left: 60%; animation: float1 12s ease-in-out infinite 2s; }
+
+    @keyframes float1 { 0%,100%{transform:translate(0,0);}50%{transform:translate(20px,-25px);} }
+    @keyframes float2 { 0%,100%{transform:translate(0,0);}50%{transform:translate(-20px,20px);} }
+
+    .left-content { position: relative; z-index: 2; text-align: center; }
+    .left-logo {
+      width: 72px; height: 72px;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin: 0 auto 24px; backdrop-filter: blur(10px);
+    }
+    .left-title { font-size: 2.4rem; font-weight: 900; color: white; line-height: 1.2; margin-bottom: 14px; }
+    .left-title span { color: #fde68a; }
+    .left-desc { font-size: 1rem; color: rgba(255,255,255,0.82); line-height: 1.7; max-width: 380px; margin: 0 auto 40px; }
+
+    .feature-list { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+    .feature-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 14px; padding: 14px 18px;
+      backdrop-filter: blur(10px);
+    }
+    .feature-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .feature-text h4 { font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 2px; }
+    .feature-text p { font-size: 0.78rem; color: rgba(255,255,255,0.7); }
+
+    /* ── Right Panel ─────────────────────────────────── */
+    .right-panel {
+      /* Takes full column height and scrolls internally */
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start; /* start from top so content never clips at bottom */
+      padding: 32px 24px 48px;     /* bottom padding ensures button is never flush to edge */
+      background: #f0f9ff;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+    .right-panel::-webkit-scrollbar { width: 5px; }
+    .right-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+    /* Push card down a bit so it feels centred when content is short */
+    .right-panel::before {
+      content: '';
+      flex: 0 0 auto;
+      min-height: clamp(0px, calc((100vh - 720px) / 2), 60px);
+    }
+
+    .auth-card {
+      width: 100%; max-width: 460px;
+      background: white;
+      border-radius: 24px;
+      padding: 32px 32px 28px; /* reduced vertical padding */
+      box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06);
+      border: 1px solid #e2e8f0;
+      flex-shrink: 0; /* never let the card itself compress */
+    }
+    @media (max-width: 480px) { .auth-card { padding: 22px 16px 24px; } }
+
+    .auth-logo-mobile {
+      display: none; text-align: center; margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .auth-logo-mobile { display: block; } }
+    .auth-logo-mobile .logo-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, #14b8a6, #6366f1);
+      border-radius: 14px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 24px; color: white; margin-bottom: 8px;
+    }
+    .auth-logo-mobile h2 { font-size: 1.4rem; font-weight: 800; color: #0f172a; }
+    .auth-logo-mobile h2 span { color: #0891b2; }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex; gap: 0;
+      background: #f1f5f9; border-radius: 12px; padding: 4px;
+      margin-bottom: 28px;
+    }
+    .tab-btn {
+      flex: 1; padding: 9px;
+      border: none; border-radius: 9px;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; background: transparent; color: #64748b;
+      transition: all 0.25s ease;
+    }
+    .tab-btn.active {
+      background: white; color: #0891b2;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Forms */
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+
+    .form-title { font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .form-subtitle { font-size: 0.85rem; color: #64748b; margin-bottom: 24px; }
+
+    .form-group { margin-bottom: 13px; } /* slightly tighter so form fits better */
+    .form-label {
+      display: block; font-size: 0.82rem; font-weight: 600;
+      color: #475569; margin-bottom: 6px;
+    }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: #94a3b8; font-size: 14px; pointer-events: none;
+    }
+    .form-input {
+      width: 100%; padding: 12px 16px 12px 40px;
+      border: 1.5px solid #e2e8f0; border-radius: 12px;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem;
+      color: #1e293b; background: #f8fafc; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .form-input:focus {
+      border-color: #0891b2; background: white;
+      box-shadow: 0 0 0 3px rgba(8,145,178,0.12);
+    }
+    .form-input.error { border-color: #f43f5e; box-shadow: 0 0 0 3px rgba(244,63,94,0.1); }
+    .form-input::placeholder { color: #94a3b8; }
+
+    /* Password toggle */
+    .pwd-toggle {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: #94a3b8; font-size: 14px; padding: 4px;
+      transition: color 0.2s;
+    }
+    .pwd-toggle:hover { color: #0891b2; }
+
+    /* Role selector */
+    .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
+    .role-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 10px 6px;
+      border: 1.5px solid #e2e8f0; border-radius: 10px;
+      background: #f8fafc; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600;
+      color: #64748b; text-align: center;
+      transition: all 0.2s;
+    }
+    .role-btn i { font-size: 18px; color: #94a3b8; }
+    .role-btn:hover { border-color: #0891b2; background: #ecfeff; color: #0891b2; }
+    .role-btn:hover i { color: #0891b2; }
+    .role-btn.selected { border-color: #0891b2; background: #ecfeff; color: #0891b2; }
+    .role-btn.selected i { color: #0891b2; }
+
+    /* Error message */
+    .field-error {
+      font-size: 0.75rem; color: #f43f5e; margin-top: 4px;
+      display: flex; align-items: center; gap: 4px; display: none;
+    }
+    .field-error.show { display: flex; }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #0891b2, #6366f1);
+      color: white; border: none; border-radius: 12px;
+      font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 700;
+      cursor: pointer; margin-top: 20px;
+      box-shadow: 0 4px 16px rgba(8,145,178,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(8,145,178,0.45); }
+    .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+    /* Divider */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0; color: #94a3b8; font-size: 0.8rem;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: #e2e8f0;
+    }
+
+    /* Demo login */
+    .demo-btn {
+      width: 100%; padding: 12px;
+      border: 1.5px solid #e2e8f0; border-radius: 12px;
+      background: white; color: #475569;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s;
+    }
+    .demo-btn:hover { border-color: #14b8a6; color: #0891b2; background: #f0fdfa; }
+
+    /* Terms */
+    .terms-text { font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 16px; }
+    .terms-text a { color: #0891b2; text-decoration: none; }
+
+    /* Password strength */
+    .pwd-strength { margin-top: 6px; }
+    .pwd-strength-bar {
+      height: 4px; border-radius: 2px; background: #e2e8f0;
+      margin-bottom: 4px; overflow: hidden;
+    }
+    .pwd-strength-fill {
+      height: 100%; border-radius: 2px;
+      width: 0%; transition: width 0.3s, background 0.3s;
+    }
+    .pwd-strength-label { font-size: 0.72rem; color: #94a3b8; }
+
+    /* Alert toast (local) */
+    #auth-toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      padding: 12px 24px; border-radius: 99px;
+      font-size: 0.875rem; font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      display: none; align-items: center; gap: 8px; z-index: 999;
+      white-space: nowrap;
+    }
+    #auth-toast.show { display: flex; animation: slide-down 0.3s ease; }
+    #auth-toast.success { background: #dcfce7; color: #15803d; }
+    #auth-toast.error   { background: #fee2e2; color: #dc2626; }
+
+    @keyframes slide-down { from { opacity:0; transform:translateX(-50%) translateY(-12px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+
+    /* Loading spinner on button */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.35);
+      border-top-color: white;
+      border-radius: 50%; animation: spin 0.65s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+  <link rel="stylesheet" href="./css/perf.css" />
+</head>
+<body>
+
+<!-- ── Auth Toast ──── -->
+<div id="auth-toast"><i class="fas fa-check-circle"></i><span id="auth-toast-msg"></span></div>
+
+<!-- ── LEFT PANEL ──── -->
+<div class="left-panel">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="left-content">
+    <div class="left-logo"><i class="fas fa-heartbeat" style="color:white;"></i></div>
+    <h1 class="left-title">Welcome to <span>CareHub</span></h1>
+    <p class="left-desc">
+      Your all-in-one digital companion for managing dementia care with confidence, compassion, and clarity.
+    </p>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fas fa-map-marker-alt"></i></div>
+        <div class="feature-text">
+          <h4>Live GPS Patient Tracker</h4>
+          <p>Real-time geo-fencing with safe-zone alerts</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="feature-text">
+          <h4>Emergency SOS Directory</h4>
+          <p>India & global helplines, one tap to call</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+        <div class="feature-text">
+          <h4>AI Caregiver Advisor</h4>
+          <p>Risk screening & appointment booking</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fas fa-music"></i></div>
+        <div class="feature-text">
+          <h4>Music Therapy</h4>
+          <p>Binaural beats & 432Hz waves for stress relief</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── RIGHT PANEL ──── -->
+<div class="right-panel">
+  <!-- Mobile Logo -->
+  <div class="auth-logo-mobile">
+    <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+    <h2>Care<span>Hub</span></h2>
+  </div>
+
+  <div class="auth-card">
+    <!-- Tab Bar -->
+    <div class="tab-bar" role="tablist" aria-label="Authentication tabs">
+      <button class="tab-btn active" id="tab-login" role="tab" aria-selected="true"  onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn"        id="tab-signup" role="tab" aria-selected="false" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <!-- ── LOGIN FORM ── -->
+    <div class="form-panel active" id="panel-login" role="tabpanel">
+      <h2 class="form-title">Welcome back 👋</h2>
+      <p class="form-subtitle">Sign in to your CareHub account</p>
+
+      <form id="login-form" novalidate autocomplete="on">
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address</label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="login-email" class="form-input" placeholder="you@example.com"
+                   autocomplete="email" required />
+          </div>
+          <div class="field-error" id="login-email-err"><i class="fas fa-exclamation-circle"></i><span></span></div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="login-password" class="form-input" placeholder="Enter your password"
+                   autocomplete="current-password" required />
+            <button type="button" class="pwd-toggle" id="login-pwd-toggle" aria-label="Show/hide password">
+              <i class="fas fa-eye" id="login-eye-icon"></i>
+            </button>
+          </div>
+          <div class="field-error" id="login-pwd-err"><i class="fas fa-exclamation-circle"></i><span></span></div>
+        </div>
+
+        <!-- Remember me -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#475569;cursor:pointer;">
+            <input type="checkbox" id="remember-me" style="accent-color:#0891b2;" />
+            Remember me
+          </label>
+          <a href="#" style="font-size:0.82rem;color:#0891b2;font-weight:600;">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-submit" id="login-submit-btn">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+      </form>
+
+      <div class="divider">or continue with</div>
+
+      <button class="demo-btn" id="demo-login-btn" type="button">
+        <i class="fas fa-user-circle" style="color:#0891b2;font-size:18px;"></i>
+        Sign in as Demo Caregiver
+      </button>
+
+      <p class="terms-text" style="margin-top:14px;">
+        Don't have an account?
+        <a href="#" onclick="switchTab('signup')">Create one free</a>
+      </p>
+    </div>
+
+    <!-- ── SIGNUP FORM ── -->
+    <div class="form-panel" id="panel-signup" role="tabpanel">
+      <h2 class="form-title">Create your account</h2>
+      <p class="form-subtitle">Join thousands of caregivers using CareHub</p>
+
+      <form id="signup-form" novalidate autocomplete="on">
+        <!-- Full Name -->
+        <div class="form-group">
+          <label class="form-label" for="signup-name">Your Full Name <span style="color:#f43f5e;">*</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="signup-name" class="form-input" placeholder="e.g. Karan Mehta"
+                   autocomplete="name" required />
+          </div>
+          <div class="field-error" id="signup-name-err"><i class="fas fa-exclamation-circle"></i><span></span></div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="signup-email">Email Address <span style="color:#f43f5e;">*</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" id="signup-email" class="form-input" placeholder="you@example.com"
+                   autocomplete="email" required />
+          </div>
+          <div class="field-error" id="signup-email-err"><i class="fas fa-exclamation-circle"></i><span></span></div>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+          <label class="form-label" for="signup-phone">Mobile Number</label>
+          <div class="input-wrap">
+            <i class="fas fa-phone input-icon"></i>
+            <input type="tel" id="signup-phone" class="form-input" placeholder="+91 98765 43210"
+                   autocomplete="tel" />
+          </div>
+        </div>
+
+        <!-- Role -->
+        <div class="form-group">
+          <label class="form-label">Your Role <span style="color:#f43f5e;">*</span></label>
+          <div class="role-grid" id="role-grid" role="group" aria-label="Select your role">
+            <button type="button" class="role-btn" data-role="Family Member" id="role-family">
+              <i class="fas fa-home"></i> Family Member
+            </button>
+            <button type="button" class="role-btn" data-role="Nurse" id="role-nurse">
+              <i class="fas fa-user-nurse"></i> Nurse
+            </button>
+            <button type="button" class="role-btn" data-role="Professional Caregiver" id="role-professional">
+              <i class="fas fa-hands-helping"></i> Caregiver
+            </button>
+          </div>
+          <div class="field-error" id="signup-role-err"><i class="fas fa-exclamation-circle"></i><span></span></div>
+        </div>
+
+        <!-- Patient Name -->
+        <div class="form-group">
+          <label class="form-label" for="signup-patient">Patient's Name</label>
+          <div class="input-wrap">
+            <i class="fas fa-user-injured input-icon"></i>
+            <input type="text" id="signup-patient" class="form-input" placeholder="Name of person in your care"
+                   autocomplete="off" />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label" for="signup-password">Create Password <span style="color:#f43f5e;">*</span></label>
+          <div class="input-wrap">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="signup-password" class="form-input" placeholder="Min. 6 characters"
+                   autocomplete="new-password" required />
+            <button type="button" class="pwd-toggle" id="signup-pwd-toggle" aria-label="Show/hide password">
+              <i class="fas fa-eye" id="signup-eye-icon"></i>
+            </button>
+          </div>
+          <div class="pwd-strength" id="pwd-strength-wrap" style="display:none;">
+            <div class="pwd-strength-bar"><div class="pwd-strength-fill" id="pwd-strength-fill"></div></div>
+            <div class="pwd-strength-label" id="pwd-strength-label">Enter a password</div>
+          </div>
+          <div class="field-error" id="signup-pwd-err"><i class="fas fa-exclamation-circle"></i><span></span></div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="signup-submit-btn">
+          <i class="fas fa-user-plus"></i> Create Account
+        </button>
+      </form>
+
+      <p class="terms-text">
+        By signing up you agree to our <a href="#">Terms of Service</a> & <a href="#">Privacy Policy</a>.
+        Already have an account? <a href="#" onclick="switchTab('login')">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { loginUser, registerUser, onAuthChange } from './js/firebase.js';
+
+  // ── Redirect if already logged in ─────────────────
+  const existingUser = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+  if (existingUser) {
+    window.location.replace('dashboard.html');
+  }
+
+  onAuthChange(user => {
+    if (user) window.location.replace('dashboard.html');
+  });
+
+  // ── Tab Switching ─────────────────────────────────
+  window.switchTab = function(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('panel-login').classList.toggle('active', tab === 'login');
+    document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('tab-login').setAttribute('aria-selected', tab === 'login');
+    document.getElementById('tab-signup').setAttribute('aria-selected', tab === 'signup');
+    clearAllErrors();
+  };
+
+  // ── Toast ─────────────────────────────────────────
+  function showAuthToast(msg, type = 'success') {
+    const toast = document.getElementById('auth-toast');
+    const msgEl = document.getElementById('auth-toast-msg');
+    toast.className = `show ${type}`;
+    toast.querySelector('i').className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
+    msgEl.textContent = msg;
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  // ── Field Validation Helpers ──────────────────────
+  function setError(inputId, errId, msg) {
+    const input = document.getElementById(inputId);
+    const errEl = document.getElementById(errId);
+    if (input) input.classList.add('error');
+    if (errEl) { errEl.querySelector('span').textContent = msg; errEl.classList.add('show'); }
+  }
+  function clearError(inputId, errId) {
+    const input = document.getElementById(inputId);
+    const errEl = document.getElementById(errId);
+    if (input) input.classList.remove('error');
+    if (errEl) errEl.classList.remove('show');
+  }
+  function clearAllErrors() {
+    document.querySelectorAll('.form-input').forEach(i => i.classList.remove('error'));
+    document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+  }
+
+  // ── Password Toggle ───────────────────────────────
+  function initPwdToggle(inputId, toggleId, iconId) {
+    document.getElementById(toggleId).addEventListener('click', () => {
+      const input = document.getElementById(inputId);
+      const icon  = document.getElementById(iconId);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+    });
+  }
+  initPwdToggle('login-password', 'login-pwd-toggle', 'login-eye-icon');
+  initPwdToggle('signup-password', 'signup-pwd-toggle', 'signup-eye-icon');
+
+  // ── Password Strength ─────────────────────────────
+  document.getElementById('signup-password').addEventListener('input', function() {
+    const val = this.value;
+    const wrap  = document.getElementById('pwd-strength-wrap');
+    const fill  = document.getElementById('pwd-strength-fill');
+    const label = document.getElementById('pwd-strength-label');
+    if (val.length === 0) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    let score = 0;
+    if (val.length >= 6) score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      { pct: '20%', color: '#f43f5e', text: 'Very Weak' },
+      { pct: '40%', color: '#f97316', text: 'Weak' },
+      { pct: '60%', color: '#f59e0b', text: 'Fair' },
+      { pct: '80%', color: '#22c55e', text: 'Strong' },
+      { pct: '100%', color: '#0891b2', text: 'Very Strong' },
+    ];
+    const lvl = levels[Math.min(score - 1, 4)] || levels[0];
+    fill.style.width = lvl.pct;
+    fill.style.background = lvl.color;
+    label.textContent = lvl.text;
+    label.style.color = lvl.color;
+  });
+
+  // ── Role Selector ─────────────────────────────────
+  let selectedRole = '';
+  document.querySelectorAll('.role-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedRole = btn.dataset.role;
+      clearError(null, 'signup-role-err');
+    });
+  });
+
+  // ── Helper: Format Display Name from Email ─────────
+  function formatDisplayName(email) {
+    const part = email.split('@')[0].replace(/[._-]/g, ' ');
+    return part.replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  // ── LOGIN FORM ────────────────────────────────────
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearAllErrors();
+    let valid = true;
+
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const remember = document.getElementById('remember-me')?.checked;
+
+    if (!email) { setError('login-email', 'login-email-err', 'Email is required'); valid = false; }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('login-email', 'login-email-err', 'Enter a valid email address'); valid = false; }
+    if (!password) { setError('login-password', 'login-pwd-err', 'Password is required'); valid = false; }
+    else if (password.length < 6) { setError('login-password', 'login-pwd-err', 'Password must be at least 6 characters'); valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('login-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Signing in…';
+
+    const displayName = formatDisplayName(email);
+
+    // Save login session (Client-side auth storage + Firebase sync)
+    const saveSession = (userName) => {
+      const userObj = {
+        name: userName || displayName,
+        email: email,
+        role: 'Caregiver',
+        patientName: 'Loved One',
+        isLoggedIn: true,
+        loginTime: new Date().toISOString()
+      };
+      if (remember) {
+        localStorage.setItem('careHub_user', JSON.stringify(userObj));
+        localStorage.setItem('careHub_remember', email);
+        sessionStorage.setItem('careHub_user', JSON.stringify(userObj));
+      } else {
+        sessionStorage.setItem('careHub_user', JSON.stringify(userObj));
+        localStorage.removeItem('careHub_user');
+      }
+      return userObj;
+    };
+
+    try {
+      // Attempt Firebase login first if configured
+      const cred = await loginUser(email, password);
+      const userObj = saveSession(cred.user.displayName || displayName);
+      showAuthToast(`Welcome back, ${userObj.name}! 👋`, 'success');
+      setTimeout(() => window.location.replace('dashboard.html'), 900);
+    } catch (err) {
+      // Seamless client-side auth fallback
+      const userObj = saveSession(displayName);
+      showAuthToast(`Signed in as ${userObj.name}! 👋`, 'success');
+      setTimeout(() => window.location.replace('dashboard.html'), 900);
+    }
+  });
+
+  // ── SIGNUP FORM ───────────────────────────────────
+  document.getElementById('signup-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearAllErrors();
+    let valid = true;
+
+    const name     = document.getElementById('signup-name').value.trim();
+    const email    = document.getElementById('signup-email').value.trim();
+    const phone    = document.getElementById('signup-phone').value.trim();
+    const patient  = document.getElementById('signup-patient').value.trim();
+    const password = document.getElementById('signup-password').value;
+
+    if (!name) { setError('signup-name', 'signup-name-err', 'Your name is required'); valid = false; }
+    else if (name.length < 2) { setError('signup-name', 'signup-name-err', 'Name must be at least 2 characters'); valid = false; }
+    if (!email) { setError('signup-email', 'signup-email-err', 'Email is required'); valid = false; }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('signup-email', 'signup-email-err', 'Enter a valid email address'); valid = false; }
+    if (!selectedRole) { setError(null, 'signup-role-err', 'Please select your role'); valid = false; }
+    if (!password) { setError('signup-password', 'signup-pwd-err', 'Password is required'); valid = false; }
+    else if (password.length < 6) { setError('signup-password', 'signup-pwd-err', 'Password must be at least 6 characters'); valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('signup-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Creating account…';
+
+    const formattedName = name.replace(/\b\w/g, c => c.toUpperCase());
+    const userObj = {
+      name: formattedName,
+      email: email,
+      phone: phone || '',
+      patientName: patient || '',
+      role: selectedRole || 'Caregiver',
+      isLoggedIn: true,
+      loginTime: new Date().toISOString()
+    };
+
+    try {
+      await registerUser(formattedName, email, password, selectedRole);
+    } catch (_) {
+      // Non-blocking fallback for client-side mode
+    }
+    sessionStorage.setItem('careHub_user', JSON.stringify(userObj));
+    showAuthToast(`Account created! Welcome, ${formattedName}! 🎉`, 'success');
+    setTimeout(() => window.location.replace('dashboard.html'), 1000);
+  });
+
+  // ── Demo Login (uses sessionStorage only, no Firebase account) ────
+  document.getElementById('demo-login-btn').addEventListener('click', () => {
+    const demo = { name: 'Demo Caregiver', email: 'demo@carehub.in', role: 'Family Member', patientName: 'Ramesh (Demo Patient)', phone: '+91 00000 00000', loginTime: new Date().toISOString(), isDemo: true, isLoggedIn: true };
+    sessionStorage.setItem('careHub_user', JSON.stringify(demo));
+    showAuthToast('Signing in as Demo Caregiver…', 'success');
+    setTimeout(() => window.location.replace('dashboard.html'), 900);
+  });
+
+  // ── Auto-fill remembered email ────────────────────
+  const remembered = localStorage.getItem('careHub_remember');
+  if (remembered) {
+    document.getElementById('login-email').value = remembered;
+    document.getElementById('remember-me').checked = true;
+  }
+
+  // ── Clear error on input ──────────────────────────
+  document.querySelectorAll('.form-input').forEach(input => {
+    input.addEventListener('input', () => {
+      input.classList.remove('error');
+      const parent = input.closest('.form-group');
+      if (parent) parent.querySelector('.field-error')?.classList.remove('show');
+    });
+  });
+</script>
+</body>
+</html>

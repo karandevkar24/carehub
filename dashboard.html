@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Auth Guard: immediate synchronous check before DOM render -->
+  <script>
+    (function() {
+      try {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) {
+          window.location.replace('login.html');
+        }
+      } catch (e) {
+        window.location.replace('login.html');
+      }
+    })();
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) window.location.replace('login.html');
+      }
+    });
+  </script>
+
+  <!-- FOUC Prevention: hide body until auth confirmed -->
+  <style id="auth-hide">body{display:none!important}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareHub – Caregiver Toolkit Dashboard</title>
+  <meta name="description" content="Your complete caregiver toolkit for dementia and memory care management." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏥</text></svg>" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f0f9ff;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ──────────────────────────────────────── */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 24px;
+      transition: box-shadow 0.25s;
+    }
+    .site-header.scrolled { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px; gap: 16px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; flex-shrink: 0;
+    }
+    .logo-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, #0891b2, #6366f1);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; color: white;
+      box-shadow: 0 3px 10px rgba(8,145,178,0.35);
+    }
+    .logo-text { font-size: 1.2rem; font-weight: 800; color: #0f172a; }
+    .logo-text span { color: #0891b2; }
+
+    /* Header controls */
+    .header-controls {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    /* Header Sign Out button */
+    .header-logout-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 16px;
+      background: #fff1f2;
+      border: 1.5px solid #fecdd3;
+      border-radius: 99px;
+      color: #e11d48;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .header-logout-btn:hover {
+      background: #e11d48;
+      border-color: #e11d48;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(225,29,72,0.25);
+    }
+    .header-logout-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Profile chip */
+    .profile-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 14px 5px 6px;
+      border: 1.5px solid #e2e8f0; border-radius: 99px;
+      background: white; cursor: pointer;
+      transition: all 0.2s; position: relative;
+    }
+    .profile-chip:hover { border-color: #0891b2; background: #f0fdfa; }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, #0891b2, #6366f1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: white;
+    }
+    .user-first-name { font-size: 0.82rem; font-weight: 600; color: #334155; }
+    .chevron { font-size: 9px; color: #94a3b8; transition: transform 0.2s; }
+    .profile-chip.open .chevron { transform: rotate(180deg); }
+
+    /* Dropdown */
+    .profile-dropdown {
+      position: absolute; top: calc(100% + 10px); right: 0;
+      width: 260px; background: white;
+      border-radius: 16px; border: 1px solid #e2e8f0;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      display: none; overflow: hidden; z-index: 200;
+    }
+    .profile-dropdown.open { display: block; animation: popIn 0.2s ease; }
+    @keyframes popIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    .pd-head {
+      background: linear-gradient(135deg, #0891b2, #6366f1);
+      padding: 18px; display: flex; align-items: center; gap: 12px;
+    }
+    .pd-avatar-lg {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: white; flex-shrink: 0;
+    }
+    .pd-name { font-size: 0.95rem; font-weight: 800; color: white; }
+    .pd-role { font-size: 0.73rem; color: rgba(255,255,255,0.75); margin-top: 2px; }
+    .pd-body { padding: 10px 14px; }
+    .pd-row {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 8px; border-radius: 8px; font-size: 0.82rem; color: #475569;
+    }
+    .pd-row:hover { background: #f1f5f9; }
+    .pd-row i { width: 14px; color: #0891b2; font-size: 12px; flex-shrink: 0; }
+    .pd-divider { height: 1px; background: #f1f5f9; margin: 6px 0; }
+    .pd-logout {
+      display: flex; align-items: center; gap: 9px;
+      width: 100%; padding: 9px 8px; border-radius: 8px;
+      border: none; background: none; cursor: pointer;
+      font-family: 'Inter',sans-serif; font-size: 0.82rem; font-weight: 600; color: #f43f5e;
+    }
+    .pd-logout:hover { background: #fff1f2; }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #0891b2 0%, #6366f1 60%, #14b8a6 100%);
+      padding: 52px 24px 56px; text-align: center; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='30' cy='30' r='20' stroke='white' stroke-opacity='0.05' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") repeat;
+      pointer-events: none;
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.18); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white; padding: 4px 14px; border-radius: 99px;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .hero-title {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 900; color: white; line-height: 1.2; margin-bottom: 14px;
+    }
+    .hero-title .highlight { color: #fde68a; }
+    .hero-subtitle { font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.65; }
+
+    /* ── TOOLKIT GRID ──────────────────────────────────── */
+    .toolkit-section {
+      max-width: 1200px; margin: 0 auto;
+      padding: 52px 24px 80px;
+    }
+    .section-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: #0891b2; background: #ecfeff; border: 1px solid #cffafe;
+      padding: 3px 12px; border-radius: 99px; margin-bottom: 10px;
+    }
+    .section-title { font-size: clamp(1.4rem, 2.5vw, 1.85rem); font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+    .section-desc  { font-size: 0.9rem; color: #64748b; margin-bottom: 36px; }
+
+    .toolkit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── TOOLKIT CARD ──────────────────────────────────── */
+    .t-card {
+      background: white;
+      border-radius: 20px;
+      border: 1.5px solid #e2e8f0;
+      padding: 28px 26px 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      position: relative; overflow: hidden;
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1),
+                  box-shadow 0.25s cubic-bezier(0.4,0,0.2,1),
+                  border-color 0.25s;
+    }
+    .t-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      border-color: transparent;
+    }
+    /* Top accent stripe */
+    .t-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: var(--stripe);
+      border-radius: 20px 20px 0 0;
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .t-card:hover::before { opacity: 1; }
+
+    /* Hover background tint */
+    .t-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: var(--tint);
+      opacity: 0; transition: opacity 0.25s; pointer-events: none;
+      border-radius: 20px;
+    }
+    .t-card:hover::after { opacity: 1; }
+
+    .card-content { position: relative; z-index: 1; }
+
+    .card-icon {
+      width: 58px; height: 58px;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; margin-bottom: 18px;
+      background: var(--icon-bg);
+      transition: transform 0.25s;
+    }
+    .t-card:hover .card-icon { transform: scale(1.1) rotate(-5deg); }
+
+    .card-title { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    .card-desc  { font-size: 0.85rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+
+    .card-tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+    .tag {
+      font-size: 0.72rem; font-weight: 600; color: var(--tag-color);
+      background: var(--tag-bg); padding: 3px 10px; border-radius: 99px;
+    }
+
+    .card-cta {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 16px; border-top: 1px solid #f1f5f9;
+    }
+    .card-cta-text { font-size: 0.85rem; font-weight: 700; color: var(--cta-color); }
+    .card-cta-icon {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--cta-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: var(--cta-color);
+      transition: transform 0.2s;
+    }
+    .t-card:hover .card-cta-icon { transform: translateX(4px); }
+
+    /* Card colour themes */
+    .card-emergency { --stripe: linear-gradient(90deg,#f43f5e,#fb923c); --tint: rgba(244,63,94,0.03); --icon-bg: #fff1f2; --tag-color: #e11d48; --tag-bg: #fff1f2; --cta-color: #e11d48; --cta-bg: #fee2e2; }
+    .card-gps       { --stripe: linear-gradient(90deg,#0891b2,#6366f1); --tint: rgba(8,145,178,0.03); --icon-bg: #ecfeff; --tag-color: #0891b2; --tag-bg: #ecfeff; --cta-color: #0891b2; --cta-bg: #e0f2fe; }
+    .card-dementia  { --stripe: linear-gradient(90deg,#f59e0b,#ef4444); --tint: rgba(245,158,11,0.03); --icon-bg: #fffbeb; --tag-color: #d97706; --tag-bg: #fffbeb; --cta-color: #d97706; --cta-bg: #fef3c7; }
+    .card-music     { --stripe: linear-gradient(90deg,#8b5cf6,#ec4899); --tint: rgba(139,92,246,0.03); --icon-bg: #f5f3ff; --tag-color: #7c3aed; --tag-bg: #f5f3ff; --cta-color: #7c3aed; --cta-bg: #ede9fe; }
+    .card-games     { --stripe: linear-gradient(90deg,#6366f1,#14b8a6); --tint: rgba(99,102,241,0.03); --icon-bg: #eef2ff; --tag-color: #4f46e5; --tag-bg: #eef2ff; --cta-color: #4f46e5; --cta-bg: #e0e7ff; }
+    .card-stories   { --stripe: linear-gradient(90deg,#f59e0b,#fb923c); --tint: rgba(245,158,11,0.03); --icon-bg: #fffbeb; --tag-color: #d97706; --tag-bg: #fef3c7; --cta-color: #d97706; --cta-bg: #fef3c7; }
+
+    /* ── QUICK STATS ROW ───────────────────────────────── */
+    .stats-row {
+      display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+      padding: 28px 24px;
+      background: white; border-top: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 1.6rem; font-weight: 900; color: #0f172a; }
+    .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 500; margin-top: 2px; }
+
+    /* ── SOS STRIP ─────────────────────────────────────── */
+    .sos-strip {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 16px 24px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      justify-content: center;
+    }
+    .sos-strip-label {
+      font-size: 0.78rem; font-weight: 700; color: #fca5a5;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .sos-strip a {
+      padding: 6px 16px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 99px; color: white; text-decoration: none;
+      font-size: 0.82rem; font-weight: 700;
+      transition: background 0.2s;
+    }
+    .sos-strip a:hover { background: rgba(239,68,68,0.3); border-color: #f87171; }
+
+    /* ── FOOTER ─────────────────────────────────────────── */
+    footer {
+      background: #0f172a; color: rgba(255,255,255,0.5);
+      text-align: center; padding: 20px 24px;
+      font-size: 0.78rem; line-height: 1.6;
+    }
+    footer span { color: #2dd4bf; }
+
+    /* ── SOS FAB ───────────────────────────────────────── */
+    #sos-fab {
+      position: fixed; bottom: 28px; right: 28px; z-index: 999;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+    }
+    .sos-fab-menu {
+      display: none; flex-direction: column; gap: 8px; align-items: flex-end;
+    }
+    .sos-fab-menu.open { display: flex; animation: popIn 0.2s ease; }
+    .sos-fab-item {
+      display: flex; align-items: center; gap: 10px;
+      background: #ffffff; color: #1e293b;
+      padding: 10px 18px; border-radius: 99px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+      font-size: 0.83rem; font-weight: 700; text-decoration: none;
+      white-space: nowrap; transition: transform 0.15s, background 0.15s;
+    }
+    .sos-fab-item:hover { transform: scale(1.05); background: #fff1f2; }
+    .sos-fab-item i { color: #f43f5e; font-size: 15px; }
+    .sos-fab-item:hover i { color: #e11d48; }
+    .sos-main-btn {
+      width: 60px; height: 60px;
+      background: linear-gradient(135deg, #f43f5e, #dc2626);
+      border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 24px;
+      box-shadow: 0 4px 20px rgba(220,38,38,0.55);
+      cursor: pointer; transition: transform 0.2s;
+      animation: pulseSOS 2.5s ease-in-out infinite;
+    }
+    @keyframes pulseSOS { 0%,100%{box-shadow:0 4px 20px rgba(220,38,38,0.55);}50%{box-shadow:0 4px 36px rgba(220,38,38,0.85);} }
+    .sos-main-btn:hover { animation: none; transform: scale(1.1); }
+
+    @media (max-width: 600px) {
+      .toolkit-grid { grid-template-columns: 1fr; }
+      .hero-title { font-size: 1.7rem; }
+      .stats-row { gap: 20px; }
+      .header-logout-btn span { display: none; }
+      .header-logout-btn { padding: 7px 12px; }
+    }
+
+    /* ── NOTIFICATION CENTER ─────────────────────────── */
+    .notif-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 1.5px solid #e2e8f0; background: white;
+      display: flex; align-items: center; justify-content: center;
+      color: #475569; font-size: 16px; cursor: pointer;
+      position: relative; transition: all 0.2s;
+    }
+    .notif-btn:hover { background: #f0fdfa; color: #0891b2; border-color: #0891b2; }
+    .notif-badge {
+      position: absolute; top: -3px; right: -3px;
+      background: #f43f5e; color: white;
+      font-size: 0.65rem; font-weight: 800;
+      min-width: 18px; height: 18px; border-radius: 99px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 4px; border: 2px solid white;
+    }
+
+    .notif-dropdown {
+      position: absolute; top: calc(100% + 12px); right: 0;
+      width: 340px; background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      border-radius: 18px; border: 1.5px solid #e2e8f0;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.14);
+      display: none; overflow: hidden; z-index: 250;
+    }
+    .notif-dropdown.open { display: block; animation: popIn 0.2s ease; }
+    .nd-head {
+      padding: 14px 18px; background: linear-gradient(135deg,#0891b2,#6366f1);
+      display: flex; align-items: center; justify-content: space-between;
+      color: white; font-weight: 800; font-size: 0.92rem;
+    }
+    .nd-actions { display: flex; gap: 8px; }
+    .nd-action-btn {
+      background: rgba(255,255,255,0.2); border: none; color: white;
+      width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; transition: background 0.2s;
+    }
+    .nd-action-btn:hover { background: rgba(255,255,255,0.35); }
+
+    .nd-perm-banner {
+      padding: 10px 16px; background: #fffbeb; border-bottom: 1px solid #fef3c7;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.76rem; color: #92400e; font-weight: 600;
+    }
+    .nd-perm-banner button {
+      background: #f59e0b; color: white; border: none;
+      padding: 3px 10px; border-radius: 99px; font-weight: 700;
+      font-size: 0.72rem; cursor: pointer;
+    }
+
+    .nd-list { max-height: 340px; overflow-y: auto; scrollbar-width: thin; }
+    .notif-item {
+      padding: 12px 16px; display: flex; gap: 12px; align-items: flex-start;
+      border-bottom: 1px solid #f1f5f9; transition: background 0.2s; cursor: pointer;
+      position: relative;
+    }
+    .notif-item:hover { background: #f8fafc; }
+    .notif-item.unread { background: #f0fdfa; }
+    .notif-icon-circle {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .notif-text { flex: 1; min-width: 0; }
+    .notif-item-title { font-size: 0.84rem; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+    .notif-item-body  { font-size: 0.76rem; color: #64748b; line-height: 1.4; margin-bottom: 4px; }
+    .notif-item-time  { font-size: 0.68rem; color: #94a3b8; font-weight: 600; }
+    .unread-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #0891b2;
+      position: absolute; top: 16px; right: 14px;
+    }
+    .nd-empty {
+      padding: 36px 20px; text-align: center; color: #94a3b8;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      font-size: 0.82rem; font-weight: 500;
+    }
+    .nd-empty i { font-size: 28px; color: #cbd5e1; }
+
+    /* ── REMINDERS SECTION ───────────────────────────── */
+    .reminders-section {
+      max-width: 1200px; margin: 0 auto 60px;
+      padding: 0 24px;
+    }
+    .reminders-card {
+      background: white; border-radius: 24px;
+      border: 1.5px solid #e2e8f0;
+      padding: 32px 28px;
+      box-shadow: 0 10px 36px rgba(0,0,0,0.05);
+      position: relative; overflow: hidden;
+    }
+    .reminders-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+      background: linear-gradient(90deg,#0891b2,#6366f1,#ec4899);
+    }
+    .reminders-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+    }
+    .rem-title-group h2 {
+      font-size: 1.35rem; font-weight: 800; color: #0f172a;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .rem-title-group p { font-size: 0.86rem; color: #64748b; margin-top: 3px; }
+    .rem-actions-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-rem-add {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 20px; border-radius: 99px;
+      background: linear-gradient(135deg,#0891b2,#6366f1);
+      color: white; font-family: 'Inter',sans-serif;
+      font-size: 0.84rem; font-weight: 700; border: none;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 3px 12px rgba(8,145,178,0.25);
+    }
+    .btn-rem-add:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(8,145,178,0.35); }
+    .btn-rem-test {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 99px;
+      background: #f0fdfa; border: 1.5px solid #a5f3fc;
+      color: #0891b2; font-family: 'Inter',sans-serif;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-rem-test:hover { background: #0891b2; color: white; border-color: #0891b2; }
+
+    .rem-filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .rf-btn {
+      padding: 6px 16px; border-radius: 99px; border: 1.5px solid #e2e8f0;
+      background: white; font-family: 'Inter',sans-serif; font-size: 0.8rem;
+      font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s;
+    }
+    .rf-btn:hover, .rf-btn.active { background: #0891b2; color: white; border-color: #0891b2; }
+
+    .reminders-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .rem-item-card {
+      background: #f8fafc; border: 1.5px solid #e2e8f0;
+      border-radius: 16px; padding: 18px 20px;
+      display: flex; gap: 14px; align-items: flex-start;
+      transition: all 0.2s; position: relative;
+    }
+    .rem-item-card:hover { background: white; border-color: #cbd5e1; box-shadow: 0 6px 20px rgba(0,0,0,0.05); }
+    .rem-item-card.inactive { opacity: 0.55; }
+    .rem-icon-box {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .rem-icon-med { background: #fff1f2; color: #f43f5e; }
+    .rem-icon-game { background: #eef2ff; color: #6366f1; }
+    .rem-info { flex: 1; min-width: 0; }
+    .rem-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 8px; }
+    .rem-time { font-size: 1.05rem; font-weight: 900; color: #0f172a; }
+    .rem-badge {
+      font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .badge-med { background: #fee2e2; color: #e11d48; }
+    .badge-game { background: #e0e7ff; color: #4338ca; }
+    .rem-title { font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; line-height: 1.35; }
+    .rem-notes { font-size: 0.77rem; color: #64748b; line-height: 1.4; margin-bottom: 12px; }
+    .rem-bottom-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .rem-schedule-text { font-size: 0.72rem; color: #0891b2; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .rem-item-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-rem-del {
+      background: none; border: none; color: #94a3b8; cursor: pointer;
+      font-size: 13px; padding: 4px; border-radius: 6px; transition: color 0.2s;
+    }
+    .btn-rem-del:hover { color: #f43f5e; }
+
+    /* Switch toggle */
+    .switch {
+      position: relative; display: inline-block; width: 38px; height: 22px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background-color: #cbd5e1; border-radius: 99px; transition: 0.25s;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 16px; width: 16px;
+      left: 3px; bottom: 3px; background-color: white;
+      border-radius: 50%; transition: 0.25s;
+    }
+    input:checked + .slider { background-color: #0891b2; }
+    input:checked + .slider:before { transform: translateX(16px); }
+
+    /* Modal */
+    .rem-modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(6px); z-index: 1000; display: none;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .rem-modal-overlay.open { display: flex; animation: popIn 0.2s ease; }
+    .rem-modal {
+      background: white; border-radius: 20px; max-width: 480px; width: 100%;
+      border: 1.5px solid #e2e8f0; box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .rm-head {
+      padding: 18px 24px; background: linear-gradient(135deg,#0891b2,#6366f1);
+      color: white; display: flex; align-items: center; justify-content: space-between;
+    }
+    .rm-head h3 { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .rm-close { background: none; border: none; color: white; font-size: 18px; cursor: pointer; opacity: 0.85; }
+    .rm-close:hover { opacity: 1; }
+    .rm-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; }
+    .rm-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+    .rm-preset-btn {
+      padding: 4px 10px; border-radius: 99px; border: 1px solid #cffafe;
+      background: #ecfeff; color: #0891b2; font-size: 0.72rem; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .rm-preset-btn:hover { background: #0891b2; color: white; }
+    .rm-field { display: flex; flex-direction: column; gap: 5px; }
+    .rm-field label { font-size: 0.8rem; font-weight: 700; color: #334155; }
+    .rm-field input, .rm-field select, .rm-field textarea {
+      padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-family: 'Inter',sans-serif; font-size: 0.85rem; color: #0f172a; outline: none;
+    }
+    .rm-field input:focus, .rm-field select:focus, .rm-field textarea:focus { border-color: #0891b2; }
+    .rm-foot {
+      padding: 16px 24px; background: #f8fafc; border-top: 1px solid #f1f5f9;
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+  </style>
+  <link rel="stylesheet" href="./css/perf.css" />
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────────────────── -->
+<header class="site-header" id="site-header">
+  <div class="header-inner">
+    <a class="logo" href="dashboard.html">
+      <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
+      <span class="logo-text">Care<span>Hub</span></span>
+    </a>
+
+    <!-- Right Controls: Notifications, Profile chip & Sign Out -->
+    <div class="header-controls">
+
+      <!-- Notification Center Bell -->
+      <div style="position:relative;">
+        <button class="notif-btn" id="notif-bell-btn" aria-label="Notifications" title="Notification Center">
+          <i class="fas fa-bell"></i>
+          <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+        </button>
+
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="nd-head">
+            <div class="nd-title"><i class="fas fa-bell"></i> Notifications</div>
+            <div class="nd-actions">
+              <button class="nd-action-btn" id="nd-mark-read-btn" title="Mark all as read"><i class="fas fa-check-double"></i></button>
+              <button class="nd-action-btn" id="nd-clear-btn" title="Clear all"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="nd-perm-banner" id="nd-perm-banner" style="display:none;">
+            <span><i class="fas fa-info-circle"></i> Enable browser popup alerts</span>
+            <button id="nd-enable-perm-btn">Enable</button>
+          </div>
+          <div class="nd-list" id="notif-items-list"></div>
+          <div class="nd-empty" id="notif-empty-state">
+            <i class="fas fa-bell-slash"></i>
+            <span>No notifications yet</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile chip -->
+      <div style="position:relative;">
+        <button class="profile-chip" id="profile-chip" aria-label="User menu" aria-expanded="false">
+          <div class="avatar" id="header-avatar"></div>
+          <span class="user-first-name" id="header-name">…</span>
+          <i class="fas fa-chevron-down chevron" id="profile-chevron"></i>
+        </button>
+
+        <div class="profile-dropdown" id="profile-dropdown">
+          <div class="pd-head">
+            <div class="pd-avatar-lg" id="pd-avatar"></div>
+            <div>
+              <div class="pd-name" id="pd-full-name">–</div>
+              <div class="pd-role" id="pd-role">–</div>
+            </div>
+          </div>
+          <div class="pd-body">
+            <div class="pd-row"><i class="fas fa-envelope"></i><span id="pd-email">–</span></div>
+            <div class="pd-row"><i class="fas fa-user-injured"></i><span>Patient: <strong id="pd-patient">–</strong></span></div>
+            <a href="profile.html" class="pd-row" style="text-decoration:none;font-weight:700;color:#0891b2;"><i class="fas fa-user-cog"></i> Edit Profile &amp; Settings</a>
+            <div class="pd-divider"></div>
+            <button class="pd-logout" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prominent Header Sign Out Button -->
+      <button class="header-logout-btn" id="header-logout-btn" title="Sign Out">
+        <i class="fas fa-sign-out-alt"></i> <span>Sign Out</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ── HERO ───────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge"><i class="fas fa-shield-alt"></i> Caregiver Dashboard</div>
+    <h1 class="hero-title">
+      Hello, <span class="highlight" id="hero-name">Caregiver</span> 👋<br />
+      Choose Your Care Module
+    </h1>
+    <p class="hero-subtitle" id="hero-subtitle">
+      Everything you need to manage, monitor, and support your patient — all in one place.
+    </p>
+  </div>
+</section>
+
+<!-- Quick Stats -->
+<div class="stats-row">
+  <div class="stat"><div class="stat-num">7</div><div class="stat-label">Care Modules</div></div>
+  <div class="stat"><div class="stat-num">55M+</div><div class="stat-label">Dementia Patients Worldwide</div></div>
+  <div class="stat"><div class="stat-num">4.1M</div><div class="stat-label">Affected in India</div></div>
+  <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">Emergency Support</div></div>
+</div>
+
+<!-- ── TOOLKIT GRID ─────────────────────────────────────── -->
+<div class="toolkit-section">
+  <div class="section-eyebrow"><i class="fas fa-toolbox"></i> Your Toolkit</div>
+  <h2 class="section-title">Caregiver Toolkit</h2>
+  <p class="section-desc">Select any module below to open its full-featured page.</p>
+
+  <div class="toolkit-grid">
+
+    <!-- 1. Emergency SOS -->
+    <a class="t-card card-emergency" href="emergency.html" id="card-sos">
+      <div class="card-content">
+        <div class="card-icon">🚨</div>
+        <div class="card-title">Emergency SOS Directory</div>
+        <div class="card-desc">
+          One-tap access to India's critical helplines — 112, 108, Elder Line, NIMHANS, ARDSI — plus global emergency numbers for 7 countries.
+        </div>
+        <div class="card-tag-row">
+          <span class="tag">112 – National</span>
+          <span class="tag">108 – Ambulance</span>
+          <span class="tag">WhatsApp Share</span>
+        </div>
+        <div class="card-cta">
+          <span class="card-cta-text">Open Emergency Hub</span>
+          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        </div>
+      </div>
+    </a>
+
+
+    <!-- 2. Nearby Doctor Finder -->
+    <a class="t-card card-gps" href="doctors.html" id="card-doctors">
+      <div class="card-content">
+        <div class="card-icon">📍</div>
+        <div class="card-title">Nearby Doctor Finder</div>
+        <div class="card-desc">
+          Find neurologists, geriatricians and dementia specialists near you. Filter by specialty and distance, view on a live map, and book appointments instantly.
+        </div>
+        <div class="card-tag-row">
+          <span class="tag">Live Map</span>
+          <span class="tag">GPS Location</span>
+          <span class="tag">Book Appointment</span>
+        </div>
+        <div class="card-cta">
+          <span class="card-cta-text">Find Nearby Doctors</span>
+          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        </div>
+      </div>
+    </a>
+
+
+    <!-- 3. Dementia Guide -->
+    <a class="t-card card-dementia" href="dementia.html" id="card-dementia">
+      <div class="card-content">
+        <div class="card-icon">🧠</div>
+        <div class="card-title">Dementia Stage Guide & Safety</div>
+        <div class="card-desc">
+          Clear guides on Early, Middle, and Late dementia stages, interactive safety checklist, plus AI Screening Advisor.
+        </div>
+        <div class="card-tag-row">
+          <span class="tag">3 Stage Guide</span>
+          <span class="tag">Safety Checklist</span>
+          <span class="tag">AI Screening Advisor</span>
+        </div>
+        <div class="card-cta">
+          <span class="card-cta-text">Open Guide &amp; AI Advisor</span>
+          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        </div>
+      </div>
+    </a>
+
+    <!-- 4. Music Therapy -->
+    <a class="t-card card-music" href="music.html" id="card-music">
+      <div class="card-content">
+        <div class="card-icon">🎵</div>
+        <div class="card-title">Caregiver Music Therapy</div>
+        <div class="card-desc">
+          Scientifically-tuned binaural beats, 432Hz waves, delta sleep, and ambient rain — generated live in your browser. No files needed.
+        </div>
+        <div class="card-tag-row">
+          <span class="tag">Binaural Beats</span>
+          <span class="tag">432Hz Waves</span>
+          <span class="tag">Stress Relief</span>
+        </div>
+        <div class="card-cta">
+          <span class="card-cta-text">Open Music Therapy</span>
+          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        </div>
+      </div>
+    </a>
+
+    <!-- 5. Cognitive Games -->
+    <a class="t-card card-games" href="games.html" id="card-games">
+      <div class="card-content">
+        <div class="card-icon">🧩</div>
+        <div class="card-title">Cognitive Games Zone</div>
+        <div class="card-desc">
+          Spot the object, color sequence memory, and photo match games — with a progress chart to track cognitive improvement.
+        </div>
+        <div class="card-tag-row">
+          <span class="tag">Spot the Object</span>
+          <span class="tag">Photo Match</span>
+          <span class="tag">Progress Chart</span>
+        </div>
+        <div class="card-cta">
+          <span class="card-cta-text">Open Games Zone</span>
+          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        </div>
+      </div>
+    </a>
+
+    <!-- 6. Story Time -->
+    <a class="t-card card-stories" href="stories.html" id="card-stories">
+      <div class="card-content">
+        <div class="card-icon">📖</div>
+        <div class="card-title">Story Time</div>
+        <div class="card-desc">
+          Short stories with audio narration and comprehension questions — available in Hindi, English, Marathi, and Telugu for gentle memory exercise.
+        </div>
+        <div class="card-tag-row">
+          <span class="tag">Audio Narration</span>
+          <span class="tag">4 Languages</span>
+          <span class="tag">Memory Questions</span>
+        </div>
+        <div class="card-cta">
+          <span class="card-cta-text">Open Story Time</span>
+          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<!-- ── DAILY CAREGIVER REMINDERS ─────────────────────── -->
+<section class="reminders-section" id="reminders-section">
+  <div class="reminders-card">
+    <div class="reminders-hdr">
+      <div class="rem-title-group">
+        <h2><i class="fas fa-clock" style="color:#0891b2;"></i> Daily Caregiver Reminders</h2>
+        <p>Set scheduled alerts for patient medication and cognitive brain games. Sends live browser notifications.</p>
+      </div>
+      <div class="rem-actions-bar">
+        <button class="btn-rem-test" id="btn-test-notif" title="Test browser alert and sound">
+          <i class="fas fa-volume-up"></i> Test Alert
+        </button>
+        <button class="btn-rem-add" id="btn-open-add-rem">
+          <i class="fas fa-plus"></i> Set Reminder
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="rem-filters">
+      <button class="rf-btn active" data-filter="all">All Reminders</button>
+      <button class="rf-btn" data-filter="medication">💊 Medication Times</button>
+      <button class="rf-btn" data-filter="game">🧩 Brain Games</button>
+    </div>
+
+    <!-- Reminders list -->
+    <div class="reminders-grid" id="reminders-grid">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+</section>
+
+<!-- Add / Edit Reminder Modal -->
+<div class="rem-modal-overlay" id="rem-modal-overlay">
+  <div class="rem-modal">
+    <div class="rm-head">
+      <h3 id="rm-modal-title"><i class="fas fa-bell"></i> Set Daily Reminder</h3>
+      <button class="rm-close" id="rm-close-btn">&times;</button>
+    </div>
+    <form id="reminder-form">
+      <div class="rm-body">
+        <div class="rm-field">
+          <label>Quick Presets</label>
+          <div class="rm-presets">
+            <button type="button" class="rm-preset-btn" data-type="medication" data-title="Morning Donepezil (5mg)" data-time="09:00" data-notes="Take with breakfast">💊 Morning Meds</button>
+            <button type="button" class="rm-preset-btn" data-type="game" data-title="Memory Match Exercise" data-time="11:30" data-notes="15-min cognitive session">🧩 Memory Game</button>
+            <button type="button" class="rm-preset-btn" data-type="medication" data-title="Afternoon Memantine (10mg)" data-time="14:00" data-notes="Post-lunch dose">💊 Afternoon Meds</button>
+            <button type="button" class="rm-preset-btn" data-type="game" data-title="Word Recall &amp; Cards" data-time="16:00" data-notes="Evening vocabulary workout">🔤 Word Game</button>
+            <button type="button" class="rm-preset-btn" data-type="medication" data-title="Night Medication &amp; Hydration" data-time="20:30" data-notes="With warm water before bed">🌙 Night Meds</button>
+          </div>
+        </div>
+
+        <div class="rm-field">
+          <label for="rem-input-type">Reminder Type</label>
+          <select id="rem-input-type" required>
+            <option value="medication">💊 Medication Time</option>
+            <option value="game">🧩 Cognitive Game Session</option>
+            <option value="custom">🔔 General Care Reminder</option>
+          </select>
+        </div>
+
+        <div class="rm-field">
+          <label for="rem-input-title">Reminder Title / Activity *</label>
+          <input type="text" id="rem-input-title" required placeholder="e.g. Morning Donepezil 5mg or Memory Match" />
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="rm-field">
+            <label for="rem-input-time">Time (24h) *</label>
+            <input type="time" id="rem-input-time" required value="09:00" />
+          </div>
+          <div class="rm-field">
+            <label for="rem-input-schedule">Repeat</label>
+            <select id="rem-input-schedule">
+              <option value="daily">Every Day</option>
+              <option value="weekdays">Weekdays (Mon-Fri)</option>
+              <option value="weekends">Weekends (Sat-Sun)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="rm-field">
+          <label for="rem-input-notes">Notes / Instructions (optional)</label>
+          <textarea id="rem-input-notes" rows="2" placeholder="e.g. Take with food, drink full glass of water"></textarea>
+        </div>
+      </div>
+
+      <div class="rm-foot">
+        <button type="button" class="btn-rem-del" id="rm-cancel-btn" style="padding:6px 14px;">Cancel</button>
+        <button type="submit" class="btn-rem-add" id="rm-save-btn">Save Reminder</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── SOS STRIP ──────────────────────────────────────── -->
+<div class="sos-strip">
+  <span class="sos-strip-label"><i class="fas fa-exclamation-triangle"></i> Quick Emergency:</span>
+  <a href="tel:112">112</a>
+  <a href="tel:108">108 – Ambulance</a>
+  <a href="tel:14567">14567 – Elder Line</a>
+  <a href="tel:08046110007">NIMHANS</a>
+  <a href="tel:18001024174">ARDSI</a>
+</div>
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer>
+  <p>© 2026 <span>CareHub</span> — Built with ❤️ for caregivers everywhere.</p>
+  <p style="margin-top:4px;">For informational purposes only. Not a substitute for professional medical advice.</p>
+</footer>
+
+<!-- ── FLOATING SOS FAB ──────────────────────────────── -->
+<div id="sos-fab">
+  <div class="sos-fab-menu" id="sos-menu">
+    <a class="sos-fab-item" href="tel:112"><i class="fas fa-phone-alt"></i> 112 – National Emergency</a>
+    <a class="sos-fab-item" href="tel:108"><i class="fas fa-ambulance"></i> 108 – Ambulance</a>
+    <a class="sos-fab-item" href="tel:14567"><i class="fas fa-user-shield"></i> 14567 – Elder Line</a>
+    <a class="sos-fab-item" href="tel:08046110007"><i class="fas fa-brain"></i> NIMHANS</a>
+  </div>
+  <button class="sos-main-btn" id="sos-toggle" aria-label="Emergency SOS">
+    <i class="fas fa-sos"></i>
+  </button>
+</div>
+
+<script type="module">
+  import { getSession, performLogout, showToast } from './js/ui.js';
+  import { auth, db } from './js/firebase.js';
+  import {
+    notify, updateNotificationCenterUI, markAllNotificationsRead,
+    clearAllNotifications, requestNotificationPermission, playChime
+  } from './js/notifications.js';
+  import {
+    getReminders, addReminder, updateReminder, deleteReminder,
+    toggleReminder, startReminderScheduler
+  } from './js/reminders.js';
+
+  // ── Load user session ─────────────────────────────────
+  const user = await getSession();
+  if (!user) {
+    window.location.replace('login.html');
+  } else {
+    document.getElementById('auth-hide')?.remove();
+    document.body.style.display = '';
+
+    const ini = n => (n || 'Caregiver').trim().split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+    const displayName = user.name || (user.email ? user.email.split('@')[0] : 'Caregiver');
+    const firstName = displayName.split(' ')[0];
+
+    // Avatar with image support
+    const renderAvatar = (el, size) => {
+      if (!el) return;
+      if (user.photoURL) {
+        el.innerHTML = `<img src="${user.photoURL}" alt="${displayName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+      } else {
+        el.textContent = ini(displayName);
+      }
+    };
+
+    renderAvatar(document.getElementById('header-avatar'));
+    renderAvatar(document.getElementById('pd-avatar'));
+
+    document.getElementById('header-name').textContent    = firstName;
+    document.getElementById('pd-full-name').textContent   = displayName;
+    document.getElementById('pd-role').textContent        = (user.role || 'Caregiver') + (user.isDemo ? ' (Demo)' : '');
+    document.getElementById('pd-email').textContent       = user.email || '–';
+    document.getElementById('pd-patient').textContent     = user.patientName || 'Not specified';
+    document.getElementById('hero-name').textContent      = firstName;
+    if (user.patientName) {
+      document.getElementById('hero-subtitle').textContent =
+        'Managing care for ' + user.patientName + '. Select a module below to get started.';
+    }
+  }
+
+  // ── NOTIFICATION CENTER ───────────────────────────────
+  const notifBellBtn = document.getElementById('notif-bell-btn');
+  const notifDropdown = document.getElementById('notif-dropdown');
+  const permBanner = document.getElementById('nd-perm-banner');
+
+  updateNotificationCenterUI();
+
+  // Check notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    permBanner.style.display = 'flex';
+  }
+
+  document.getElementById('nd-enable-perm-btn')?.addEventListener('click', async () => {
+    const res = await requestNotificationPermission();
+    if (res === 'granted') {
+      permBanner.style.display = 'none';
+      showToast('Browser notifications enabled! 🔔', 'success');
+    }
+  });
+
+  if (notifBellBtn && notifDropdown) {
+    notifBellBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = notifDropdown.classList.toggle('open');
+      notifBellBtn.setAttribute('aria-expanded', open);
+      if (dropdown) dropdown.classList.remove('open');
+    });
+    document.addEventListener('click', e => {
+      if (!notifDropdown.contains(e.target) && !notifBellBtn.contains(e.target)) {
+        notifDropdown.classList.remove('open');
+      }
+    });
+  }
+
+  document.getElementById('nd-mark-read-btn')?.addEventListener('click', () => {
+    markAllNotificationsRead();
+    showToast('All notifications marked as read', 'success', 2000);
+  });
+
+  document.getElementById('nd-clear-btn')?.addEventListener('click', () => {
+    clearAllNotifications();
+    showToast('Notifications cleared', 'success', 2000);
+  });
+
+  // Profile dropdown
+  const chip     = document.getElementById('profile-chip');
+  const dropdown = document.getElementById('profile-dropdown');
+  if (chip && dropdown) {
+    chip.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = dropdown.classList.toggle('open');
+      chip.classList.toggle('open', open);
+      chip.setAttribute('aria-expanded', open);
+      if (notifDropdown) notifDropdown.classList.remove('open');
+    });
+    document.addEventListener('click', e => {
+      if (!chip.contains(e.target)) {
+        dropdown.classList.remove('open'); chip.classList.remove('open');
+      }
+    });
+  }
+
+  // Logout buttons
+  document.getElementById('logout-btn')?.addEventListener('click', performLogout);
+  document.getElementById('header-logout-btn')?.addEventListener('click', performLogout);
+
+  // ── REMINDERS SYSTEM ──────────────────────────────────
+  let activeRemFilter = 'all';
+
+  function formatTime12(t24) {
+    if (!t24) return '';
+    const [h, m] = t24.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+  }
+
+  async function renderRemindersList() {
+    const grid = document.getElementById('reminders-grid');
+    if (!grid) return;
+    const reminders = await getReminders();
+
+    const filtered = reminders.filter(r => {
+      if (activeRemFilter === 'all') return true;
+      return r.type === activeRemFilter;
+    });
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:36px;color:#94a3b8;font-size:0.9rem;">
+          <i class="fas fa-calendar-check" style="font-size:2rem;color:#cbd5e1;margin-bottom:10px;display:block;"></i>
+          No reminders in this category. Click "+ Set Reminder" to create one.
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(r => {
+      const isMed = r.type === 'medication';
+      const iconClass = isMed ? 'rem-icon-med' : 'rem-icon-game';
+      const icon = isMed ? 'fa-pills' : 'fa-gamepad';
+      const badgeClass = isMed ? 'badge-med' : 'badge-game';
+      const badgeText = isMed ? 'Medication' : 'Brain Game';
+      const schedMap = { daily: 'Daily', weekdays: 'Mon-Fri', weekends: 'Sat-Sun' };
+      const schedText = schedMap[r.schedule] || r.schedule || 'Daily';
+
+      return `
+        <div class="rem-item-card ${r.active ? '' : 'inactive'}" data-id="${r.id}">
+          <div class="rem-icon-box ${iconClass}">
+            <i class="fas ${icon}"></i>
+          </div>
+          <div class="rem-info">
+            <div class="rem-top-row">
+              <span class="rem-time">${formatTime12(r.time)}</span>
+              <span class="rem-badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <div class="rem-title">${r.title}</div>
+            ${r.notes ? `<div class="rem-notes">${r.notes}</div>` : ''}
+            <div class="rem-bottom-row">
+              <span class="rem-schedule-text"><i class="fas fa-redo"></i> ${schedText}</span>
+              <div class="rem-item-actions">
+                <label class="switch" title="${r.active ? 'Disable' : 'Enable'} reminder">
+                  <input type="checkbox" class="rem-toggle-cb" data-id="${r.id}" ${r.active ? 'checked' : ''} />
+                  <span class="slider"></span>
+                </label>
+                <button class="btn-rem-del" data-id="${r.id}" title="Delete reminder">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Toggle switch listeners
+    grid.querySelectorAll('.rem-toggle-cb').forEach(cb => {
+      cb.addEventListener('change', async e => {
+        const id = cb.dataset.id;
+        const active = cb.checked;
+        await toggleReminder(id, active);
+        showToast(active ? 'Reminder activated ⏰' : 'Reminder paused ⏸️', 'success', 2000);
+        renderRemindersList();
+      });
+    });
+
+    // Delete listeners
+    grid.querySelectorAll('.btn-rem-del').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        const id = btn.dataset.id;
+        await deleteReminder(id);
+        showToast('Reminder deleted', 'warn', 2000);
+        renderRemindersList();
+      });
+    });
+  }
+
+  // Filter tab buttons
+  document.querySelectorAll('.rf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.rf-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeRemFilter = btn.dataset.filter;
+      renderRemindersList();
+    });
+  });
+
+  // Modal logic
+  const modalOverlay = document.getElementById('rem-modal-overlay');
+  const openAddBtn   = document.getElementById('btn-open-add-rem');
+  const closeBtn     = document.getElementById('rm-close-btn');
+  const cancelBtn    = document.getElementById('rm-cancel-btn');
+  const remForm      = document.getElementById('reminder-form');
+
+  const openModal = () => {
+    remForm.reset();
+    document.getElementById('rem-input-time').value = '09:00';
+    modalOverlay.classList.add('open');
+  };
+  const closeModal = () => modalOverlay.classList.remove('open');
+
+  openAddBtn?.addEventListener('click', openModal);
+  closeBtn?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
+  modalOverlay?.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+
+  // Quick preset buttons in modal
+  document.querySelectorAll('.rm-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('rem-input-type').value = btn.dataset.type;
+      document.getElementById('rem-input-title').value = btn.dataset.title;
+      document.getElementById('rem-input-time').value = btn.dataset.time;
+      document.getElementById('rem-input-notes').value = btn.dataset.notes || '';
+    });
+  });
+
+  // Save reminder submit
+  remForm?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const type = document.getElementById('rem-input-type').value;
+    const title = document.getElementById('rem-input-title').value;
+    const time = document.getElementById('rem-input-time').value;
+    const schedule = document.getElementById('rem-input-schedule').value;
+    const notes = document.getElementById('rem-input-notes').value;
+
+    await addReminder({ type, title, time, schedule, notes });
+    closeModal();
+    showToast('Reminder added successfully! ⏰', 'success');
+    renderRemindersList();
+  });
+
+  // Test Notification & Chime button
+  document.getElementById('btn-test-notif')?.addEventListener('click', async () => {
+    playChime();
+    await notify('💊 Medication Time: Donepezil 5mg (Sample Alert)', {
+      body: 'Time to administer patient morning medication with breakfast.',
+      type: 'medication',
+      link: 'dashboard.html',
+    });
+    showToast('🔔 Test notification & audio chime sent!', 'success', 3000);
+  });
+
+  // Start background reminder scheduler & initial list render
+  renderRemindersList();
+  startReminderScheduler();
+
+  // Header scroll shadow
+  window.addEventListener('scroll', () => {
+    document.getElementById('site-header')?.classList.toggle('scrolled', window.scrollY > 4);
+  }, { passive: true });
+
+  // SOS FAB
+  const sosMenu   = document.getElementById('sos-menu');
+  const sosToggle = document.getElementById('sos-toggle');
+  if (sosToggle && sosMenu) {
+    sosToggle.addEventListener('click', e => { e.stopPropagation(); sosMenu.classList.toggle('open'); });
+    document.addEventListener('click', () => sosMenu.classList.remove('open'));
+  }
+</script>
+<script src="./js/page-transition.js"></script>
+</body>
+</html>

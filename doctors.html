@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CareHub – Nearby Doctor Finder</title>
+<meta name="description" content="Find neurologists, geriatricians and dementia specialists near you with GPS location, live map and appointment booking."/>
+
+<!-- Auth guard: synchronous, before anything renders -->
+<script>
+(function(){
+  try{
+    var s=sessionStorage.getItem('careHub_user')||localStorage.getItem('careHub_user');
+    if(!s)window.location.replace('login.html');
+  }catch(e){window.location.replace('login.html');}
+})();
+window.addEventListener('pageshow',function(e){
+  if(e.persisted){
+    var s=sessionStorage.getItem('careHub_user')||localStorage.getItem('careHub_user');
+    if(!s)window.location.replace('login.html');
+  }
+});
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>"/>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100vh;color:#1e293b}
+
+/* ── Header (matches all other inner pages exactly) ──── */
+.page-header{background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border-bottom:1px solid #e2e8f0;padding:0 24px;position:sticky;top:0;z-index:1000}
+.ph-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;height:60px}
+.back-btn{display:flex;align-items:center;gap:7px;color:#64748b;text-decoration:none;font-size:.85rem;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid #e2e8f0;transition:all .2s;white-space:nowrap}
+.back-btn:hover{background:#ecfeff;color:#0891b2;border-color:#0891b2}
+.ph-title{font-size:1rem;font-weight:800;color:#0f172a;flex:1}
+.avatar-sm{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0891b2,#6366f1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;cursor:default;user-select:none}
+
+/* ── Hero ─────────────────────────────────────────────── */
+.page-hero{background:linear-gradient(135deg,#0891b2 0%,#6366f1 60%,#14b8a6 100%);padding:44px 24px;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='30' cy='30' r='20' stroke='white' stroke-opacity='0.05' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") repeat;pointer-events:none}
+.page-hero h1{font-size:clamp(1.8rem,4vw,2.4rem);font-weight:900;color:#fff;margin-bottom:8px;position:relative}
+.page-hero p{color:rgba(255,255,255,.88);font-size:.95rem;position:relative}
+
+/* ── Search bar ──────────────────────────────────────── */
+.search-wrap{max-width:1200px;margin:-24px auto 0;padding:0 24px;position:relative;z-index:10}
+.search-bar{display:flex;gap:8px;background:#fff;border-radius:16px;padding:10px 14px;box-shadow:0 8px 32px rgba(8,145,178,.15);border:1.5px solid #e0f2fe;flex-wrap:wrap;align-items:center}
+.search-bar i.fa-search{color:#0891b2;flex-shrink:0}
+.s-input{flex:1;min-width:150px;border:none;outline:none;font-family:'Inter',sans-serif;font-size:.9rem;color:#1e293b;padding:4px 6px;background:transparent}
+.s-input::placeholder{color:#94a3b8}
+.s-select{border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;color:#475569;background:#f8fafc;cursor:pointer;outline:none;transition:border-color .2s}
+.s-select:focus{border-color:#0891b2}
+.btn-locate{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;background:#f0fdfa;color:#0891b2;border:1.5px solid #a5f3fc;border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s}
+.btn-locate:hover{background:#0891b2;color:#fff;border-color:#0891b2}
+.btn-search{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:linear-gradient(135deg,#0891b2,#6366f1);color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform .2s}
+.btn-search:hover{transform:translateY(-1px)}
+.btn-search:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* ── Inline banners ──────────────────────────────────── */
+.banner{display:none;margin:14px 0 0;padding:14px 18px;border-radius:12px;font-size:.85rem;font-weight:600;align-items:flex-start;gap:12px}
+.banner.show{display:flex}
+.banner.warn{background:#fffbeb;border:1.5px solid #fcd34d;color:#92400e}
+.banner.err{background:#fff1f2;border:1.5px solid #fecdd3;color:#9f1239}
+.banner-body{flex:1}
+.banner-title{font-weight:700;margin-bottom:4px}
+.manual-row{margin-top:10px;display:flex;gap:8px}
+.manual-in{flex:1;padding:8px 12px;border:1.5px solid #fcd34d;border-radius:8px;font-family:'Inter',sans-serif;font-size:.85rem;outline:none}
+.manual-in:focus{border-color:#0891b2}
+.manual-go{padding:8px 16px;background:#0891b2;color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer}
+.retry-link{color:#0891b2;text-decoration:underline;cursor:pointer;font-weight:700}
+
+/* ── Layout ──────────────────────────────────────────── */
+.page-body{max-width:1200px;margin:0 auto;padding:28px 24px 80px}
+.two-col{display:grid;grid-template-columns:1fr 400px;gap:20px;align-items:start}
+@media(max-width:880px){.two-col{grid-template-columns:1fr}}
+
+/* ── Map card ─────────────────────────────────────────── */
+.map-card{background:#fff;border-radius:20px;border:1.5px solid #e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,.06);overflow:hidden}
+.card-hdr{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9}
+.card-hdr-title{font-weight:800;font-size:.92rem;color:#0f172a;display:flex;align-items:center;gap:8px}
+#loc-label{font-size:.78rem;color:#0891b2;font-weight:600;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#map{height:420px;z-index:1;background:#e0f2fe}
+@media(max-width:880px){#map{height:280px}}
+
+/* ── Results panel ───────────────────────────────────── */
+.results-panel{display:flex;flex-direction:column}
+.panel-hdr{background:#fff;border-radius:20px 20px 0 0;border:1.5px solid #e2e8f0;border-bottom:none;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:.95rem;font-weight:800;color:#0f172a}
+.count-badge{font-size:.75rem;color:#0891b2;font-weight:600;background:#ecfeff;padding:3px 10px;border-radius:99px}
+.src-label{font-size:.7rem;color:#94a3b8;margin-top:2px;text-align:right}
+.doc-list{background:#fff;border:1.5px solid #e2e8f0;border-top:none;border-radius:0 0 20px 20px;max-height:480px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#a5f3fc transparent}
+.doc-list::-webkit-scrollbar{width:4px}
+.doc-list::-webkit-scrollbar-thumb{background:#a5f3fc;border-radius:99px}
+
+/* Skeleton */
+.skel-wrap{padding:12px}
+.skel{background:#f1f5f9;border-radius:12px;height:96px;margin-bottom:8px;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+
+/* Doctor card */
+.doc-card{padding:16px 18px;border-bottom:1px solid #f1f5f9;display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:background .15s}
+.doc-card:last-child{border-bottom:none}
+.doc-card:hover,.doc-card.hl{background:#f0fdfa}
+.doc-emoji{font-size:1.9rem;flex-shrink:0;line-height:1;margin-top:2px}
+.doc-body{flex:1;min-width:0}
+.doc-name{font-size:.9rem;font-weight:700;color:#0f172a;margin-bottom:2px}
+.doc-spec{font-size:.74rem;color:#0891b2;font-weight:600;margin-bottom:5px}
+.doc-meta{font-size:.72rem;color:#64748b;display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.doc-addr{font-size:.71rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px}
+.doc-phone-row{font-size:.74rem;color:#10b981;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.no-phone{font-size:.71rem;color:#94a3b8;font-style:italic;margin-bottom:8px}
+.avail-badge{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px}
+.avail-now{background:#dcfce7;color:#15803d}
+.avail-today{background:#fef3c7;color:#92400e}
+.avail-week{background:#f1f5f9;color:#64748b}
+.doc-btns{display:flex;gap:6px;flex-wrap:wrap}
+.btn-call{padding:5px 12px;background:#f0fdf4;color:#15803d;border:1.5px solid #86efac;border-radius:99px;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all .18s}
+.btn-call:hover{background:#15803d;color:#fff;border-color:#15803d}
+.btn-call.off{opacity:.35;pointer-events:none}
+.btn-book{padding:5px 12px;background:linear-gradient(135deg,#0891b2,#6366f1);color:#fff;border:none;border-radius:99px;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:transform .18s}
+.btn-book:hover{transform:translateY(-1px)}
+.dist-pill{font-size:.7rem;font-weight:700;color:#0891b2;background:#ecfeff;padding:3px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;align-self:flex-start}
+.star{color:#f59e0b}
+
+/* Empty state */
+.empty{padding:40px 20px;text-align:center;color:#94a3b8}
+.empty i{font-size:2.5rem;color:#bae6fd;margin-bottom:12px;display:block}
+.empty strong{display:block;color:#475569;font-size:.9rem;margin-bottom:6px}
+.empty p{font-size:.8rem;line-height:1.5}
+.btn-widen{margin-top:14px;padding:8px 20px;background:#0891b2;color:#fff;border:none;border-radius:99px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer}
+
+/* ── Booking Modal ─────────────────────────────────────── */
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(6px);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal-box{background:#fff;border-radius:22px;padding:32px;width:100%;max-width:480px;box-shadow:0 24px 80px rgba(0,0,0,.18);max-height:92vh;overflow-y:auto;animation:mPop .28s cubic-bezier(.4,0,.2,1)}
+@keyframes mPop{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.m-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}
+.m-hdr h2{font-size:1.2rem;font-weight:800;color:#0f172a}
+.m-hdr p{font-size:.84rem;color:#64748b;margin-top:3px;font-weight:600}
+.m-close{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:18px;padding:2px 6px}
+.m-close:hover{color:#475569}
+.fgrp{margin-bottom:14px}
+.flbl{display:block;font-size:.82rem;font-weight:600;color:#475569;margin-bottom:5px}
+.finput{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:'Inter',sans-serif;font-size:.86rem;color:#1e293b;outline:none;background:#f8fafc;transition:border-color .2s}
+.finput:focus{border-color:#0891b2;background:#fff;box-shadow:0 0 0 3px rgba(8,145,178,.1)}
+.slots{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
+.slot{padding:6px 13px;border:1.5px solid #e2e8f0;border-radius:99px;font-size:.8rem;font-weight:600;color:#475569;cursor:pointer;transition:all .18s;background:#fff;font-family:'Inter',sans-serif}
+.slot:hover,.slot.sel{background:#0891b2;color:#fff;border-color:#0891b2}
+.btn-confirm{width:100%;padding:13px;background:linear-gradient(135deg,#0891b2,#6366f1);color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:16px;box-shadow:0 4px 14px rgba(8,145,178,.28);transition:transform .2s}
+.btn-confirm:hover{transform:translateY(-2px)}
+
+/* Leaflet markers */
+.m-user{width:18px;height:18px;background:#0891b2;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(8,145,178,.65)}
+.m-doc{width:36px;height:36px;background:#fff;border-radius:50%;border:3px solid #0891b2;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 3px 12px rgba(8,145,178,.3);transition:transform .2s}
+.m-doc.hl{border-color:#6366f1;transform:scale(1.25)}
+
+/* Toast */
+#toasts{position:fixed;top:76px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+</style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────── -->
+<header class="page-header">
+  <div class="ph-inner">
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    <span class="ph-title"><i class="fas fa-map-marker-alt" style="color:#0891b2;margin-right:6px;"></i>Nearby Doctor Finder</span>
+    <div class="avatar-sm" id="hdr-avatar">U</div>
+  </div>
+</header>
+
+<!-- ── Hero ───────────────────────────────────────────── -->
+<div class="page-hero">
+  <h1>📍 Nearby Doctor Finder</h1>
+  <p>Neurologists, geriatricians &amp; dementia specialists — sorted by distance from you</p>
+</div>
+
+<!-- ── Search Bar ─────────────────────────────────────── -->
+<div class="search-wrap">
+  <div class="search-bar">
+    <i class="fas fa-search"></i>
+    <input class="s-input" id="s-loc" type="text" placeholder="Search city, area, or address… (e.g. 'Chennai')">
+    <select class="s-select" id="s-spec">
+      <option value="all">🩺 All Specialists</option>
+      <option value="neurologist">🧠 Neurologist</option>
+      <option value="geriatrician">👴 Geriatrician</option>
+      <option value="psychiatrist">🧬 Psychiatrist</option>
+      <option value="physician">⚕️ General Physician</option>
+      <option value="physiotherapist">🏃 Physiotherapist</option>
+    </select>
+    <select class="s-select" id="s-rad">
+      <option value="5">5 km</option>
+      <option value="10" selected>10 km</option>
+      <option value="25">25 km</option>
+      <option value="50">50 km</option>
+      <option value="9999">Worldwide</option>
+    </select>
+    <button class="btn-locate" id="btn-locate"><i class="fas fa-crosshairs"></i> My Location</button>
+    <button class="btn-search" id="btn-search"><i class="fas fa-search"></i> Search</button>
+  </div>
+
+  <!-- Status / error banners -->
+  <div class="banner warn" id="b-denied">
+    <i class="fas fa-map-marker-slash" style="margin-top:2px;flex-shrink:0;"></i>
+    <div class="banner-body">
+      <div class="banner-title">📍 Location access denied</div>
+      Type your city below to search nearby doctors:
+      <div class="manual-row">
+        <input class="manual-in" id="b-manual" type="text" placeholder="e.g. Chennai, Bangalore, Mumbai…">
+        <button class="manual-go" id="b-go">Search</button>
+      </div>
+    </div>
+  </div>
+  <div class="banner err" id="b-offline">
+    <i class="fas fa-wifi-slash" style="margin-top:2px;flex-shrink:0;"></i>
+    <div class="banner-body">
+      <div class="banner-title">📶 No internet connection</div>
+      Showing doctors from local database. <span class="retry-link" id="b-retry">Retry when online</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Two-column layout ───────────────────────────────── -->
+<div class="page-body">
+  <div class="two-col">
+
+    <!-- Map -->
+    <div>
+      <div class="map-card">
+        <div class="card-hdr">
+          <div class="card-hdr-title"><i class="fas fa-map-marker-alt" style="color:#0891b2;"></i> Live Map</div>
+          <span id="loc-label">📡 Detecting location…</span>
+        </div>
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-panel">
+      <div class="panel-hdr">
+        <div class="panel-title">👨‍⚕️ Nearby Doctors</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <span class="count-badge" id="count">Searching…</span>
+          <span class="src-label" id="src-label"></span>
+        </div>
+      </div>
+      <div class="doc-list" id="doc-list">
+        <div class="skel-wrap">
+          <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Booking Modal ───────────────────────────────────── -->
+<div class="modal-bg" id="modal">
+  <div class="modal-box">
+    <div class="m-hdr">
+      <div>
+        <h2>Book Appointment</h2>
+        <p id="m-doc-name"></p>
+      </div>
+      <button class="m-close" id="m-close"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="m-form">
+      <div class="fgrp"><label class="flbl">Patient Name *</label><input class="finput" id="m-patient" placeholder="Full name" required/></div>
+      <div class="fgrp"><label class="flbl">Your Phone *</label><input class="finput" id="m-phone" type="tel" placeholder="+91 98765 43210" required/></div>
+      <div class="fgrp"><label class="flbl">Date *</label><input class="finput" id="m-date" type="date" required/></div>
+      <div class="fgrp">
+        <label class="flbl">Preferred Time Slot</label>
+        <div class="slots" id="m-slots"></div>
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Reason for Visit</label>
+        <select class="finput" id="m-reason">
+          <option value="">Select…</option>
+          <option>Memory assessment</option>
+          <option>Dementia evaluation</option>
+          <option>Medication review</option>
+          <option>Follow-up consultation</option>
+          <option>Second opinion</option>
+        </select>
+      </div>
+      <button class="btn-confirm" type="submit"><i class="fas fa-calendar-check"></i> Confirm Appointment</button>
+    </form>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PLAIN SCRIPT — zero module imports, always runs
+     ═══════════════════════════════════════════════════════ -->
+<script>
+// ── Fill avatar initials ──────────────────────────────────
+(function(){
+  try{
+    var u=JSON.parse(sessionStorage.getItem('careHub_user')||localStorage.getItem('careHub_user')||'{}');
+    var n=(u.name||u.displayName||u.email||'U').trim();
+    var init=n.split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+    document.getElementById('hdr-avatar').textContent=init||'U';
+  }catch(e){}
+})();
+
+// ── Doctor dataset (20 realistic entries across Indian cities + 3 international) ──
+var DB=[
+  // Chennai
+  {id:'c1',emoji:'🧠',name:'Dr. Priya Menon',spec:'Neurologist – Dementia Specialist',type:'neurologist',hospital:'Apollo Hospitals',city:'Chennai',addr:'21 Greams Lane, Thousand Lights, Chennai 600006',phone:'+91 44 2829 3333',rating:4.9,avail:'now',lat:13.0607,lng:80.2492,slots:['09:00 AM','10:30 AM','02:00 PM','04:30 PM']},
+  {id:'c2',emoji:'⚕️',name:'Dr. Karthik Venkat',spec:'General Physician',type:'physician',hospital:'Fortis Malar',city:'Chennai',addr:'52 1st Main Rd, Gandhi Nagar, Chennai 600020',phone:'+91 44 4200 2000',rating:4.6,avail:'today',lat:13.0067,lng:80.2480,slots:['10:00 AM','12:00 PM','05:00 PM']},
+  {id:'c3',emoji:'🏃',name:'Dr. Shalini Kumar',spec:'Physiotherapist',type:'physiotherapist',hospital:'MIOT Hospitals',city:'Chennai',addr:'4/112 Mount Poonamallee Rd, Manapakkam, Chennai 600089',phone:'+91 44 2249 2288',rating:4.7,avail:'today',lat:13.0143,lng:80.1698,slots:['09:30 AM','11:00 AM','03:00 PM']},
+  // Bangalore
+  {id:'b1',emoji:'👴',name:'Dr. Suresh Iyer',spec:'Geriatrician',type:'geriatrician',hospital:'Manipal Hospitals',city:'Bangalore',addr:'98 Rustom Bagh, Airport Rd, Bangalore 560017',phone:'+91 80 2222 4444',rating:4.8,avail:'now',lat:12.9631,lng:77.6395,slots:['10:00 AM','11:30 AM','03:00 PM']},
+  {id:'b2',emoji:'🧠',name:'Dr. Ravi Krishnan',spec:'Neurologist',type:'neurologist',hospital:'NIMHANS',city:'Bangalore',addr:'Hosur Rd, Lakkasandra, Bangalore 560029',phone:'+91 80 4611 0007',rating:4.9,avail:'today',lat:12.9407,lng:77.5969,slots:['09:00 AM','11:30 AM','02:00 PM']},
+  {id:'b3',emoji:'🧬',name:'Dr. Anita Rao',spec:'Psychiatrist',type:'psychiatrist',hospital:'Sakra World Hospital',city:'Bangalore',addr:'52/2 Devarabisanahalli, Outer Ring Rd, Bangalore 560103',phone:'+91 80 4969 4969',rating:4.7,avail:'week',lat:12.9355,lng:77.6929,slots:['10:30 AM','01:00 PM','04:00 PM']},
+  {id:'b4',emoji:'⚕️',name:'Dr. Deepak Shetty',spec:'General Physician',type:'physician',hospital:'Aster CMI Hospital',city:'Bangalore',addr:'43/2 New Airport Rd, NH-7, Bangalore 560092',phone:'+91 80 4342 0100',rating:4.5,avail:'now',lat:13.0731,lng:77.5972,slots:['09:00 AM','11:00 AM','04:30 PM']},
+  // Delhi
+  {id:'d1',emoji:'🧬',name:'Dr. Ananya Sharma',spec:'Neuropsychologist',type:'neurologist',hospital:'AIIMS Delhi',city:'New Delhi',addr:'Sri Aurobindo Marg, Ansari Nagar, New Delhi 110029',phone:'+91 11 2659 3308',rating:4.7,avail:'today',lat:28.5672,lng:77.2100,slots:['09:30 AM','01:00 PM','03:30 PM']},
+  {id:'d2',emoji:'👴',name:'Dr. Naveen Gupta',spec:'Geriatrician',type:'geriatrician',hospital:'Max Super Speciality',city:'New Delhi',addr:'1 Press Enclave Rd, Saket, New Delhi 110017',phone:'+91 11 2651 5050',rating:4.8,avail:'now',lat:28.5275,lng:77.2092,slots:['10:00 AM','12:00 PM','03:00 PM','05:30 PM']},
+  {id:'d3',emoji:'🏃',name:'Dr. Pooja Malhotra',spec:'Physiotherapist',type:'physiotherapist',hospital:'Sir Ganga Ram Hospital',city:'New Delhi',addr:'Rajinder Nagar, New Delhi 110060',phone:'+91 11 2575 0000',rating:4.6,avail:'today',lat:28.6414,lng:77.1882,slots:['09:00 AM','11:30 AM','02:30 PM']},
+  // Mumbai
+  {id:'m1',emoji:'🏥',name:'Dr. Ramesh Gupta',spec:'Geriatric Psychiatrist',type:'psychiatrist',hospital:'Fortis Healthcare',city:'Mumbai',addr:'Mulund Goregaon Link Rd, Mumbai 400078',phone:'+91 22 6799 9999',rating:4.8,avail:'now',lat:19.1632,lng:72.9363,slots:['10:30 AM','12:00 PM','04:00 PM']},
+  {id:'m2',emoji:'🧠',name:'Dr. Nisha Mehta',spec:'Neurologist',type:'neurologist',hospital:'Kokilaben Hospital',city:'Mumbai',addr:'Rao Saheb Achutrao Patwardhan Marg, Mumbai 400053',phone:'+91 22 3066 6666',rating:4.9,avail:'today',lat:19.1337,lng:72.8256,slots:['09:00 AM','11:00 AM','03:30 PM']},
+  // Hyderabad
+  {id:'h1',emoji:'🧠',name:'Dr. Kavitha Reddy',spec:"Neurologist – Alzheimer's Specialist",type:'neurologist',hospital:'Yashoda Hospitals',city:'Hyderabad',addr:'Raj Bhavan Rd, Somajiguda, Hyderabad 500082',phone:'+91 40 4567 4567',rating:4.9,avail:'now',lat:17.4126,lng:78.4071,slots:['09:00 AM','11:00 AM','02:30 PM']},
+  {id:'h2',emoji:'👴',name:'Dr. Srinivas Rao',spec:'Geriatrician',type:'geriatrician',hospital:'Apollo Hospitals Jubilee Hills',city:'Hyderabad',addr:'Film Nagar, Jubilee Hills, Hyderabad 500033',phone:'+91 40 2360 7777',rating:4.7,avail:'today',lat:17.4126,lng:78.4126,slots:['10:00 AM','01:00 PM','04:30 PM']},
+  // Kolkata
+  {id:'k1',emoji:'👴',name:'Dr. Debashis Roy',spec:'Geriatrician & Memory Care',type:'geriatrician',hospital:'Apollo Gleneagles',city:'Kolkata',addr:'58 Canal Circular Rd, Kolkata 700054',phone:'+91 33 2320 3040',rating:4.7,avail:'now',lat:22.5804,lng:88.3961,slots:['10:00 AM','12:30 PM','04:00 PM']},
+  // Pune
+  {id:'p1',emoji:'🧬',name:'Dr. Meera Joshi',spec:'Neuropsychiatrist',type:'psychiatrist',hospital:'Ruby Hall Clinic',city:'Pune',addr:'40 Sassoon Rd, Camp, Pune 411001',phone:'+91 20 6645 6645',rating:4.6,avail:'today',lat:18.5254,lng:73.8724,slots:['09:30 AM','11:00 AM','03:00 PM']},
+  // Ahmedabad
+  {id:'a1',emoji:'🏥',name:'Dr. Nikhil Patel',spec:'Geriatrician',type:'geriatrician',hospital:'Sterling Hospitals',city:'Ahmedabad',addr:'Off Gurukul Rd, Memnagar, Ahmedabad 380052',phone:'+91 79 4000 6000',rating:4.5,avail:'week',lat:23.0525,lng:72.5671,slots:['10:00 AM','01:00 PM','04:00 PM']},
+  // Kochi
+  {id:'ko1',emoji:'🧠',name:'Dr. Arun Nair',spec:'Consultant Neurologist',type:'neurologist',hospital:'Amrita Institute of Medical Sciences',city:'Kochi',addr:'AIMS Ponekkara, Ernakulam, Kochi 682041',phone:'+91 484 280 1234',rating:4.8,avail:'now',lat:10.0231,lng:76.3086,slots:['09:00 AM','11:00 AM','02:00 PM']},
+  // International
+  {id:'uk1',emoji:'🧠',name:'Dr. Eleanor Hughes',spec:'Consultant Neurologist',type:'neurologist',hospital:"King's College Hospital",city:'London',addr:'Denmark Hill, London SE5 9RS',phone:'+44 20 3299 9000',rating:4.9,avail:'today',lat:51.4683,lng:-0.0945,slots:['09:00 AM','11:00 AM','02:00 PM']},
+  {id:'us1',emoji:'👴',name:'Dr. James Harrington',spec:'Geriatric Medicine & Dementia Care',type:'geriatrician',hospital:'Mayo Clinic',city:'Rochester MN',addr:'200 First St SW, Rochester, MN 55905',phone:'+1 507 284 2511',rating:5.0,avail:'today',lat:44.0224,lng:-92.4668,slots:['08:00 AM','10:00 AM','01:00 PM']},
+];
+
+// ── Haversine ─────────────────────────────────────────────
+function hav(a,b,c,d){var R=6371,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180;var x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function dtxt(k){return k<1?Math.round(k*1000)+'m away':k.toFixed(1)+' km away';}
+function filter(lat,lng,rkm,spec){
+  return DB.map(function(d){return Object.assign({},d,{dist:hav(lat,lng,d.lat,d.lng)});})
+    .filter(function(d){return (rkm>=9999||d.dist<=rkm)&&(spec==='all'||d.type===spec);})
+    .sort(function(a,b){return a.dist-b.dist;});
+}
+
+// ── State ─────────────────────────────────────────────────
+var cLat=20.5937,cLng=78.9629,cDocs=[],selDoc=null,selSlot=null;
+
+// ── Map ───────────────────────────────────────────────────
+var map=L.map('map',{zoomControl:true});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:19
+}).addTo(map);
+map.setView([20.5937,78.9629],5);
+setTimeout(function(){map.invalidateSize();},250);
+
+var uPin=null,dPins={};
+
+function setUPin(la,ln){
+  if(uPin)uPin.remove();
+  uPin=L.marker([la,ln],{icon:L.divIcon({html:'<div class="m-user"></div>',iconSize:[18,18],className:''})})
+    .addTo(map).bindPopup('<strong>📍 Your Location</strong>');
+}
+function clrPins(){Object.values(dPins).forEach(function(p){p.remove();});dPins={};}
+function addPin(doc,idx){
+  if(!doc.lat||!doc.lng)return;
+  var el='<div class="m-doc">'+doc.emoji+'</div>';
+  var m=L.marker([doc.lat,doc.lng],{icon:L.divIcon({html:el,iconSize:[36,36],iconAnchor:[18,18],className:''})}).addTo(map);
+  m.bindPopup('<strong>'+esc(doc.name)+'</strong><br><small>'+esc(doc.spec)+'</small><br><small>'+dtxt(doc.dist)+'</small>');
+  m.on('click',function(){hlCard(idx);});
+  dPins[doc.id]=m;
+}
+function hlCard(idx){
+  document.querySelectorAll('.doc-card').forEach(function(c){c.classList.remove('hl');});
+  // Also reset marker styles
+  cDocs.forEach(function(d){
+    var el=document.querySelector('.m-doc[data-id="'+d.id+'"]');
+    if(el)el.classList.remove('hl');
+  });
+  var c=document.querySelector('.doc-card[data-idx="'+idx+'"]');
+  if(c){c.classList.add('hl');c.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+
+// ── Nominatim geocoding (XMLHttpRequest, no module needed) ─
+function geocode(q,cb){
+  var r=new XMLHttpRequest();
+  r.timeout=10000;
+  r.open('GET','https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=1');
+  r.setRequestHeader('Accept-Language','en');
+  r.onload=function(){try{var d=JSON.parse(r.responseText);d.length?cb(null,{lat:+d[0].lat,lng:+d[0].lon,name:d[0].display_name.split(',').slice(0,2).join(',').trim()}):cb('not found');}catch(e){cb(e);}};
+  r.onerror=r.ontimeout=function(){cb('timeout');};
+  r.send();
+}
+function revGeocode(la,ln,cb){
+  var r=new XMLHttpRequest();
+  r.timeout=8000;
+  r.open('GET','https://nominatim.openstreetmap.org/reverse?lat='+la+'&lon='+ln+'&format=json');
+  r.setRequestHeader('Accept-Language','en');
+  r.onload=function(){try{var d=JSON.parse(r.responseText),a=d.address||{};cb(a.city||a.town||a.village||a.county||a.state||'your location');}catch(e){cb('your location');}};
+  r.onerror=r.ontimeout=function(){cb('your location');};
+  r.send();
+}
+
+// ── Banners ───────────────────────────────────────────────
+function hideBanners(){document.querySelectorAll('.banner').forEach(function(b){b.classList.remove('show');});}
+function showBanner(id){hideBanners();var el=document.getElementById(id);if(el)el.classList.add('show');}
+
+// ── Render ────────────────────────────────────────────────
+function render(docs){
+  clrPins();cDocs=docs;
+  var rkm=parseInt(document.getElementById('s-rad').value,10)||10;
+  document.getElementById('count').textContent=docs.length?docs.length+' found':'0 found';
+  document.getElementById('src-label').textContent='📚 Local database';
+  var list=document.getElementById('doc-list');
+
+  if(!docs.length){
+    list.innerHTML='<div class="empty"><i class="fas fa-user-md"></i><strong>No doctors found nearby</strong><p>No results within '+(rkm>=9999?'any distance':rkm+' km')+' for this filter.<br>Try a wider radius or different specialty.</p><button class="btn-widen" id="btn-widen"><i class="fas fa-expand-alt"></i> Wider Radius</button></div>';
+    document.getElementById('btn-widen').onclick=function(){
+      var sel=document.getElementById('s-rad'),opts=Array.from(sel.options),i=opts.findIndex(function(o){return o.selected;});
+      if(i<opts.length-1)sel.selectedIndex=i+1;
+      runSearch();
+    };
+    return;
+  }
+
+  var availLabel={'now':'<span class="avail-badge avail-now">✅ Available now</span>','today':'<span class="avail-badge avail-today">🕐 Available today</span>','week':'<span class="avail-badge avail-week">📅 Available this week</span>'};
+
+  list.innerHTML=docs.map(function(d,i){
+    return '<div class="doc-card" data-idx="'+i+'">'
+      +'<div class="doc-emoji">'+d.emoji+'</div>'
+      +'<div class="doc-body">'
+        +'<div class="doc-name">'+esc(d.name)+'</div>'
+        +'<div class="doc-spec">'+esc(d.spec)+'</div>'
+        +'<div class="doc-meta">'
+          +(d.rating?'<span><i class="fas fa-star star"></i> '+d.rating+'</span>':'')
+          +(d.hospital?'<span><i class="fas fa-hospital-alt" style="color:#0891b2;"></i> '+esc(d.hospital)+'</span>':'')
+          +(d.city?'<span><i class="fas fa-city" style="color:#94a3b8;"></i> '+esc(d.city)+'</span>':'')
+          +(d.avail?availLabel[d.avail]||'':'')
+        +'</div>'
+        +(d.addr?'<div class="doc-addr"><i class="fas fa-map-marker-alt" style="color:#0891b2;margin-right:3px;"></i>'+esc(d.addr)+'</div>':'')
+        +(d.phone?'<div class="doc-phone-row"><i class="fas fa-phone-alt"></i> '+esc(d.phone)+'</div>':'<div class="no-phone"><i class="fas fa-phone-slash"></i> No phone listed</div>')
+        +'<div class="doc-btns">'
+          +(d.phone?'<a class="btn-call" href="tel:'+esc(d.phone)+'"><i class="fas fa-phone-alt"></i> Call</a>':'<a class="btn-call off" href="#"><i class="fas fa-phone-alt"></i> Call</a>')
+          +'<button class="btn-book" data-idx="'+i+'"><i class="fas fa-calendar-plus"></i> Book Appointment</button>'
+        +'</div>'
+      +'</div>'
+      +(d.dist!=null?'<div class="dist-pill">'+dtxt(d.dist)+'</div>':'')
+    +'</div>';
+  }).join('');
+
+  list.onclick=function(e){
+    var book=e.target.closest('.btn-book');
+    var card=e.target.closest('.doc-card');
+    if(book){openBook(cDocs[parseInt(book.dataset.idx)]);return;}
+    if(card){
+      var idx=parseInt(card.dataset.idx);
+      hlCard(idx);
+      var doc=cDocs[idx];
+      if(doc&&dPins[doc.id]){map.setView([doc.lat,doc.lng],14);dPins[doc.id].openPopup();}
+    }
+  };
+
+  docs.forEach(function(d,i){addPin(d,i);});
+  var all=Object.values(dPins).concat(uPin?[uPin]:[]);
+  if(all.length){try{map.fitBounds(L.featureGroup(all).getBounds().pad(0.3));}catch(_){}}
+}
+
+// ── Main search ───────────────────────────────────────────
+function runSearch(){
+  var rkm=parseInt(document.getElementById('s-rad').value,10)||10;
+  var spec=document.getElementById('s-spec').value;
+  hideBanners();
+  document.getElementById('count').textContent='Searching…';
+  document.getElementById('src-label').textContent='';
+  document.getElementById('btn-search').disabled=true;
+  document.getElementById('doc-list').innerHTML='<div class="skel-wrap"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>';
+  setUPin(cLat,cLng);
+  map.setView([cLat,cLng],13);
+
+  var docs=filter(cLat,cLng,rkm,spec);
+  render(docs);
+  document.getElementById('btn-search').disabled=false;
+
+  revGeocode(cLat,cLng,function(nm){
+    document.getElementById('loc-label').textContent='📍 Near '+nm;
+    document.getElementById('s-loc').placeholder=nm;
+  });
+
+  if(!navigator.onLine)showBanner('b-offline');
+}
+
+// ── Geolocation ───────────────────────────────────────────
+function geolocate(){
+  document.getElementById('loc-label').textContent='📡 Detecting location…';
+  document.getElementById('btn-search').disabled=true;
+  if(!navigator.geolocation){showBanner('b-denied');cLat=20.5937;cLng=78.9629;runSearch();return;}
+  var timer=setTimeout(function(){showBanner('b-denied');cLat=20.5937;cLng=78.9629;runSearch();},8000);
+  navigator.geolocation.getCurrentPosition(
+    function(p){clearTimeout(timer);hideBanners();cLat=p.coords.latitude;cLng=p.coords.longitude;runSearch();},
+    function(){clearTimeout(timer);showBanner('b-denied');cLat=20.5937;cLng=78.9629;runSearch();},
+    {timeout:7000,maximumAge:60000}
+  );
+}
+function searchByText(q){
+  q=(q||'').trim();
+  if(!q){toast('Enter a city or address to search','warn');return;}
+  document.getElementById('loc-label').textContent='🔍 Geocoding…';
+  geocode(q,function(err,g){
+    if(err||!g){toast('Location not found — try a different city name','err');document.getElementById('loc-label').textContent='❌ Not found';document.getElementById('btn-search').disabled=false;return;}
+    cLat=g.lat;cLng=g.lng;
+    document.getElementById('s-loc').value=g.name;
+    runSearch();
+  });
+}
+
+// ── Booking Modal ─────────────────────────────────────────
+function openBook(doc){
+  selDoc=doc;selSlot=null;
+  document.getElementById('m-doc-name').textContent=(doc.emoji||'⚕️')+' '+doc.name+' — '+doc.hospital;
+  var sl=document.getElementById('m-slots');
+  sl.innerHTML=(doc.slots||['09:00 AM','11:00 AM','02:00 PM','04:30 PM']).map(function(s){
+    return '<button type="button" class="slot" data-s="'+s+'">'+s+'</button>';
+  }).join('');
+  document.getElementById('m-date').min=new Date().toISOString().split('T')[0];
+  document.getElementById('modal').classList.add('open');
+}
+document.getElementById('m-slots').addEventListener('click',function(e){
+  var b=e.target.closest('.slot');if(!b)return;
+  document.querySelectorAll('.slot').forEach(function(x){x.classList.remove('sel');});
+  b.classList.add('sel');selSlot=b.dataset.s;
+});
+document.getElementById('m-close').onclick=function(){document.getElementById('modal').classList.remove('open');};
+document.getElementById('modal').onclick=function(e){if(e.target===this)this.classList.remove('open');};
+document.getElementById('m-form').onsubmit=function(e){
+  e.preventDefault();
+  if(!selSlot){toast('Please select a time slot','warn');return;}
+  var nm=document.getElementById('m-patient').value.trim();
+  var dt=document.getElementById('m-date').value;
+  toast('✅ Appointment confirmed for '+nm+' with '+selDoc.name+' on '+dt+' at '+selSlot,'ok',5000);
+  document.getElementById('modal').classList.remove('open');
+  this.reset();selSlot=null;
+};
+
+// ── Toast ─────────────────────────────────────────────────
+function toast(msg,type,dur){
+  dur=dur||3500;
+  var cols={ok:'#22c55e',err:'#f43f5e',warn:'#f59e0b'};
+  var icns={ok:'fa-check-circle',err:'fa-exclamation-circle',warn:'fa-exclamation-triangle'};
+  var t=document.createElement('div');
+  t.style.cssText='display:flex;align-items:center;gap:10px;padding:12px 18px;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.12);border-left:4px solid '+(cols[type]||cols.ok)+';font-size:.875rem;font-weight:500;color:#1e293b;max-width:300px;pointer-events:auto;';
+  t.innerHTML='<i class="fas '+(icns[type]||icns.ok)+'" style="color:'+(cols[type]||cols.ok)+';"></i><span>'+msg+'</span>';
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transition='.35s';setTimeout(function(){t.remove();},380);},dur);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── Wire controls ─────────────────────────────────────────
+document.getElementById('btn-locate').onclick=geolocate;
+document.getElementById('btn-search').onclick=function(){searchByText(document.getElementById('s-loc').value);};
+document.getElementById('s-loc').onkeydown=function(e){if(e.key==='Enter')searchByText(this.value);};
+document.getElementById('s-spec').onchange=runSearch;
+document.getElementById('s-rad').onchange=runSearch;
+document.getElementById('b-retry').onclick=function(){hideBanners();runSearch();};
+document.getElementById('b-go').onclick=function(){var v=document.getElementById('b-manual').value;if(v.trim()){hideBanners();searchByText(v);}};
+document.getElementById('b-manual').onkeydown=function(e){if(e.key==='Enter')document.getElementById('b-go').click();};
+window.addEventListener('online',function(){hideBanners();runSearch();});
+
+// ── Boot ──────────────────────────────────────────────────
+geolocate();
+</script>
+</body>
+</html>

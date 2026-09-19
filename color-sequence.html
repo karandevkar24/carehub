@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Auth Guard: immediate synchronous check before DOM render -->
+  <script>
+    (function() {
+      try {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) { window.location.replace('login.html'); }
+      } catch (e) { window.location.replace('login.html'); }
+    })();
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) window.location.replace('login.html');
+      }
+    });
+  </script>
+
+  <!-- FOUC Prevention -->
+  <style id="auth-hide">body{display:none!important}</style>
+  <!-- GUARANTEED body reveal: plain script, independent of module imports -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+    window.addEventListener('load', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareHub – Color Sequence Memory</title>
+  <meta name="description" content="Calm, pastel color pattern sequence memory game for dementia and cognitive care." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>" />
+
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{
+      font-family:'Nunito',system-ui,sans-serif;
+      background:
+        radial-gradient(ellipse at 15% 20%, rgba(254,205,211,0.35) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 15%, rgba(199,210,254,0.38) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 85%, rgba(187,247,208,0.35) 0%, transparent 55%),
+        linear-gradient(150deg, #fdfbf7 0%, #f5f3ff 45%, #f0fdfa 100%);
+      min-height:100vh;
+      color:#1e293b;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .page-header{
+      background:rgba(255,255,255,0.92);
+      backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(226,232,240,0.8);
+      padding:0 24px;
+      position:sticky;
+      top:0;
+      z-index:100;
+    }
+    .ph-inner{
+      max-width:1100px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      height:64px;
+      gap:14px;
+    }
+    .header-left{display:flex;align-items:center;gap:12px;}
+    .back-btn{
+      display:flex;align-items:center;gap:7px;
+      color:#64748b;text-decoration:none;
+      font-size:0.85rem;font-weight:700;
+      padding:7px 16px;border-radius:99px;
+      border:1.5px solid #e2e8f0;
+      background:white;transition:all 0.2s;
+    }
+    .back-btn:hover{background:#f0fdfa;color:#0891b2;border-color:#0891b2;}
+    .ph-title{font-size:1.05rem;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;}
+
+    .header-right{display:flex;align-items:center;gap:12px;}
+    .btn-audio-toggle{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:7px 15px;border-radius:99px;
+      border:1.5px solid #e2e8f0;background:white;
+      color:#475569;font-family:'Inter',sans-serif;
+      font-size:0.82rem;font-weight:700;
+      cursor:pointer;transition:all 0.2s;
+    }
+    .btn-audio-toggle.active{background:#ecfeff;color:#0891b2;border-color:#a5f3fc;}
+    .btn-audio-toggle:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,0.06);}
+
+    .avatar-sm{
+      width:36px;height:36px;border-radius:50%;
+      background:linear-gradient(135deg,#ec4899,#8b5cf6);
+      display:flex;align-items:center;justify-content:center;
+      font-size:13px;font-weight:800;color:white;overflow:hidden;
+      border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.1);
+    }
+    .avatar-sm img{width:100%;height:100%;object-fit:cover;}
+
+    /* â”€â”€ HERO BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .game-hero{
+      background:linear-gradient(135deg,#ec4899 0%,#8b5cf6 50%,#3b82f6 100%);
+      padding:42px 24px 48px;
+      text-align:center;
+      color:white;
+      position:relative;
+      overflow:hidden;
+    }
+    .game-hero::before{
+      content:'';position:absolute;inset:0;
+      background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='30' cy='30' r='18' stroke='white' stroke-opacity='0.08' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E") repeat;
+      pointer-events:none;
+    }
+    .hero-badge{
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(255,255,255,0.22);backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,0.35);
+      color:white;padding:4px 14px;border-radius:99px;
+      font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;
+      margin-bottom:12px;
+    }
+    .game-hero h1{font-size:clamp(1.7rem,3.8vw,2.4rem);font-weight:900;margin-bottom:6px;}
+    .game-hero p{font-size:0.95rem;color:rgba(255,255,255,0.9);max-width:580px;margin:0 auto;}
+
+    /* â”€â”€ MAIN CONTAINER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .game-container{
+      max-width:960px;
+      margin:-24px auto 60px;
+      padding:0 20px;
+      width:100%;
+      flex:1;
+    }
+
+    /* Glass Card */
+    .board-card{
+      background:rgba(255,255,255,0.92);
+      backdrop-filter:blur(24px);
+      border:1.5px solid rgba(255,255,255,0.85);
+      border-radius:28px;
+      padding:36px 32px 42px;
+      box-shadow:0 16px 48px rgba(139,92,246,0.1);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      position:relative;
+      overflow:hidden;
+    }
+    @media(max-width:600px){.board-card{padding:24px 18px 32px;border-radius:22px;}}
+
+    /* Top HUD Row */
+    .hud-row{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:14px;
+      margin-bottom:28px;
+      padding-bottom:18px;
+      border-bottom:1.5px solid #f1f5f9;
+    }
+    .hud-pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:#f8fafc;
+      border:1.5px solid #e2e8f0;
+      padding:8px 18px;
+      border-radius:99px;
+      font-size:0.85rem;
+      font-weight:700;
+      color:#475569;
+    }
+    .hud-pill strong{color:#0f172a;font-weight:900;font-size:1.05rem;}
+    .hud-level-badge{
+      background:linear-gradient(135deg,#ec4899,#8b5cf6);
+      color:white;
+      padding:8px 22px;
+      border-radius:99px;
+      font-size:0.92rem;
+      font-weight:900;
+      box-shadow:0 4px 14px rgba(236,72,153,0.3);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    /* Status & Instructions Banner */
+    .status-banner{
+      width:100%;
+      max-width:600px;
+      border-radius:18px;
+      padding:16px 22px;
+      text-align:center;
+      margin-bottom:30px;
+      transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+    }
+    .status-banner.watch{
+      background:linear-gradient(135deg,#fef3c7,#fee2e2);
+      border:1.5px solid #fde68a;
+      color:#92400e;
+      box-shadow:0 4px 18px rgba(245,158,11,0.12);
+    }
+    .status-banner.play{
+      background:linear-gradient(135deg,#e0f2fe,#dcfce7);
+      border:1.5px solid #a7f3d0;
+      color:#065f46;
+      box-shadow:0 4px 18px rgba(16,185,129,0.15);
+      animation:gentlePulse 2.5s infinite;
+    }
+    .status-banner.success{
+      background:linear-gradient(135deg,#dcfce7,#bbf7d0);
+      border:1.5px solid #86efac;
+      color:#15803d;
+      box-shadow:0 6px 24px rgba(34,197,94,0.2);
+    }
+    .status-banner.retry{
+      background:linear-gradient(135deg,#f3e8ff,#ede9fe);
+      border:1.5px solid #d8b4fe;
+      color:#6b21a8;
+      box-shadow:0 4px 18px rgba(168,85,247,0.12);
+    }
+
+    @keyframes gentlePulse{
+      0%,100%{transform:scale(1);}
+      50%{transform:scale(1.015);}
+    }
+
+    .sb-title{font-size:1.15rem;font-weight:900;display:flex;align-items:center;gap:8px;}
+    .sb-desc{font-size:0.86rem;font-weight:600;opacity:0.9;}
+
+    /* Step Progress Indicator (Dots) */
+    .step-dots{
+      display:flex;
+      gap:10px;
+      margin-bottom:32px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .step-dot{
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      border:2px solid #cbd5e1;
+      background:white;
+      transition:all 0.3s;
+    }
+    .step-dot.active{
+      transform:scale(1.3);
+      border-color:#8b5cf6;
+      background:#8b5cf6;
+      box-shadow:0 0 10px rgba(139,92,246,0.5);
+    }
+    .step-dot.filled{
+      border-color:#10b981;
+      background:#10b981;
+    }
+
+    /* â”€â”€ COLOR TILES GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .tiles-wrap{
+      width:100%;
+      max-width:760px;
+      display:grid;
+      gap:20px;
+      justify-content:center;
+      margin-bottom:34px;
+    }
+    /* Dynamic grid columns based on count */
+    .tiles-grid-3{grid-template-columns:repeat(3,minmax(120px,180px));}
+    .tiles-grid-4{grid-template-columns:repeat(4,minmax(110px,160px));}
+    .tiles-grid-5{grid-template-columns:repeat(5,minmax(100px,140px));}
+    .tiles-grid-6{grid-template-columns:repeat(3,minmax(110px,160px));}
+    @media(max-width:720px){
+      .tiles-grid-3{grid-template-columns:repeat(3,1fr);}
+      .tiles-grid-4{grid-template-columns:repeat(2,1fr);}
+      .tiles-grid-5{grid-template-columns:repeat(3,1fr);}
+      .tiles-grid-6{grid-template-columns:repeat(3,1fr);}
+      .tiles-wrap{gap:14px;}
+    }
+
+    /* Colored Tile */
+    .color-tile{
+      position:relative;
+      aspect-ratio:1/1;
+      min-height:120px;
+      border-radius:24px;
+      border:3px solid transparent;
+      cursor:pointer;
+      user-select:none;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:16px;
+      transition:transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, filter 0.25s ease, opacity 0.25s;
+      box-shadow:0 8px 24px rgba(0,0,0,0.06), inset 0 2px 4px rgba(255,255,255,0.6);
+      opacity:0.85;
+      outline:none;
+    }
+    @media(max-width:500px){
+      .color-tile{border-radius:18px;min-height:100px;padding:10px;}
+    }
+
+    /* Inner Glass Sheen */
+    .color-tile::after{
+      content:'';
+      position:absolute;
+      top:6px;left:10px;right:10px;height:35%;
+      background:linear-gradient(180deg,rgba(255,255,255,0.45) 0%,rgba(255,255,255,0) 100%);
+      border-radius:18px 18px 90px 90px;
+      pointer-events:none;
+    }
+
+    /* Hover state (when interactive) */
+    .color-tile.interactive:hover{
+      opacity:1;
+      transform:translateY(-4px) scale(1.03);
+      box-shadow:0 14px 32px var(--glow-color, rgba(0,0,0,0.12));
+    }
+    .color-tile.interactive:active{
+      transform:scale(0.96);
+    }
+
+    /* Disabled state during playback */
+    .color-tile.disabled{
+      cursor:default;
+      pointer-events:none;
+    }
+
+    /* â”€â”€ ACTIVE / LIT HIGHLIGHT (2 SECONDS PER STEP) â”€â”€ */
+    .color-tile.lit{
+      opacity:1 !important;
+      transform:scale(1.1) !important;
+      border-color:white !important;
+      box-shadow:
+        0 0 50px var(--glow-color, rgba(236,72,153,0.9)),
+        0 0 20px var(--glow-color, rgba(236,72,153,0.7)),
+        inset 0 0 25px rgba(255,255,255,0.8) !important;
+      filter:brightness(1.18) saturate(1.25);
+      z-index:10;
+    }
+
+    .tile-name{
+      font-size:0.88rem;
+      font-weight:900;
+      color:#1e293b;
+      letter-spacing:0.02em;
+      text-shadow:0 1px 3px rgba(255,255,255,0.8);
+      position:relative;
+      z-index:2;
+    }
+    .tile-icon{
+      font-size:1.6rem;
+      position:relative;
+      z-index:2;
+      transition:transform 0.2s;
+    }
+    .color-tile.lit .tile-icon{
+      transform:scale(1.25);
+    }
+
+    /* â”€â”€ CONTROLS & REPLAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    .bottom-controls{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      width:100%;
+    }
+    .btn-action{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:12px 28px;
+      border-radius:99px;
+      font-family:'Inter',sans-serif;
+      font-size:0.9rem;
+      font-weight:800;
+      cursor:pointer;
+      border:none;
+      transition:all 0.2s;
+    }
+    .btn-replay{
+      background:#ffffff;
+      color:#6366f1;
+      border:2px solid #e0e7ff;
+      box-shadow:0 4px 14px rgba(99,102,241,0.1);
+    }
+    .btn-replay:hover{
+      background:#eef2ff;
+      border-color:#c7d2fe;
+      transform:translateY(-1px);
+    }
+    .btn-start-lvl{
+      background:linear-gradient(135deg,#ec4899,#8b5cf6);
+      color:white;
+      box-shadow:0 4px 18px rgba(236,72,153,0.35);
+    }
+    .btn-start-lvl:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 24px rgba(236,72,153,0.45);
+    }
+
+    /* Celebration & Confetti */
+    .celebration-toast{
+      position:fixed;
+      bottom:36px;
+      left:50%;
+      transform:translateX(-50%) translateY(30px);
+      background:rgba(255,255,255,0.96);
+      backdrop-filter:blur(16px);
+      border:2px solid #86efac;
+      padding:16px 28px;
+      border-radius:99px;
+      box-shadow:0 12px 40px rgba(34,197,94,0.25);
+      font-size:1rem;
+      font-weight:800;
+      color:#15803d;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      opacity:0;
+      pointer-events:none;
+      transition:all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index:999;
+    }
+    .celebration-toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    /* Guide text */
+    .game-help-box{
+      max-width:680px;
+      margin:28px auto 0;
+      background:white;
+      border:1.5px solid #e2e8f0;
+      border-radius:20px;
+      padding:22px 26px;
+      display:flex;
+      align-items:flex-start;
+      gap:16px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.04);
+    }
+    .help-icon{
+      width:40px;height:40px;border-radius:12px;
+      background:#f0fdfa;color:#0891b2;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;flex-shrink:0;
+    }
+    .help-text h4{font-size:0.95rem;font-weight:800;color:#0f172a;margin-bottom:4px;}
+    .help-text p{font-size:0.83rem;color:#64748b;line-height:1.55;}
+  </style>
+  <link rel="stylesheet" href="./css/perf.css" />
+</head>
+<body>
+
+<!-- â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<header class="page-header">
+  <div class="ph-inner">
+    <div class="header-left">
+      <a class="back-btn" href="games.html"><i class="fas fa-arrow-left"></i> Games Zone</a>
+      <span class="ph-title"><i class="fas fa-palette" style="color:#ec4899;"></i> Color Sequence</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-audio-toggle active" id="audio-toggle-btn" title="Soft piano background music">
+        <i class="fas fa-music"></i> <span id="audio-text">Piano: On</span>
+      </button>
+      <div class="avatar-sm" id="header-avatar"></div>
+    </div>
+  </div>
+</header>
+
+<!-- â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<div class="game-hero">
+  <div class="hero-badge"><i class="fas fa-brain"></i> Memory &amp; Attention Exercise</div>
+  <h1>🎨 Color Sequence Memory</h1>
+  <p>Watch each pastel tile light up for 2 seconds, then tap them back in the exact same order.</p>
+</div>
+
+<!-- â”€â”€ MAIN GAME CONTAINER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<div class="game-container">
+  <div class="board-card">
+
+    <!-- HUD Row -->
+    <div class="hud-row">
+      <div class="hud-level-badge">
+        <i class="fas fa-trophy"></i>
+        <span>Level <span id="hud-level-num">1</span></span>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="hud-pill">
+          <i class="fas fa-shapes" style="color:#8b5cf6;"></i>
+          <span>Palette: <strong id="hud-palette-count">3 Colors</strong></span>
+        </div>
+        <div class="hud-pill">
+          <i class="fas fa-route" style="color:#ec4899;"></i>
+          <span>Steps: <strong id="hud-steps-count">3</strong></span>
+        </div>
+        <div class="hud-pill">
+          <i class="fas fa-star" style="color:#f59e0b;"></i>
+          <span>Streak: <strong id="hud-streak">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Banner -->
+    <div class="status-banner watch" id="status-banner">
+      <div class="sb-title" id="sb-title">
+        <i class="fas fa-eye"></i> Watch the Pattern...
+      </div>
+      <div class="sb-desc" id="sb-desc">
+        Each color lights up for 2 seconds. Relax and observe the order.
+      </div>
+    </div>
+
+    <!-- Step Progress Dots -->
+    <div class="step-dots" id="step-dots"></div>
+
+    <!-- Interactive Tiles Grid -->
+    <div class="tiles-wrap tiles-grid-3" id="tiles-wrap"></div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls">
+      <button class="btn-action btn-replay" id="btn-replay-pattern" style="display:none;">
+        <i class="fas fa-redo"></i> Replay Pattern
+      </button>
+      <button class="btn-action btn-start-lvl" id="btn-start-pattern">
+        <i class="fas fa-play"></i> Start Level
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Help & Caregiver Advice Box -->
+  <div class="game-help-box">
+    <div class="help-icon"><i class="fas fa-heart"></i></div>
+    <div class="help-text">
+      <h4>Gentle Dementia Care Design</h4>
+      <p>
+        Colors shift completely on every level to maintain cognitive curiosity without repetition fatigue.
+        Pacing is unhurried: each color highlights for a full 2 seconds, with no time pressure or negative buzzer.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Celebration Toast -->
+<div class="celebration-toast" id="celebration-toast">
+  <i class="fas fa-sparkles" style="color:#10b981;font-size:20px;"></i>
+  <span id="toast-text">Splendid! Moving to Level 2 🌸</span>
+</div>
+
+<script type="module">
+  import { getSession, populateHeader, showToast } from './js/ui.js';
+  import { saveScore } from './js/firebase.js';
+
+  const user = await getSession();
+  if (user) populateHeader(user);
+  document.getElementById('auth-hide')?.remove();
+  document.body.style.display = '';
+
+  // â”€â”€ 1. PASTEL COLOR POOL (Curated 16 calming, eye-friendly colors) â”€â”€
+  // Each has an associated gentle pentatonic pitch so chords and sequences always sound harmonious!
+  const COLOR_POOL = [
+    { id: 'rose',       name: 'Soft Rose',    icon: '🌸', bg: '#fecdd3', border: '#fb7185', glow: 'rgba(253, 164, 175, 0.95)', freq: 261.63 }, // C4
+    { id: 'peach',      name: 'Warm Peach',   icon: '🍑', bg: '#fed7aa', border: '#fb923c', glow: 'rgba(254, 215, 170, 0.95)', freq: 293.66 }, // D4
+    { id: 'butter',     name: 'Pale Butter',  icon: '🌼', bg: '#fef08a', border: '#facc15', glow: 'rgba(254, 240, 138, 0.95)', freq: 329.63 }, // E4
+    { id: 'mint',       name: 'Fresh Mint',   icon: '🍃', bg: '#bbf7d0', border: '#4ade80', glow: 'rgba(187, 247, 208, 0.95)', freq: 392.00 }, // G4
+    { id: 'sky',        name: 'Sky Blue',     icon: 'â˜️', bg: '#bae6fd', border: '#38bdf8', glow: 'rgba(186, 230, 253, 0.95)', freq: 440.00 }, // A4
+    { id: 'lavender',   name: 'Lavender',     icon: '🪻', bg: '#ddd6fe', border: '#a78bfa', glow: 'rgba(221, 214, 254, 0.95)', freq: 523.25 }, // C5
+    { id: 'lilac',      name: 'Soft Lilac',   icon: '💜', bg: '#f5d0fe', border: '#e879f9', glow: 'rgba(245, 208, 254, 0.95)', freq: 587.33 }, // D5
+    { id: 'coral',      name: 'Muted Coral',  icon: '🪸', bg: '#fecaca', border: '#f87171', glow: 'rgba(254, 202, 202, 0.95)', freq: 659.25 }, // E5
+    { id: 'apricot',    name: 'Apricot',      icon: '🍊', bg: '#ffedd5', border: '#fdba74', glow: 'rgba(255, 237, 213, 0.95)', freq: 392.00 }, // G4
+    { id: 'sage',       name: 'Sage Green',   icon: '🌿', bg: '#ccfbf1', border: '#2dd4bf', glow: 'rgba(204, 251, 241, 0.95)', freq: 440.00 }, // A4
+    { id: 'aqua',       name: 'Aqua Water',   icon: '💧', bg: '#cffafe', border: '#67e8f9', glow: 'rgba(207, 250, 254, 0.95)', freq: 523.25 }, // C5
+    { id: 'periwinkle', name: 'Periwinkle',   icon: 'âœ¨', bg: '#e0e7ff', border: '#818cf8', glow: 'rgba(224, 231, 255, 0.95)', freq: 293.66 }, // D4
+    { id: 'orchid',     name: 'Soft Orchid',  icon: '🌺', bg: '#fae8ff', border: '#d8b4fe', glow: 'rgba(250, 232, 255, 0.95)', freq: 329.63 }, // E4
+    { id: 'blush',      name: 'Powder Blush', icon: '🎀', bg: '#fce7f3', border: '#f472b6', glow: 'rgba(252, 231, 243, 0.95)', freq: 261.63 }, // C4
+    { id: 'lemon',      name: 'Mellow Lemon', icon: '🍋', bg: '#fef9c3', border: '#fde047', glow: 'rgba(254, 249, 195, 0.95)', freq: 587.33 }, // D5
+    { id: 'pistachio',  name: 'Pistachio',    icon: '🌱', bg: '#dcfce7', border: '#86efac', glow: 'rgba(220, 252, 231, 0.95)', freq: 659.25 }, // E5
+  ];
+
+  // â”€â”€ 2. WEB AUDIO SYNTHESIZER (Piano Ambience & Color Tones) â”€â”€
+  let audioCtx = null;
+  let isMuted = false;
+  let bgmInterval = null;
+
+  function getAudioContext() {
+    if (!audioCtx || audioCtx.state === 'closed') {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  /** Play warm bell/marimba tone for color highlight or tap */
+  function playColorTone(frequency) {
+    if (isMuted) return;
+    try {
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+
+      // Primary gentle tone
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(frequency, now);
+
+      // Warm harmonic overtone
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(frequency * 2, now);
+
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+
+      gain2.gain.setValueAtTime(0.08, now);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+      osc.connect(gain);
+      osc2.connect(gain2);
+      gain.connect(ctx.destination);
+      gain2.connect(ctx.destination);
+
+      osc.start(now);
+      osc2.start(now);
+      osc.stop(now + 1.5);
+      osc2.stop(now + 0.9);
+    } catch (_) {}
+  }
+
+  /** Gentle celebratory ascending chime */
+  function playCelebrationChime() {
+    if (isMuted) return;
+    try {
+      const ctx = getAudioContext();
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 - E5 - G5 - C6
+      notes.forEach((freq, idx) => {
+        const now = ctx.currentTime + (idx * 0.12);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.65);
+      });
+    } catch (_) {}
+  }
+
+  /** Soft comforting sound on mistake */
+  function playSoftRetrySound() {
+    if (isMuted) return;
+    try {
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(392.00, now); // G4
+      osc.frequency.exponentialRampToValueAtTime(329.63, now + 0.35); // E4
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.55);
+    } catch (_) {}
+  }
+
+  /** Soft ambient piano chord loop */
+  function startBackgroundPiano() {
+    if (bgmInterval) clearInterval(bgmInterval);
+    const chords = [
+      [261.63, 329.63, 392.00], // C major
+      [220.00, 261.63, 329.63], // A minor
+      [174.61, 220.00, 261.63], // F major
+      [196.00, 246.94, 293.66], // G major
+    ];
+    let chordIdx = 0;
+
+    const playChord = () => {
+      if (isMuted) return;
+      try {
+        const ctx = getAudioContext();
+        const chord = chords[chordIdx % chords.length];
+        chordIdx++;
+        chord.forEach((freq, i) => {
+          const now = ctx.currentTime + (i * 0.18);
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.025, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 4.5);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 4.8);
+        });
+      } catch (_) {}
+    };
+
+    bgmInterval = setInterval(playChord, 5000);
+    playChord();
+  }
+
+  // Audio mute toggle
+  const audioToggleBtn = document.getElementById('audio-toggle-btn');
+  const audioText = document.getElementById('audio-text');
+  audioToggleBtn.addEventListener('click', () => {
+    isMuted = !isMuted;
+    audioToggleBtn.classList.toggle('active', !isMuted);
+    audioText.textContent = isMuted ? 'Piano: Muted' : 'Piano: On';
+    if (!isMuted) {
+      getAudioContext();
+      startBackgroundPiano();
+      showToast('Background piano unmuted 🎵', 'success', 2000);
+    } else {
+      showToast('Audio muted 🔇', 'warn', 1500);
+    }
+  });
+
+  // Start BGM on first user interaction
+  const initAudioOnGesture = () => {
+    if (!isMuted && !bgmInterval) {
+      getAudioContext();
+      startBackgroundPiano();
+    }
+    window.removeEventListener('click', initAudioOnGesture);
+  };
+  window.addEventListener('click', initAudioOnGesture);
+
+  // â”€â”€ 3. GAME STATE & DIFFICULTY SCALING LOGIC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  let currentLevel = 1;
+  let currentStreak = 0;
+  let previousLevelPaletteIds = []; // Stores immediately preceding level's palette IDs
+  let currentPalette = [];
+  let currentPattern = [];
+  let playerInputIndex = 0;
+  let isPlayingPattern = false;
+  let levelStartTime = Date.now();
+  let canPlayerClick = false;
+
+  /**
+   * Determine palette size (number of distinct colors on screen)
+   * Rule: Starts at 3. Every 10 levels, increase by 1.
+   * Levels 1–10: 3 colors
+   * Levels 11–20: 4 colors
+   * Levels 21–30: 5 colors
+   * Levels 31+: 6 colors
+   */
+  function getPaletteSizeForLevel(level) {
+    const band = Math.floor((level - 1) / 10);
+    return Math.min(3 + band, 6);
+  }
+
+  /**
+   * Determine pattern length for a level
+   * Gradually scales within the band without sudden spikes
+   */
+  function getPatternLengthForLevel(level) {
+    const paletteSize = getPaletteSizeForLevel(level);
+    const bandOffset = (level - 1) % 10;
+    // Gradual progression: e.g. level 1-3: 3; level 4-7: 4; level 8-10: 5
+    if (bandOffset <= 2) return Math.max(3, paletteSize);
+    if (bandOffset <= 6) return Math.max(4, paletteSize + 1);
+    return Math.max(5, paletteSize + 2);
+  }
+
+  /**
+   * Select a new palette strictly adhering to the Color Randomization Rule:
+   * "no color from the immediately preceding level's palette should repeat in the next level's palette."
+   */
+  function selectPaletteForLevel(level) {
+    const paletteSize = getPaletteSizeForLevel(level);
+
+    // Filter out colors used in the immediately preceding level
+    const available = COLOR_POOL.filter(c => !previousLevelPaletteIds.includes(c.id));
+
+    // Shuffle and pick paletteSize colors
+    const shuffled = [...available].sort(() => Math.random() - 0.5);
+    const chosen = shuffled.slice(0, paletteSize);
+
+    // Update previousLevelPaletteIds for the NEXT level
+    previousLevelPaletteIds = chosen.map(c => c.id);
+    return chosen;
+  }
+
+  /**
+   * Generate sequence pattern using colors from the current palette
+   * Note: Colors CAN repeat within the pattern (e.g. A - B - A)
+   */
+  function generatePattern(palette, length) {
+    const pattern = [];
+    for (let i = 0; i < length; i++) {
+      const color = palette[Math.floor(Math.random() * palette.length)];
+      pattern.push(color);
+    }
+    return pattern;
+  }
+
+  // â”€â”€ 4. UI RENDERING & TILE INTERACTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const tilesWrap = document.getElementById('tiles-wrap');
+  const stepDotsEl = document.getElementById('step-dots');
+  const statusBanner = document.getElementById('status-banner');
+  const sbTitle = document.getElementById('sb-title');
+  const sbDesc = document.getElementById('sb-desc');
+  const hudLevelNum = document.getElementById('hud-level-num');
+  const hudPaletteCount = document.getElementById('hud-palette-count');
+  const hudStepsCount = document.getElementById('hud-steps-count');
+  const hudStreak = document.getElementById('hud-streak');
+  const btnStartPattern = document.getElementById('btn-start-pattern');
+  const btnReplayPattern = document.getElementById('btn-replay-pattern');
+  const celebrationToast = document.getElementById('celebration-toast');
+  const toastText = document.getElementById('toast-text');
+
+  function renderTiles(palette) {
+    tilesWrap.className = `tiles-wrap tiles-grid-${palette.length}`;
+    tilesWrap.innerHTML = palette.map(color => `
+      <button class="color-tile disabled"
+              id="tile-${color.id}"
+              data-id="${color.id}"
+              style="background:${color.bg};border-color:${color.border};--glow-color:${color.glow};"
+              aria-label="${color.name}">
+        <div class="tile-icon">${color.icon}</div>
+        <div class="tile-name">${color.name}</div>
+      </button>
+    `).join('');
+  }
+
+  function renderStepDots(count) {
+    stepDotsEl.innerHTML = Array.from({ length: count }, (_, i) => `
+      <div class="step-dot" id="step-dot-${i}"></div>
+    `).join('');
+  }
+
+  function updateStatus(mode, title, desc) {
+    statusBanner.className = `status-banner ${mode}`;
+    sbTitle.innerHTML = title;
+    sbDesc.textContent = desc;
+  }
+
+  // â”€â”€ 5. PATTERN PLAYBACK (STRICT 2-SECOND DURATION PER COLOR) â”€â”€
+  async function playPatternSequence() {
+    isPlayingPattern = true;
+    canPlayerClick = false;
+    playerInputIndex = 0;
+
+    btnStartPattern.style.display = 'none';
+    btnReplayPattern.style.display = 'none';
+
+    // Disable all tiles during playback
+    document.querySelectorAll('.color-tile').forEach(t => {
+      t.classList.remove('interactive', 'lit');
+      t.classList.add('disabled');
+    });
+
+    renderStepDots(currentPattern.length);
+
+    updateStatus(
+      'watch',
+      '<i class="fas fa-eye"></i> Watch Carefully...',
+      `Level ${currentLevel}: Pattern of ${currentPattern.length} colors. Each lights up for 2 seconds.`
+    );
+
+    // Short pause before starting sequence
+    await new Promise(r => setTimeout(r, 600));
+
+    for (let i = 0; i < currentPattern.length; i++) {
+      const color = currentPattern[i];
+      const tileEl = document.getElementById(`tile-${color.id}`);
+      const dotEl = document.getElementById(`step-dot-${i}`);
+
+      // Highlight step dot
+      dotEl?.classList.add('active');
+
+      // Update status message
+      updateStatus(
+        'watch',
+        `<i class="fas fa-eye"></i> Showing Color ${i + 1} of ${currentPattern.length}...`,
+        `${color.name} (${color.icon})`
+      );
+
+      // Turn on highlight
+      if (tileEl) tileEl.classList.add('lit');
+      playColorTone(color.freq);
+
+      // EXACTLY 2 SECONDS (2000ms) HIGHLIGHT DURATION AS REQUIRED
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Turn off highlight
+      if (tileEl) tileEl.classList.remove('lit');
+      dotEl?.classList.remove('active');
+
+      // Brief gentle 250ms interval between items so repeats are distinctly recognized
+      if (i < currentPattern.length - 1) {
+        await new Promise(r => setTimeout(r, 250));
+      }
+    }
+
+    // Pattern finished -> Enable Player Turn
+    isPlayingPattern = false;
+    canPlayerClick = true;
+
+    document.querySelectorAll('.color-tile').forEach(t => {
+      t.classList.remove('disabled');
+      t.classList.add('interactive');
+    });
+
+    updateStatus(
+      'play',
+      '<i class="fas fa-hand-pointer"></i> Your Turn! Tap the Colors in Order',
+      `Tap tile 1 of ${currentPattern.length} to begin.`
+    );
+
+    btnReplayPattern.style.display = 'inline-flex';
+  }
+
+  // â”€â”€ 6. PLAYER INPUT & VALIDATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  tilesWrap.addEventListener('click', async e => {
+    const tile = e.target.closest('.color-tile');
+    if (!tile || !canPlayerClick || isPlayingPattern) return;
+
+    const clickedId = tile.dataset.id;
+    const expectedColor = currentPattern[playerInputIndex];
+
+    // Find clicked color details
+    const colorObj = COLOR_POOL.find(c => c.id === clickedId);
+    if (colorObj) playColorTone(colorObj.freq);
+
+    // Momentary tap glow
+    tile.classList.add('lit');
+    setTimeout(() => tile.classList.remove('lit'), 300);
+
+    if (clickedId === expectedColor.id) {
+      // Correct step!
+      const dotEl = document.getElementById(`step-dot-${playerInputIndex}`);
+      dotEl?.classList.add('filled');
+      playerInputIndex++;
+
+      if (playerInputIndex === currentPattern.length) {
+        // Full Level Completed!
+        canPlayerClick = false;
+        currentStreak++;
+        hudStreak.textContent = currentStreak;
+
+        playCelebrationChime();
+
+        updateStatus(
+          'success',
+          '🎉 Beautiful Memory! Level Complete!',
+          'You matched all colors in the exact sequence.'
+        );
+
+        showCelebrationToast(`Wonderful! Moving to Level ${currentLevel + 1} 🌸`);
+
+        // Log score / level reached
+        const durationSecs = Math.round((Date.now() - levelStartTime) / 1000);
+        logLevelCompletion(currentLevel, 100, durationSecs);
+
+        // Advance to next level after a calm celebration pause
+        setTimeout(() => {
+          startLevel(currentLevel + 1);
+        }, 2200);
+
+      } else {
+        // Progress within current level
+        updateStatus(
+          'play',
+          `<i class="fas fa-check"></i> Great! Next Color (${playerInputIndex + 1} of ${currentPattern.length})`,
+          'Keep going at your own comfortable pace.'
+        );
+      }
+
+    } else {
+      // Soft, gentle, muted feedback (no harsh red flash or buzzer)
+      canPlayerClick = false;
+      currentStreak = 0;
+      hudStreak.textContent = '0';
+
+      playSoftRetrySound();
+
+      updateStatus(
+        'retry',
+        '🌸 Close! Take Your Time',
+        'No rush at all. Would you like to watch the pattern again or retry?'
+      );
+
+      btnStartPattern.innerHTML = '<i class="fas fa-redo"></i> Try This Level Again';
+      btnStartPattern.style.display = 'inline-flex';
+      btnReplayPattern.style.display = 'inline-flex';
+    }
+  });
+
+  // Replay Pattern Button
+  btnReplayPattern.addEventListener('click', () => {
+    playPatternSequence();
+  });
+
+  // Start / Retry Level Button
+  btnStartPattern.addEventListener('click', () => {
+    playPatternSequence();
+  });
+
+  function showCelebrationToast(msg) {
+    toastText.textContent = msg;
+    celebrationToast.classList.add('show');
+    setTimeout(() => celebrationToast.classList.remove('show'), 2200);
+  }
+
+  // â”€â”€ 7. START LEVEL WORKFLOW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  function startLevel(lvl) {
+    currentLevel = lvl;
+    levelStartTime = Date.now();
+
+    // Palette & pattern generation
+    currentPalette = selectPaletteForLevel(currentLevel);
+    currentPattern = generatePattern(currentPalette, getPatternLengthForLevel(currentLevel));
+
+    // Update HUD
+    hudLevelNum.textContent = currentLevel;
+    hudPaletteCount.textContent = `${currentPalette.length} Colors`;
+    hudStepsCount.textContent = currentPattern.length;
+
+    renderTiles(currentPalette);
+    renderStepDots(currentPattern.length);
+
+    btnStartPattern.innerHTML = '<i class="fas fa-play"></i> Watch Pattern';
+    btnStartPattern.style.display = 'inline-flex';
+    btnReplayPattern.style.display = 'none';
+
+    updateStatus(
+      'watch',
+      `Ready for Level ${currentLevel}`,
+      `This level features ${currentPalette.length} fresh pastel colors. Press "Watch Pattern" when you're ready.`
+    );
+
+    // Auto-play pattern sequence smoothly
+    setTimeout(() => {
+      playPatternSequence();
+    }, 800);
+  }
+
+  // â”€â”€ 8. SCORE & LEVEL LOGGING FOR PROGRESS GRAPH â”€â”€â”€â”€â”€â”€
+  async function logLevelCompletion(lvl, accuracy, duration) {
+    try {
+      await saveScore('color', {
+        level: lvl,
+        score: accuracy,
+        duration,
+        date: new Date().toISOString().split('T')[0]
+      });
+    } catch (_) {
+      // Local storage fallback
+      const key = 'careHub_scores_color';
+      const local = JSON.parse(localStorage.getItem(key) || '[]');
+      local.push({
+        game: 'color',
+        level: lvl,
+        score: accuracy,
+        duration,
+        date: new Date().toISOString().split('T')[0],
+        playedAt: Date.now()
+      });
+      localStorage.setItem(key, JSON.stringify(local.slice(-50)));
+    }
+  }
+
+  // Start Level 1 on load
+  startLevel(1);
+</script>
+<script src="./js/page-transition.js"></script>
+</body>
+</html>

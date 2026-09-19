@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Auth Guard: immediate synchronous check before DOM render -->
+  <script>
+    (function() {
+      try {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) {
+          window.location.replace('login.html');
+        }
+      } catch (e) {
+        window.location.replace('login.html');
+      }
+    })();
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) window.location.replace('login.html');
+      }
+    });
+  </script>
+
+  <!-- FOUC Prevention: hide body until auth confirmed -->
+  <style id="auth-hide">body{display:none!important}</style>
+  <!-- GUARANTEED body reveal: plain script, independent of module imports -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+    window.addEventListener('load', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+  </script><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareHub – Dementia Stage Guide &amp; AI Advisor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+    <!-- Auth guard handled by Firebase module script -->
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',system-ui,sans-serif;background:#fffbeb;min-height:100vh;color:#1e293b;}
+
+    /* Header */
+    .page-header{background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-bottom:1px solid #e2e8f0;padding:0 24px;position:sticky;top:0;z-index:100;}
+    .ph-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;height:60px;}
+    .back-btn{display:flex;align-items:center;gap:7px;color:#64748b;text-decoration:none;font-size:0.85rem;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid #e2e8f0;transition:all 0.2s;white-space:nowrap;}
+    .back-btn:hover{background:#fffbeb;color:#d97706;border-color:#fcd34d;}
+    .ph-title{font-size:1rem;font-weight:800;color:#0f172a;flex:1;}
+    .avatar-sm{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;flex-shrink:0;}
+
+    /* Hero */
+    .page-hero{background:linear-gradient(135deg,#f59e0b 0%,#ef4444 60%,#dc2626 100%);padding:52px 24px;text-align:center;}
+    .page-hero h1{font-size:clamp(1.8rem,4vw,2.4rem);font-weight:900;color:white;margin-bottom:8px;}
+    .page-hero p{color:rgba(255,255,255,0.88);font-size:0.95rem;}
+
+    .page-content{max-width:1100px;margin:0 auto;padding:44px 24px 80px;}
+
+    /* Stage tabs */
+    .stage-tabs{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;}
+    .stage-tab{display:flex;align-items:center;gap:7px;padding:9px 22px;border-radius:99px;border:2px solid transparent;background:white;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:700;color:#64748b;border-color:#e2e8f0;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+    .stage-tab:hover{border-color:#f59e0b;color:#92400e;}
+    .stage-tab.active{color:white;border-color:transparent;}
+    .tab-early.active{background:linear-gradient(135deg,#22c55e,#15803d);}
+    .tab-middle.active{background:linear-gradient(135deg,#f59e0b,#d97706);}
+    .tab-late.active{background:linear-gradient(135deg,#ef4444,#dc2626);}
+
+    /* Stage panel */
+    .stage-panel{display:none;}
+    .stage-panel.active{display:block;animation:fadeIn 0.3s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+    .stage-card{background:white;border-radius:20px;border:1.5px solid #e2e8f0;padding:28px;margin-bottom:24px;box-shadow:0 4px 16px rgba(0,0,0,0.06);}
+    .stage-card-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:18px;}
+    .stage-icon{width:54px;height:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+    .stage-card-title{font-size:1.15rem;font-weight:800;color:#0f172a;margin-bottom:4px;}
+    .stage-card-sub{font-size:0.82rem;color:#64748b;}
+
+    .symptom-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:18px;}
+    .symptom-item{display:flex;align-items:flex-start;gap:8px;background:#f8fafc;border-radius:10px;padding:10px 12px;font-size:0.83rem;color:#334155;}
+    .symptom-item i{margin-top:2px;flex-shrink:0;}
+
+    .alert-box{border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:10px;font-size:0.83rem;font-weight:600;}
+    .alert-box.warn{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
+    .alert-box.danger{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;}
+    .alert-box.info{background:#e0f2fe;color:#075985;border:1px solid #bae6fd;}
+
+    /* Two column grid */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+    @media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+
+    /* Checklist */
+    .sec-heading{font-size:1rem;font-weight:800;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+    .checklist{list-style:none;display:flex;flex-direction:column;gap:8px;}
+    .check-item{display:flex;align-items:center;gap:12px;background:white;border-radius:12px;padding:13px 16px;border:1.5px solid #e2e8f0;cursor:pointer;transition:all 0.2s;font-size:0.86rem;font-weight:500;color:#334155;}
+    .check-item:hover{border-color:#fcd34d;background:#fffbeb;}
+    .check-item.checked{background:#f0fdf4;border-color:#86efac;color:#15803d;text-decoration:line-through;}
+    .check-item input[type=checkbox]{width:18px;height:18px;accent-color:#22c55e;flex-shrink:0;}
+    .check-progress{height:8px;background:#f1f5f9;border-radius:99px;overflow:hidden;margin-bottom:8px;}
+    .check-progress-fill{height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);border-radius:99px;transition:width 0.4s ease;}
+    .check-pct{font-size:0.78rem;color:#64748b;margin-bottom:12px;}
+
+    /* Redflags banner */
+    .redflag-section-head{
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+      margin-bottom:16px;
+    }
+    .redflag-legend{
+      display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    }
+    .legend-dot{
+      display:flex;align-items:center;gap:5px;
+      font-size:0.72rem;font-weight:700;color:#64748b;
+    }
+    .legend-dot span{
+      width:10px;height:10px;border-radius:50%;flex-shrink:0;
+    }
+    .redflag-category{
+      margin-bottom:22px;
+    }
+    .redflag-cat-title{
+      font-size:0.72rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.09em;color:#94a3b8;margin-bottom:10px;
+      display:flex;align-items:center;gap:6px;
+    }
+    .redflag-cat-title::after{content:'';flex:1;height:1px;background:#f1f5f9;}
+    .redflag-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(175px,1fr));
+      gap:10px;
+    }
+    .rf-item{
+      background:white;border-radius:14px;padding:14px 14px 12px;
+      border:2px solid #fee2e2;
+      display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+      transition:transform 0.2s,box-shadow 0.2s;
+      position:relative; overflow:hidden;
+    }
+    .rf-item:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(220,38,38,0.12);}
+    /* severity top bar */
+    .rf-item::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:3px;
+      background:var(--rf-bar,#fca5a5);
+    }
+    .rf-item.sev-critical{ --rf-bar:linear-gradient(90deg,#dc2626,#ef4444); border-color:#fca5a5; }
+    .rf-item.sev-high    { --rf-bar:linear-gradient(90deg,#f97316,#fb923c); border-color:#fed7aa; }
+    .rf-item.sev-moderate{ --rf-bar:linear-gradient(90deg,#f59e0b,#fbbf24); border-color:#fde68a; }
+    .rf-icon{font-size:1.6rem;}
+    .rf-text{font-size:0.8rem;font-weight:700;color:#dc2626;line-height:1.4;}
+    .rf-badge{
+      font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;
+      padding:2px 8px;border-radius:99px;margin-top:2px;
+    }
+    .rf-badge.critical{background:#fee2e2;color:#b91c1c;}
+    .rf-badge.high    {background:#ffedd5;color:#c2410c;}
+    .rf-badge.moderate{background:#fef3c7;color:#92400e;}
+
+    /* â”€â”€ AI Screening Advisor â”€â”€ */
+    .ai-section{margin-top:36px;}
+    .ai-toggle-btn{
+      width:100%;display:flex;align-items:center;justify-content:space-between;
+      padding:18px 24px;background:linear-gradient(135deg,#f59e0b,#ef4444);
+      border:none;border-radius:20px;cursor:pointer;font-family:'Inter',sans-serif;
+      color:white;font-weight:800;font-size:1rem;transition:all 0.2s;
+      box-shadow:0 6px 20px rgba(245,158,11,0.3);
+    }
+    .ai-toggle-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(245,158,11,0.4);}
+    .ai-toggle-btn .ai-btn-left{display:flex;align-items:center;gap:12px;}
+    .ai-toggle-btn .ai-btn-icon{width:42px;height:42px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+    .ai-panel{
+      display:none;margin-top:12px;
+      background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);
+      border-radius:20px;border:1.5px solid #fde68a;
+      box-shadow:0 8px 32px rgba(245,158,11,0.1);
+      overflow:hidden;animation:fadeIn 0.3s ease;
+    }
+    .ai-panel.open{display:block;}
+    .ai-head{background:linear-gradient(135deg,#f59e0b,#ef4444);padding:18px 20px;display:flex;align-items:center;gap:12px;}
+    .ai-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:18px;}
+    .ai-head-info h3{font-size:0.92rem;font-weight:800;color:white;}
+    .ai-head-info p{font-size:0.72rem;color:rgba(255,255,255,0.8);}
+    .ai-online{width:8px;height:8px;background:#4ade80;border-radius:50%;border:2px solid white;margin-left:auto;}
+    .ai-msgs{height:300px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#fffbeb;scrollbar-width:thin;}
+    .ai-msg{max-width:82%;padding:10px 14px;border-radius:14px;font-size:0.83rem;line-height:1.5;}
+    .ai-msg.bot{background:white;border:1px solid #fde68a;border-radius:4px 14px 14px 14px;align-self:flex-start;color:#1e293b;}
+    .ai-msg.user{background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border-radius:14px 4px 14px 14px;align-self:flex-end;}
+    .ai-opts{padding:10px 16px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid #fef3c7;background:white;}
+    .ai-opt{padding:6px 12px;border:1.5px solid #fcd34d;border-radius:99px;background:#fffbeb;color:#92400e;font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+    .ai-opt:hover{background:#f59e0b;color:white;border-color:#f59e0b;}
+    .ai-input-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid #fef3c7;background:white;}
+    .ai-input{flex:1;padding:9px 13px;border:1.5px solid #fde68a;border-radius:99px;font-family:'Inter',sans-serif;font-size:0.84rem;outline:none;}
+    .ai-input:focus{border-color:#f59e0b;}
+    .ai-send{width:38px;height:38px;background:linear-gradient(135deg,#f59e0b,#ef4444);border:none;border-radius:50%;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+    .ai-risk-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:99px;font-size:0.75rem;font-weight:700;margin-top:6px;}
+    .ai-risk-low{background:#dcfce7;color:#15803d;}
+    .ai-risk-moderate{background:#fef3c7;color:#92400e;}
+    .ai-risk-severe{background:#fee2e2;color:#dc2626;}
+    .ai-reset-btn{margin-left:auto;background:none;border:none;color:rgba(255,255,255,0.75);font-family:'Inter',sans-serif;font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:4px;}
+    .ai-reset-btn:hover{color:white;}
+
+    /* Emergency call banner */
+    .emg-banner{
+      display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+      background:linear-gradient(135deg,#1e293b,#0f172a);
+      border-radius:16px;padding:18px 22px;margin-top:20px;
+    }
+    .emg-banner-icon{
+      width:48px;height:48px;background:rgba(239,68,68,0.2);
+      border:2px solid rgba(239,68,68,0.4);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:22px;flex-shrink:0;
+      animation:pulseSOS 2.5s ease-in-out infinite;
+    }
+    @keyframes pulseSOS{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4);}50%{box-shadow:0 0 0 10px rgba(239,68,68,0);}}
+    .emg-banner-text h4{font-size:0.95rem;font-weight:800;color:white;margin-bottom:3px;}
+    .emg-banner-text p{font-size:0.8rem;color:rgba(255,255,255,0.6);}
+    .emg-banner-btns{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;}
+    .emg-call-btn{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:9px 18px;border-radius:99px;border:none;
+      font-family:'Inter',sans-serif;font-size:0.83rem;font-weight:700;
+      cursor:pointer;text-decoration:none;transition:all 0.2s;
+    }
+    .emg-call-btn.red{background:#ef4444;color:white;}
+    .emg-call-btn.red:hover{background:#dc2626;}
+    .emg-call-btn.outline{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);}
+    .emg-call-btn.outline:hover{background:rgba(255,255,255,0.18);}
+  </style>
+  <link rel="stylesheet" href="./css/perf.css" />
+</head>
+<body>
+
+<header class="page-header">
+  <div class="ph-inner">
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    <span class="ph-title"><i class="fas fa-brain" style="color:#f59e0b;margin-right:6px;"></i>Dementia Stage Guide & Safety</span>
+    <div class="avatar-sm" id="header-avatar"></div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <h1>🧠 Dementia Stage Guide</h1>
+  <p>Early, Middle, and Late stage signs · Red flags · Home safety checklist</p>
+</div>
+
+<div class="page-content">
+
+  <!-- Red Flags -->
+  <div style="margin-bottom:32px;">
+    <div class="redflag-section-head">
+      <div class="sec-heading" style="color:#dc2626;margin-bottom:0;"><i class="fas fa-exclamation-triangle"></i> Immediate Red Flags — Call a Doctor Now</div>
+      <div class="redflag-legend">
+        <div class="legend-dot"><span style="background:#dc2626;"></span> Critical — Call 112</div>
+        <div class="legend-dot"><span style="background:#f97316;"></span> High — See doctor today</div>
+        <div class="legend-dot"><span style="background:#f59e0b;"></span> Moderate — Urgent appointment</div>
+      </div>
+    </div>
+
+    <!-- Category 1: Safety & Physical -->
+    <div class="redflag-category">
+      <div class="redflag-cat-title"><i class="fas fa-shield-alt"></i> Safety & Physical Danger</div>
+      <div class="redflag-grid">
+        <div class="rf-item sev-critical">
+          <div class="rf-icon">🚶</div>
+          <div class="rf-text">Wandering outdoors alone — especially at night or in traffic</div>
+          <span class="rf-badge critical">Critical</span>
+        </div>
+        <div class="rf-item sev-critical">
+          <div class="rf-icon">🔥</div>
+          <div class="rf-text">Leaves stove, oven, or taps running completely unattended</div>
+          <span class="rf-badge critical">Critical</span>
+        </div>
+        <div class="rf-item sev-critical">
+          <div class="rf-icon">🤕</div>
+          <div class="rf-text">Unexplained falls, injuries, or bruises — possible self-harm</div>
+          <span class="rf-badge critical">Critical</span>
+        </div>
+        <div class="rf-item sev-high">
+          <div class="rf-icon">🔪</div>
+          <div class="rf-text">Attempts to use dangerous items unsafely (knives, tools, electricity)</div>
+          <span class="rf-badge high">High</span>
+        </div>
+        <div class="rf-item sev-high">
+          <div class="rf-icon">🚗</div>
+          <div class="rf-text">Attempts to drive a vehicle despite cognitive impairment</div>
+          <span class="rf-badge high">High</span>
+        </div>
+        <div class="rf-item sev-moderate">
+          <div class="rf-icon">🛁</div>
+          <div class="rf-text">Refuses all personal hygiene — bathing, changing clothes, oral care</div>
+          <span class="rf-badge moderate">Moderate</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category 2: Behavioural & Psychiatric -->
+    <div class="redflag-category">
+      <div class="redflag-cat-title"><i class="fas fa-brain"></i> Behavioural & Psychiatric Crisis</div>
+      <div class="redflag-grid">
+        <div class="rf-item sev-critical">
+          <div class="rf-icon">😡</div>
+          <div class="rf-text">Extreme aggression, hitting, biting, or physical violence toward caregiver</div>
+          <span class="rf-badge critical">Critical</span>
+        </div>
+        <div class="rf-item sev-critical">
+          <div class="rf-icon">👻</div>
+          <div class="rf-text">Vivid hallucinations causing terror, screaming, or panic attacks</div>
+          <span class="rf-badge critical">Critical</span>
+        </div>
+        <div class="rf-item sev-high">
+          <div class="rf-icon">🔫</div>
+          <div class="rf-text">Severe paranoia — believes family is poisoning food or plotting harm</div>
+          <span class="rf-badge high">High</span>
+        </div>
+        <div class="rf-item sev-high">
+          <div class="rf-icon">😢</div>
+          <div class="rf-text">Expressing suicidal thoughts, hopelessness, or asking to "end it"</div>
+          <span class="rf-badge high">High</span>
+        </div>
+        <div class="rf-item sev-high">
+          <div class="rf-icon">😶</div>
+          <div class="rf-text">Sudden total withdrawal — stops speaking, moving, or responding</div>
+          <span class="rf-badge high">High</span>
+        </div>
+        <div class="rf-item sev-moderate">
+          <div class="rf-icon">🌙</div>
+          <div class="rf-text">Severe day-night reversal — completely awake all night, disruptive</div>
+          <span class="rf-badge moderate">Moderate</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category 3: Medical & Cognitive -->
+    <div class="redflag-category">
+      <div class="redflag-cat-title"><i class="fas fa-stethoscope"></i> Medical & Cognitive Decline</div>
+      <div class="redflag-grid">
+        <div class="rf-item sev-critical">
+          <div class="rf-icon">🫁</div>
+          <div class="rf-text">Sudden difficulty swallowing — choking on food or liquids (aspiration risk)</div>
+          <span class="rf-badge critical">Critical</span>
+        </div>
+        <div class="rf-item sev-critical">
+          <div class="rf-icon">💊</div>
+          <div class="rf-text">Accidental overdose or refusal of critical medications (heart, seizure)</div>
+          <span class="rf-badge critical">Critical</span>
+        </div>
+        <div class="rf-item sev-high">
+          <div class="rf-icon">🗣️</div>
+          <div class="rf-text">Sudden loss of speech or inability to form coherent sentences (possible stroke)</div>
+          <span class="rf-badge high">High</span>
+        </div>
+        <div class="rf-item sev-high">
+          <div class="rf-icon">🧊</div>
+          <div class="rf-text">Unable to recognise own home or believes they are in the wrong house</div>
+          <span class="rf-badge high">High</span>
+        </div>
+        <div class="rf-item sev-moderate">
+          <div class="rf-icon">🍽️</div>
+          <div class="rf-text">Complete refusal to eat or drink — significant weight loss in under 2 weeks</div>
+          <span class="rf-badge moderate">Moderate</span>
+        </div>
+        <div class="rf-item sev-moderate">
+          <div class="rf-icon">🚽</div>
+          <div class="rf-text">Sudden loss of bladder or bowel control with no awareness of it occurring</div>
+          <span class="rf-badge moderate">Moderate</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emergency Banner -->
+    <div class="emg-banner">
+      <div class="emg-banner-icon">🚨</div>
+      <div class="emg-banner-text">
+        <h4>Seeing any Critical flag? Act immediately.</h4>
+        <p>Do not wait for a scheduled appointment — call emergency services or the NIMHANS helpline now.</p>
+      </div>
+      <div class="emg-banner-btns">
+        <a class="emg-call-btn red" href="tel:112"><i class="fas fa-phone-alt"></i> Call 112</a>
+        <a class="emg-call-btn outline" href="tel:08046110007"><i class="fas fa-brain"></i> NIMHANS</a>
+        <a class="emg-call-btn outline" href="emergency.html"><i class="fas fa-list"></i> All Helplines</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage Tabs -->
+  <div class="stage-tabs">
+    <button class="stage-tab tab-early active" data-target="panel-early"><i class="fas fa-seedling"></i> Early Stage</button>
+    <button class="stage-tab tab-middle"        data-target="panel-middle"><i class="fas fa-exclamation-circle"></i> Middle Stage</button>
+    <button class="stage-tab tab-late"          data-target="panel-late"><i class="fas fa-heartbeat"></i> Late Stage</button>
+  </div>
+
+  <!-- EARLY STAGE -->
+  <div class="stage-panel active" id="panel-early">
+    <div class="two-col">
+      <div>
+        <div class="stage-card">
+          <div class="stage-card-head">
+            <div class="stage-icon" style="background:#dcfce7;">🌱</div>
+            <div><div class="stage-card-title">Early Stage — Mild Impairment</div><div class="stage-card-sub">Duration typically 2–4 years</div></div>
+          </div>
+          <ul class="symptom-list">
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> Forgetting recent conversations or appointments</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> Difficulty finding the right words</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> Losing or misplacing everyday objects</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> Trouble planning or managing money</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> Mild mood swings / social withdrawal</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> Getting confused in unfamiliar places</li>
+          </ul>
+          <div class="alert-box info" style="margin-top:8px;">
+            <i class="fas fa-info-circle"></i>
+            <span>Patient can still live independently with some support. This is the best time to plan future care arrangements.</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="stage-card">
+          <div class="stage-card-head">
+            <div class="stage-icon" style="background:#dcfce7;">🛡️</div>
+            <div><div class="stage-card-title">Caregiver Actions</div><div class="stage-card-sub">What you should do right now</div></div>
+          </div>
+          <ul class="symptom-list">
+            <li class="symptom-item"><i class="fas fa-check" style="color:#16a34a;"></i> Book a neurologist/geriatrician assessment</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#16a34a;"></i> Set up a medication reminder app or pill box</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#16a34a;"></i> Install door alarms and GPS tracker</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#16a34a;"></i> Remove fall hazards — loose rugs, sharp corners</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#16a34a;"></i> Label cabinets, drawers, and common items</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#16a34a;"></i> Discuss legal & financial planning (power of attorney)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MIDDLE STAGE -->
+  <div class="stage-panel" id="panel-middle">
+    <div class="two-col">
+      <div>
+        <div class="stage-card">
+          <div class="stage-card-head">
+            <div class="stage-icon" style="background:#fef3c7;">âš ️</div>
+            <div><div class="stage-card-title">Middle Stage — Moderate Impairment</div><div class="stage-card-sub">Duration typically 2–10 years (longest stage)</div></div>
+          </div>
+          <ul class="symptom-list">
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#f59e0b;font-size:8px;"></i> Forgetting personal history and family names</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#f59e0b;font-size:8px;"></i> Wandering — especially at night</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#f59e0b;font-size:8px;"></i> Increasing confusion about time and place</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#f59e0b;font-size:8px;"></i> Needs help with dressing, bathing, toileting</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#f59e0b;font-size:8px;"></i> Paranoia, hallucinations, or delusions</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#f59e0b;font-size:8px;"></i> Difficulty recognising close family members</li>
+          </ul>
+          <div class="alert-box warn" style="margin-top:8px;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>24/7 supervision is strongly recommended. Consider professional in-home care or a memory care facility.</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="stage-card">
+          <div class="stage-card-head">
+            <div class="stage-icon" style="background:#fef3c7;">🔒</div>
+            <div><div class="stage-card-title">Safety Priorities</div><div class="stage-card-sub">Critical actions for this stage</div></div>
+          </div>
+          <ul class="symptom-list">
+            <li class="symptom-item"><i class="fas fa-check" style="color:#d97706;"></i> Install door & window locks with alarms</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#d97706;"></i> Use stove auto-shutoff or remove knobs</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#d97706;"></i> Secure medications in a locked cabinet</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#d97706;"></i> Put up large-print photos with name labels</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#d97706;"></i> Get a medical ID bracelet engraved</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#d97706;"></i> Contact ARDSI / local day-care programs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LATE STAGE -->
+  <div class="stage-panel" id="panel-late">
+    <div class="two-col">
+      <div>
+        <div class="stage-card">
+          <div class="stage-card-head">
+            <div class="stage-icon" style="background:#fee2e2;">❤️</div>
+            <div><div class="stage-card-title">Late Stage — Severe Impairment</div><div class="stage-card-sub">Full-time care required</div></div>
+          </div>
+          <ul class="symptom-list">
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#dc2626;font-size:8px;"></i> Loss of ability to speak or communicate</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#dc2626;font-size:8px;"></i> Requires help for all daily activities</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#dc2626;font-size:8px;"></i> Difficulty swallowing — risk of aspiration</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#dc2626;font-size:8px;"></i> Increased vulnerability to infections</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#dc2626;font-size:8px;"></i> May become bed-bound</li>
+            <li class="symptom-item"><i class="fas fa-circle" style="color:#dc2626;font-size:8px;"></i> Loss of bladder and bowel control</li>
+          </ul>
+          <div class="alert-box danger" style="margin-top:8px;">
+            <i class="fas fa-heart"></i>
+            <span>Focus on comfort, dignity, and quality of life. Palliative care and hospice services may be appropriate.</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="stage-card">
+          <div class="stage-card-head">
+            <div class="stage-icon" style="background:#fee2e2;">💙</div>
+            <div><div class="stage-card-title">Caregiver Support</div><div class="stage-card-sub">You matter too — please seek help</div></div>
+          </div>
+          <ul class="symptom-list">
+            <li class="symptom-item"><i class="fas fa-check" style="color:#dc2626;"></i> Reach out to ARDSI for palliative care resources</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#dc2626;"></i> Use respite care services to take regular breaks</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#dc2626;"></i> Join a caregiver support group (online or local)</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#dc2626;"></i> Speak to a counsellor or psychologist yourself</li>
+            <li class="symptom-item"><i class="fas fa-check" style="color:#dc2626;"></i> Discuss advance directives and end-of-life wishes</li>
+          </ul>
+          <div style="margin-top:14px;padding:12px;background:#fdf2f8;border-radius:10px;font-size:0.82rem;color:#9d174d;font-weight:500;border:1px solid #fbcfe8;">
+            🌸 NIMHANS Helpline: <strong>080-46110007</strong> · Available Mon–Sat
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Safety Checklist -->
+  <div style="background:white;border-radius:20px;border:1.5px solid #e2e8f0;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,0.06);margin-top:32px;">
+    <div class="sec-heading"><i class="fas fa-clipboard-check" style="color:#22c55e;"></i> Home Safety Checklist</div>
+    <div class="check-progress"><div class="check-progress-fill" id="check-fill" style="width:0%;"></div></div>
+    <div class="check-pct" id="check-pct">0 of 12 completed</div>
+    <ul class="checklist" id="safety-checklist">
+      <li class="check-item" data-id="c1"><input type="checkbox" id="c1"> <label for="c1">Remove loose rugs and trip hazards from all walkways</label></li>
+      <li class="check-item" data-id="c2"><input type="checkbox" id="c2"> <label for="c2">Install grab bars in bathroom and near toilet</label></li>
+      <li class="check-item" data-id="c3"><input type="checkbox" id="c3"> <label for="c3">Use nightlights in bedroom, hallways, and bathroom</label></li>
+      <li class="check-item" data-id="c4"><input type="checkbox" id="c4"> <label for="c4">Lock or remove access to dangerous chemicals and medicines</label></li>
+      <li class="check-item" data-id="c5"><input type="checkbox" id="c5"> <label for="c5">Install stove knob covers or auto-shutoff device</label></li>
+      <li class="check-item" data-id="c6"><input type="checkbox" id="c6"> <label for="c6">Place door alarms on all exterior doors</label></li>
+      <li class="check-item" data-id="c7"><input type="checkbox" id="c7"> <label for="c7">Set water heater to below 49°C to prevent scalding</label></li>
+      <li class="check-item" data-id="c8"><input type="checkbox" id="c8"> <label for="c8">Install smoke and carbon monoxide detectors</label></li>
+      <li class="check-item" data-id="c9"><input type="checkbox" id="c9"> <label for="c9">Patient wears ID bracelet with caregiver contact</label></li>
+      <li class="check-item" data-id="c10"><input type="checkbox" id="c10"> <label for="c10">Remove or lock away sharp objects (scissors, knives)</label></li>
+      <li class="check-item" data-id="c11"><input type="checkbox" id="c11"> <label for="c11">Label all rooms and key items with large-print signs</label></li>
+      <li class="check-item" data-id="c12"><input type="checkbox" id="c12"> <label for="c12">Keep emergency numbers visibly posted by the telephone</label></li>
+    </ul>
+  </div>
+
+  <!-- â”€â”€ AI Screening Advisor â”€â”€ -->
+  <div class="ai-section" id="ai-advisor">
+    <button class="ai-toggle-btn" id="ai-toggle-btn" aria-expanded="false" aria-controls="ai-panel">
+      <div class="ai-btn-left">
+        <div class="ai-btn-icon">🤖</div>
+        <div style="text-align:left;">
+          <div>AI Screening Advisor</div>
+          <div style="font-size:0.75rem;font-weight:500;opacity:0.85;">Symptom screening &amp; dementia risk assessment</div>
+        </div>
+      </div>
+      <i class="fas fa-chevron-down" id="ai-chevron" style="transition:transform 0.25s;"></i>
+    </button>
+
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-head">
+        <div class="ai-avatar">🤖</div>
+        <div class="ai-head-info">
+          <h3>AI Caregiver Advisor</h3>
+          <p>Symptom screening &amp; risk assessment</p>
+        </div>
+        <button class="ai-reset-btn" id="ai-reset-btn"><i class="fas fa-redo"></i> Reset</button>
+        <div class="ai-online"></div>
+      </div>
+      <div class="ai-msgs" id="ai-msgs"></div>
+      <div class="ai-opts" id="ai-opts"></div>
+      <div class="ai-input-row">
+        <input class="ai-input" id="ai-input" placeholder="Type a message…" />
+        <button class="ai-send" id="ai-send"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { getSession, populateHeader, showToast } from './js/ui.js';
+  import { processChat, resetChat, getRandomTip } from './js/chat.js';
+  import { auth, db } from './js/firebase.js';
+  const user = await getSession();
+  if (user) populateHeader(user);
+  document.getElementById('auth-hide')?.remove();
+  document.body.style.display = '';
+
+  // Stage tabs
+  document.querySelectorAll('.stage-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.stage-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.stage-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
+  });
+
+  // Safety checklist with localStorage persistence
+  const STORE_KEY = 'careHub_checklist';
+  const saved = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+  const items  = document.querySelectorAll('.check-item');
+  const fill   = document.getElementById('check-fill');
+  const pct    = document.getElementById('check-pct');
+  const total  = items.length;
+
+  function updateProgress() {
+    const done = document.querySelectorAll('.check-item.checked').length;
+    fill.style.width = `${(done / total) * 100}%`;
+    pct.textContent  = `${done} of ${total} completed`;
+    const state = {};
+    document.querySelectorAll('.check-item').forEach(el => { state[el.dataset.id] = el.classList.contains('checked'); });
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  }
+
+  // Restore saved state
+  items.forEach(el => {
+    const cb = el.querySelector('input[type=checkbox]');
+    if (saved[el.dataset.id]) { el.classList.add('checked'); cb.checked = true; }
+    el.addEventListener('click', e => {
+      if (e.target.tagName === 'A') return;
+      const checked = el.classList.toggle('checked');
+      cb.checked = checked;
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  /* â”€â”€ AI Screening Advisor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  const aiToggleBtn = document.getElementById('ai-toggle-btn');
+  const aiPanel     = document.getElementById('ai-panel');
+  const aiChevron   = document.getElementById('ai-chevron');
+  const aiMsgsEl    = document.getElementById('ai-msgs');
+  const aiOptsEl    = document.getElementById('ai-opts');
+  const aiInputEl   = document.getElementById('ai-input');
+  const aiSendBtn   = document.getElementById('ai-send');
+  const aiResetBtn  = document.getElementById('ai-reset-btn');
+  let aiInitialized = false;
+
+  aiToggleBtn.addEventListener('click', () => {
+    const open = aiPanel.classList.toggle('open');
+    aiChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+    aiToggleBtn.setAttribute('aria-expanded', open);
+    if (open && !aiInitialized) {
+      aiInitialized = true;
+      resetChat();
+      const intro = processChat('__start__', user?.name || '');
+      addAiMsg(intro.message, 'bot');
+      if (intro.options) showAiOpts(intro.options);
+    }
+  });
+
+  aiResetBtn.addEventListener('click', () => {
+    aiMsgsEl.innerHTML = '';
+    aiOptsEl.innerHTML = '';
+    resetChat();
+    aiInitialized = true;
+    const intro = processChat('__start__', user?.name || '');
+    addAiMsg(intro.message, 'bot');
+    if (intro.options) showAiOpts(intro.options);
+    showToast('AI Advisor reset – starting fresh assessment', 'success', 2500);
+  });
+
+  function addAiMsg(text, who) {
+    const d = document.createElement('div');
+    d.className = `ai-msg ${who}`;
+    d.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    aiMsgsEl.appendChild(d);
+    aiMsgsEl.scrollTop = aiMsgsEl.scrollHeight;
+  }
+
+  function showAiOpts(opts) {
+    aiOptsEl.innerHTML = opts.map(o => `<button class="ai-opt">${o}</button>`).join('');
+  }
+
+  function handleAiResponse(resp) {
+    setTimeout(() => {
+      addAiMsg(resp.message, 'bot');
+      if (resp.options) showAiOpts(resp.options); else aiOptsEl.innerHTML = '';
+      if (resp.riskLevel) {
+        const cls = { Low:'ai-risk-low', Moderate:'ai-risk-moderate', Severe:'ai-risk-severe' }[resp.riskLevel] || '';
+        const badge = document.createElement('div');
+        badge.className = `ai-risk-badge ${cls}`;
+        badge.innerHTML = `<i class="fas fa-chart-bar"></i> Risk Level: ${resp.riskLevel}`;
+        aiMsgsEl.lastChild.appendChild(badge);
+        aiMsgsEl.scrollTop = aiMsgsEl.scrollHeight;
+        if (resp.riskLevel !== 'Low') showToast(`âš ️ ${resp.riskLevel} risk detected — consider booking a specialist`, resp.riskLevel === 'Severe' ? 'error' : 'warn', 5000);
+      }
+    }, 500);
+  }
+
+  aiOptsEl.addEventListener('click', e => {
+    const btn = e.target.closest('.ai-opt');
+    if (!btn) return;
+    addAiMsg(btn.textContent, 'user');
+    aiOptsEl.innerHTML = '';
+    handleAiResponse(processChat(btn.textContent, user?.name || ''));
+  });
+
+  function sendAiMessage() {
+    const text = aiInputEl.value.trim();
+    if (!text) return;
+    addAiMsg(text, 'user');
+    aiInputEl.value = '';
+    aiOptsEl.innerHTML = '';
+    handleAiResponse(processChat(text, user?.name || ''));
+  }
+
+  aiSendBtn.addEventListener('click', sendAiMessage);
+  aiInputEl.addEventListener('keydown', e => { if (e.key === 'Enter') sendAiMessage(); });
+
+  // Auto-expand AI Advisor if linked directly via hash
+  if (window.location.hash === '#ai-advisor' || window.location.hash === '#ai-screening') {
+    setTimeout(() => {
+      if (!aiPanel.classList.contains('open')) {
+        aiToggleBtn.click();
+      }
+      document.getElementById('ai-advisor')?.scrollIntoView({ behavior: 'smooth' });
+    }, 300);
+  }
+</script>
+<script src="./js/page-transition.js"></script>
+</body>
+</html>

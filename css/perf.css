@@ -1,0 +1,146 @@
+/*
+ * CareHub — Performance & Accessibility Patch
+ * Loaded on every page to reduce GPU-heavy styles on low-end/mobile devices.
+ */
+
+/* ── Auth reveal fade-in: body starts hidden, fades in when auth confirmed ── */
+body {
+  transition: opacity 0.25s ease;
+}
+/* When auth-hide style is removed and display:'' set, we get a smooth fade */
+body[style*="display: block"],
+body[style*="display:"],
+body:not([style*="display:none"]) {
+  opacity: 1;
+}
+
+/* ── Loading skeleton: subtle pulse while Firebase initializes ──────────── */
+@keyframes _ch-pulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* ── Reduce backdrop-filter cost on mobile ────────────────────────── */
+@media (max-width: 768px) {
+  .site-header,
+  header,
+  .hdr,
+  [style*="backdrop-filter"] {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+  /* Disable smooth scroll on mobile — causes lag on older phones */
+  html { scroll-behavior: auto !important; }
+}
+
+/* ── Honour prefers-reduced-motion for all animations ─────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .blob, .blob-1, .blob-2, .blob-3 { animation: none !important; }
+  body { transition: none !important; }
+}
+
+/* ── GPU compositing: promote sticky header to own layer ─────────── */
+.site-header, .hdr, header {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* ── Contain heavy box-shadows to composited layers ──────────────── */
+.auth-card, .card, .feature-item, .track-card {
+  will-change: auto;
+  contain: layout style;
+}
+
+/* ── Touch scrolling improvements for mobile ─────────────────────── */
+body, .right-panel, main, .page-content {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Avatar placeholder — styled so empty div looks good before JS ── */
+#header-avatar:empty,
+#pd-avatar:empty,
+#hdr-av:empty {
+  background: linear-gradient(135deg, #0891b2, #6366f1);
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#header-avatar:empty::after,
+#pd-avatar:empty::after,
+#hdr-av:empty::after {
+  content: '\f007';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 0.85em;
+  color: rgba(255,255,255,0.8);
+}
+
+
+/* ── Reduce backdrop-filter cost on mobile ────────────────────────── */
+@media (max-width: 768px) {
+  .site-header,
+  header,
+  .hdr,
+  [style*="backdrop-filter"] {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+}
+
+/* ── Honour prefers-reduced-motion for all animations ─────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .blob,
+  .blob-1,
+  .blob-2,
+  .blob-3 {
+    animation: none !important;
+  }
+}
+
+/* ── Contain heavy box-shadows to composited layers ──────────────── */
+.auth-card,
+.card,
+.feature-item,
+.track-card {
+  will-change: auto;
+  contain: layout style;
+}
+
+/* ── Avatar placeholder — styled so empty div looks good before JS ── */
+#header-avatar:empty,
+#pd-avatar:empty,
+#hdr-av:empty {
+  background: linear-gradient(135deg, #0891b2, #6366f1);
+  color: transparent;
+}
+#header-avatar:empty::after,
+#pd-avatar:empty::after,
+#hdr-av:empty::after {
+  content: '\f007';           /* fa-user */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 0.85em;
+  color: rgba(255,255,255,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}

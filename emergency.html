@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Auth Guard: immediate synchronous check before DOM render -->
+  <script>
+    (function() {
+      try {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) {
+          window.location.replace('login.html');
+        }
+      } catch (e) {
+        window.location.replace('login.html');
+      }
+    })();
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) {
+        var s = sessionStorage.getItem('careHub_user') || localStorage.getItem('careHub_user');
+        if (!s) window.location.replace('login.html');
+      }
+    });
+  </script>
+
+  <!-- FOUC Prevention: hide body until auth confirmed -->
+  <style id="auth-hide">body{display:none!important}</style>
+  <!-- GUARANTEED body reveal: runs immediately, before any module import -->
+  <script>
+    // Remove auth-hide unconditionally after a tiny delay to allow CSS parse
+    // This runs synchronously in the HTML parser — completely independent of modules
+    document.addEventListener('DOMContentLoaded', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+    // Belt-and-suspenders: also remove on load
+    window.addEventListener('load', function() {
+      var ah = document.getElementById('auth-hide');
+      if (ah) ah.remove();
+      document.body.style.display = '';
+    });
+  </script><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareHub – Emergency SOS Directory</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚨</text></svg>" />
+    <!-- Auth guard handled by Firebase module script -->
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { background: #0f172a; }
+    .page-header {
+      background: rgba(15,23,42,0.95); backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 0 24px; position: sticky; top: 0; z-index: 100;
+    }
+    .ph-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; gap: 16px; height: 60px;
+    }
+    .back-btn {
+      display: flex; align-items: center; gap: 7px;
+      color: rgba(255,255,255,0.65); text-decoration: none;
+      font-size: 0.85rem; font-weight: 600;
+      padding: 6px 14px; border-radius: 99px;
+      border: 1px solid rgba(255,255,255,0.12);
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.08); color: white; }
+    .ph-title { font-size: 1rem; font-weight: 800; color: white; flex: 1; }
+    .ph-badge {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; padding: 3px 10px; border-radius: 99px;
+      background: rgba(244,63,94,0.2); color: #fca5a5;
+      border: 1px solid rgba(244,63,94,0.3);
+    }
+    .avatar-sm {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg,#0891b2,#6366f1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: white; flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* ── Page hero ── */
+    .emg-hero {
+      background: linear-gradient(135deg,#1e293b 0%,#0f172a 100%);
+      padding: 52px 24px; text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .emg-hero h1 { font-size: clamp(1.8rem,4vw,2.6rem); font-weight: 900; color: white; margin-bottom: 10px; }
+    .emg-hero p  { color: rgba(255,255,255,0.65); font-size: 0.95rem; }
+
+    /* ── Content area ── */
+    .page-content { max-width: 1200px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* ── Helpline grid ── */
+    .helpline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap: 14px; margin-bottom: 40px;
+    }
+    .helpline-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px; padding: 22px;
+      cursor: pointer; text-decoration: none;
+      display: block; transition: all 0.25s;
+    }
+    .helpline-card:hover {
+      background: rgba(255,255,255,0.10);
+      border-color: rgba(255,255,255,0.22);
+      transform: translateY(-3px);
+    }
+    .hc-flag  { font-size: 2rem; margin-bottom: 10px; }
+    .hc-org   { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.06em; }
+    .hc-name  { font-size: 0.9rem; font-weight: 700; color: white; margin: 4px 0 10px; }
+    .hc-num   { font-size: 1.5rem; font-weight: 900; color: #2dd4bf; }
+    .hc-call  { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 8px; display: flex; align-items: center; gap: 5px; }
+    .helpline-card:hover .hc-call { color: #2dd4bf; }
+
+    /* ── Global selector ── */
+    .global-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 28px; margin-bottom: 40px;
+    }
+    .global-box h3 { color: white; font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+    .country-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+    .country-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border: 1.5px solid rgba(255,255,255,0.18);
+      border-radius: 99px; background: transparent; color: white;
+      font-family: 'Inter',sans-serif; font-size: 0.83rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .country-btn:hover,.country-btn.active { background: #0891b2; border-color: #0891b2; }
+    .country-info {
+      display: none; padding: 18px;
+      background: rgba(20,184,166,0.12);
+      border: 1px solid rgba(20,184,166,0.3);
+      border-radius: 14px;
+    }
+    .country-info.show { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .ci-num { font-size: 2.4rem; font-weight: 900; color: #2dd4bf; }
+    .ci-desc { font-size: 0.85rem; color: rgba(255,255,255,0.65); }
+    .ci-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .btn-call {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 20px; background: #0891b2; color: white;
+      border: none; border-radius: 99px;
+      font-family: 'Inter',sans-serif; font-size: 0.85rem; font-weight: 700;
+      text-decoration: none; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-call:hover { background: #0e7490; }
+    .btn-wa {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 20px; background: #25D366; color: white;
+      border: none; border-radius: 99px;
+      font-family: 'Inter',sans-serif; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-wa:hover { background: #1da851; }
+
+    /* Section heading */
+    .sec-label {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #2dd4bf;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 6px;
+    }
+    .sec-label::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+
+    @media(max-width:600px) { .helpline-grid{grid-template-columns:1fr 1fr;} }
+  </style>
+  <link rel="stylesheet" href="./css/perf.css" />
+</head>
+<body>
+
+<!-- Header -->
+<header class="page-header">
+  <div class="ph-inner">
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    <span class="ph-title"><i class="fas fa-phone-volume" style="color:#f87171;margin-right:6px;"></i>Emergency SOS Directory</span>
+    <span class="ph-badge">Critical</span>
+    <div class="avatar-sm" id="header-avatar" title="Your profile"></div>
+  </div>
+</header>
+
+<!-- Hero -->
+<div class="emg-hero">
+  <h1>🚨 Emergency SOS Directory</h1>
+  <p>India's critical helplines + global emergency numbers — one tap to call</p>
+</div>
+
+<!-- Content -->
+<div class="page-content">
+
+  <!-- India Helplines -->
+  <div class="sec-label"><i class="fas fa-flag"></i> India Emergency Helplines</div>
+  <div class="helpline-grid" id="helpline-grid"></div>
+
+  <!-- Global Selector -->
+  <div class="sec-label"><i class="fas fa-globe"></i> Global Emergency Numbers</div>
+  <div class="global-box">
+    <h3>Select Your Country</h3>
+    <div class="country-btns" id="country-btns"></div>
+    <div class="country-info" id="country-info">
+      <div>
+        <div style="font-size:2.5rem;" id="ci-flag">🌍</div>
+        <div class="ci-desc" id="ci-desc">Select a country above</div>
+        <div class="ci-num" id="ci-num">–</div>
+        <div class="ci-actions">
+          <a class="btn-call" id="ci-call" href="#"><i class="fas fa-phone-alt"></i> Tap to Call</a>
+          <button class="btn-wa" id="ci-wa"><i class="fab fa-whatsapp"></i> Share Location</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="sec-label"><i class="fas fa-lightbulb"></i> Emergency Tips</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px;">
+      <div style="font-size:1.5rem;margin-bottom:8px;">🪪</div>
+      <div style="font-weight:700;color:white;font-size:0.9rem;margin-bottom:4px;">ID Bracelet</div>
+      <div style="color:rgba(255,255,255,0.55);font-size:0.82rem;">Ensure patient always wears an ID bracelet with your phone number.</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px;">
+      <div style="font-size:1.5rem;margin-bottom:8px;">📋</div>
+      <div style="font-weight:700;color:white;font-size:0.9rem;margin-bottom:4px;">Medical Summary</div>
+      <div style="color:rgba(255,255,255,0.55);font-size:0.82rem;">Keep a printed summary of diagnoses, medications, and allergies near the door.</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px;">
+      <div style="font-size:1.5rem;margin-bottom:8px;">📞</div>
+      <div style="font-weight:700;color:white;font-size:0.9rem;margin-bottom:4px;">Speed Dial Setup</div>
+      <div style="color:rgba(255,255,255,0.55);font-size:0.82rem;">Save 112, 108 and your neurologist as speed dial contacts on all household phones.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Plain script: renders all content synchronously. Zero dependency on Firebase/module imports. -->
+<script>
+  // ── INDIA HELPLINES — inlined for guaranteed render ──
+  var INDIA_HELPLINES = [
+    { flag: '\uD83C\uDDEE\uD83C\uDDF3', org: 'National Emergency',        name: 'All Emergencies',           number: '112',           description: 'Police, Fire, Medical' },
+    { flag: '\uD83D\uDE91',             org: 'National Ambulance Service', name: 'Medical Ambulance',         number: '108',           description: 'Free ambulance, 24/7' },
+    { flag: '\uD83D\uDC74',             org: 'Ministry of Social Justice', name: 'Elder Line',                number: '14567',         description: 'National helpline for senior citizens' },
+    { flag: '\uD83E\uDDE0',             org: 'NIMHANS Bangalore',          name: 'Mental Health & Dementia',  number: '080-46110007',  description: 'NIMHANS mental health helpline' },
+    { flag: '\uD83E\uDD1D',             org: 'ARDSI',                      name: "Alzheimer's Helpline",      number: '1800-102-4174', description: "Alzheimer's & Related Disorders Society of India" },
+    { flag: '\uD83C\uDFE5',             org: 'iCall / NIMHANS',            name: 'Caregiver Mental Health',   number: '9152987821',    description: 'Psychosocial support for caregivers' },
+  ];
+
+  // ── GLOBAL HELPLINES — inlined for guaranteed render ──
+  var GLOBAL_HELPLINES = {
+    IN: { flag: '\uD83C\uDDEE\uD83C\uDDF3', country: 'India',     number: '112', description: 'National Emergency Number' },
+    US: { flag: '\uD83C\uDDFA\uD83C\uDDF8', country: 'USA',       number: '911', description: 'Police, Fire, Medical Emergency' },
+    UK: { flag: '\uD83C\uDDEC\uD83C\uDDE7', country: 'UK',        number: '999', description: 'Police, Fire, Medical Emergency' },
+    EU: { flag: '\uD83C\uDDEA\uD83C\uDDFA', country: 'Europe',    number: '112', description: 'EU-wide Emergency Number' },
+    AU: { flag: '\uD83C\uDDE6\uD83C\uDDFA', country: 'Australia', number: '000', description: 'Police, Fire, Ambulance' },
+    CA: { flag: '\uD83C\uDDE8\uD83C\uDDE6', country: 'Canada',    number: '911', description: 'Police, Fire, Medical Emergency' },
+    SG: { flag: '\uD83C\uDDF8\uD83C\uDDEC', country: 'Singapore', number: '995', description: 'Ambulance & Fire Brigade' },
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Render India helplines
+    var grid = document.getElementById('helpline-grid');
+    if (grid) {
+      grid.innerHTML = INDIA_HELPLINES.map(function(h) {
+        return '<a class="helpline-card" href="tel:' + h.number + '">' +
+          '<div class="hc-flag">' + h.flag + '</div>' +
+          '<div class="hc-org">' + h.org + '</div>' +
+          '<div class="hc-name">' + h.name + '</div>' +
+          '<div class="hc-num">' + h.number + '</div>' +
+          '<div class="hc-call"><i class="fas fa-phone-alt"></i> Tap to Call</div>' +
+          '</a>';
+      }).join('');
+    }
+
+    // Render country buttons
+    var btnWrap = document.getElementById('country-btns');
+    var infoBox = document.getElementById('country-info');
+    if (btnWrap && infoBox) {
+      Object.keys(GLOBAL_HELPLINES).forEach(function(code) {
+        var data = GLOBAL_HELPLINES[code];
+        var btn = document.createElement('button');
+        btn.className = 'country-btn';
+        btn.setAttribute('data-code', code);
+        btn.innerHTML = data.flag + ' ' + data.country;
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.country-btn').forEach(function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          document.getElementById('ci-flag').textContent = data.flag;
+          document.getElementById('ci-desc').textContent = data.country + ' \u2013 ' + data.description;
+          document.getElementById('ci-num').textContent  = data.number;
+          document.getElementById('ci-call').href = 'tel:' + data.number;
+          infoBox.classList.add('show');
+        });
+        btnWrap.appendChild(btn);
+      });
+    }
+
+    // WhatsApp share
+    var waBtn = document.getElementById('ci-wa');
+    if (waBtn) {
+      waBtn.addEventListener('click', function() {
+        var msg = encodeURIComponent('\uD83D\uDEA8 EMERGENCY \u2013 Please help! Location: https://www.google.com/maps \u2013 CareHub Alert');
+        window.open('https://api.whatsapp.com/send?text=' + msg, '_blank');
+      });
+    }
+  });
+</script>
+
+<!-- Module script: ONLY for header population. Failure here does NOT affect page content. -->
+<script type="module">
+  import { getSession, populateHeader } from './js/ui.js';
+  try {
+    var user = await getSession();
+    if (user) populateHeader(user);
+  } catch (err) {
+    console.warn('Emergency page auth:', err);
+  }
+</script>
+<script src="./js/page-transition.js"></script>
+</body>
+</html>
