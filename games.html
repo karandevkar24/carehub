@@ -197,20 +197,23 @@
     }
   </style>
   <link rel="stylesheet" href="./css/perf.css" />
+  <!-- i18n: translations data + engine -->
+  <script src="./js/translations.js"></script>
+  <script src="./js/i18n.js"></script>
 </head>
 <body>
 
 <header class="page-header">
   <div class="ph-inner">
-    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
-    <span class="ph-title"><i class="fas fa-gamepad" style="color:#0d9488;margin-right:6px;"></i>Cognitive Games Zone</span>
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> <span data-i18n="nav.back">Dashboard</span></a>
+    <span class="ph-title"><i class="fas fa-gamepad" style="color:#0d9488;margin-right:6px;"></i><span data-i18n="games.pageHeader">Cognitive Games Zone</span></span>
     <div class="avatar-sm" id="header-avatar"></div>
   </div>
 </header>
 
 <div class="page-hero">
-  <h1>&#129513; Games Zone</h1>
-  <p>Choose a game and tap Play to start</p>
+  <h1>&#129513; <span data-i18n="games.pageTitle">Cognitive Games Zone</span></h1>
+  <p data-i18n="games.pageSubtitle">Choose a game and tap Play to start</p>
 </div>
 
 <div class="page-content">
@@ -223,25 +226,25 @@
     <!-- Spot the Object -->
     <a class="gs-card" href="spot-game.html" id="gs-spot">
       <div class="gs-icon">&#127807;</div>
-      <div class="gs-title">Spot the Object</div>
-      <div class="gs-desc">Find the hidden object in a picture. Great for attention and visual focus.</div>
-      <button class="gs-play-btn" tabindex="-1"><i class="fas fa-play"></i> Play</button>
+      <div class="gs-title" data-i18n="games.spotTitle">Spot the Object</div>
+      <div class="gs-desc" data-i18n="games.spotDesc">Find the hidden object in a picture. Great for attention and visual focus.</div>
+      <button class="gs-play-btn" tabindex="-1"><i class="fas fa-play"></i> <span data-i18n="games.play">Play</span></button>
     </a>
 
     <!-- Color Sequence (inline game) -->
     <div class="gs-card" id="gs-color" role="button" tabindex="0" aria-label="Play Color Sequence game">
       <div class="gs-icon">&#127912;</div>
-      <div class="gs-title">Color Sequence</div>
-      <div class="gs-desc">Watch pastel tiles light up, then tap them in the same order.</div>
-      <button class="gs-play-btn" tabindex="-1"><i class="fas fa-play"></i> Play</button>
+      <div class="gs-title" data-i18n="games.colorTitle">Color Sequence</div>
+      <div class="gs-desc" data-i18n="games.colorDesc">Watch pastel tiles light up, then tap them in the same order.</div>
+      <button class="gs-play-btn" tabindex="-1"><i class="fas fa-play"></i> <span data-i18n="games.play">Play</span></button>
     </div>
 
     <!-- Photo Match -->
     <a class="gs-card" href="memory-match.html" id="gs-photo">
       <div class="gs-icon">&#128247;</div>
-      <div class="gs-title">Photo Match</div>
-      <div class="gs-desc">Match pairs of photos in a classic memory card game.</div>
-      <button class="gs-play-btn" tabindex="-1"><i class="fas fa-play"></i> Play</button>
+      <div class="gs-title" data-i18n="games.photoTitle">Photo Match</div>
+      <div class="gs-desc" data-i18n="games.photoDesc">Match pairs of photos in a classic memory card game.</div>
+      <button class="gs-play-btn" tabindex="-1"><i class="fas fa-play"></i> <span data-i18n="games.play">Play</span></button>
     </a>
 
   </div>

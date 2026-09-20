@@ -172,36 +172,39 @@
     @media(max-width:600px) { .helpline-grid{grid-template-columns:1fr 1fr;} }
   </style>
   <link rel="stylesheet" href="./css/perf.css" />
+  <!-- i18n: translations data + engine -->
+  <script src="./js/translations.js"></script>
+  <script src="./js/i18n.js"></script>
 </head>
 <body>
 
 <!-- Header -->
 <header class="page-header">
   <div class="ph-inner">
-    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
-    <span class="ph-title"><i class="fas fa-phone-volume" style="color:#f87171;margin-right:6px;"></i>Emergency SOS Directory</span>
-    <span class="ph-badge">Critical</span>
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> <span data-i18n="nav.back">Dashboard</span></a>
+    <span class="ph-title"><i class="fas fa-phone-volume" style="color:#f87171;margin-right:6px;"></i><span data-i18n="emergency.pageHeader">Emergency SOS Directory</span></span>
+    <span class="ph-badge" data-i18n="emergency.badge">Critical</span>
     <div class="avatar-sm" id="header-avatar" title="Your profile"></div>
   </div>
 </header>
 
 <!-- Hero -->
 <div class="emg-hero">
-  <h1>🚨 Emergency SOS Directory</h1>
-  <p>India's critical helplines + global emergency numbers — one tap to call</p>
+  <h1>🚨 <span data-i18n="emergency.pageTitle">Emergency SOS Directory</span></h1>
+  <p data-i18n="emergency.pageSubtitle">India's critical helplines + global emergency numbers — one tap to call</p>
 </div>
 
 <!-- Content -->
 <div class="page-content">
 
   <!-- India Helplines -->
-  <div class="sec-label"><i class="fas fa-flag"></i> India Emergency Helplines</div>
+  <div class="sec-label"><i class="fas fa-flag"></i> <span data-i18n="emergency.indiaSection">India Emergency Helplines</span></div>
   <div class="helpline-grid" id="helpline-grid"></div>
 
   <!-- Global Selector -->
-  <div class="sec-label"><i class="fas fa-globe"></i> Global Emergency Numbers</div>
+  <div class="sec-label"><i class="fas fa-globe"></i> <span data-i18n="emergency.globalSection">Global Emergency Numbers</span></div>
   <div class="global-box">
-    <h3>Select Your Country</h3>
+    <h3 data-i18n="emergency.selectCountry">Select Your Country</h3>
     <div class="country-btns" id="country-btns"></div>
     <div class="country-info" id="country-info">
       <div>
@@ -209,30 +212,31 @@
         <div class="ci-desc" id="ci-desc">Select a country above</div>
         <div class="ci-num" id="ci-num">–</div>
         <div class="ci-actions">
-          <a class="btn-call" id="ci-call" href="#"><i class="fas fa-phone-alt"></i> Tap to Call</a>
-          <button class="btn-wa" id="ci-wa"><i class="fab fa-whatsapp"></i> Share Location</button>
+          <a class="btn-call" id="ci-call" href="#"><i class="fas fa-phone-alt"></i> <span data-i18n="emergency.tapToCall">Tap to Call</span></a>
+          <button class="btn-wa" id="ci-wa"><i class="fab fa-whatsapp"></i> <span data-i18n="emergency.shareLocation">Share Location</span></button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Tips -->
-  <div class="sec-label"><i class="fas fa-lightbulb"></i> Emergency Tips</div>
+  <div class="sec-label"><i class="fas fa-lightbulb"></i> <span data-i18n="emergency.tipsSection">Emergency Tips</span></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px;">
       <div style="font-size:1.5rem;margin-bottom:8px;">🪪</div>
-      <div style="font-weight:700;color:white;font-size:0.9rem;margin-bottom:4px;">ID Bracelet</div>
-      <div style="color:rgba(255,255,255,0.55);font-size:0.82rem;">Ensure patient always wears an ID bracelet with your phone number.</div>
+      <div style="font-weight:700;color:white;font-size:0.9rem;margin-bottom:4px;" data-i18n="emergency.tip1.title">ID Bracelet</div>
+      <div style="color:rgba(255,255,255,0.55);font-size:0.82rem;" data-i18n="emergency.tip1.desc">Ensure patient always wears an ID bracelet with your phone number.</div>
     </div>
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px;">
       <div style="font-size:1.5rem;margin-bottom:8px;">📋</div>
-      <div style="font-weight:700;color:white;font-size:0.9rem;margin-bottom:4px;">Medical Summary</div>
-      <div style="color:rgba(255,255,255,0.55);font-size:0.82rem;">Keep a printed summary of diagnoses, medications, and allergies near the door.</div>
+      <div style="font-weight:700;color:white;font-size:0.9rem;margin-bottom:4px;" data-i18n="emergency.tip2.title">Medical Summary</div>
+      <div style="color:rgba(255,255,255,0.55);font-size:0.82rem;" data-i18n="emergency.tip2.desc">Keep a printed summary of diagnoses, medications, and allergies near the door.</div>
     </div>
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px;">
-      <div style="font-size:1.5rem;margin-bottom:8px;">📞</div>
-      <div style="font-weight:700;color:white;font-size:0.9rem;margin-bottom:4px;">Speed Dial Setup</div>
-      <div style="color:rgba(255,255,255,0.55);font-size:0.82rem;">Save 112, 108 and your neurologist as speed dial contacts on all household phones.</div>
+      <div style="font-size:1.5rem;margin-bottom:8px;">⚡</div>
+      <div style="font-weight:700;color:white;font-size:0.9rem;margin-bottom:4px;" data-i18n="emergency.tip3.title">Speed Dial Setup</div>
+      <div style="color:rgba(255,255,255,0.55);font-size:0.82rem;" data-i18n="emergency.tip3.desc">Save 112, 108 and your neurologist as speed dial contacts on all household phones.</div>
+    </div>d dial contacts on all household phones.</div>
     </div>
   </div>
 </div>

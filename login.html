@@ -302,6 +302,9 @@
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
   <link rel="stylesheet" href="./css/perf.css" />
+  <!-- i18n: translations data + engine -->
+  <script src="./js/translations.js"></script>
+  <script src="./js/i18n.js"></script>
 </head>
 <body>
 
@@ -354,6 +357,7 @@
 
 <!-- ── RIGHT PANEL ──── -->
 <div class="right-panel">
+
   <!-- Mobile Logo -->
   <div class="auth-logo-mobile">
     <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
@@ -363,19 +367,19 @@
   <div class="auth-card">
     <!-- Tab Bar -->
     <div class="tab-bar" role="tablist" aria-label="Authentication tabs">
-      <button class="tab-btn active" id="tab-login" role="tab" aria-selected="true"  onclick="switchTab('login')">Sign In</button>
-      <button class="tab-btn"        id="tab-signup" role="tab" aria-selected="false" onclick="switchTab('signup')">Create Account</button>
+      <button class="tab-btn active" id="tab-login" role="tab" aria-selected="true"  onclick="switchTab('login')" data-i18n="login.signIn">Sign In</button>
+      <button class="tab-btn"        id="tab-signup" role="tab" aria-selected="false" onclick="switchTab('signup')" data-i18n="login.createAccount">Create Account</button>
     </div>
 
     <!-- ── LOGIN FORM ── -->
     <div class="form-panel active" id="panel-login" role="tabpanel">
-      <h2 class="form-title">Welcome back 👋</h2>
+      <h2 class="form-title" data-i18n="login.signInToCareHub">Welcome back 👋</h2>
       <p class="form-subtitle">Sign in to your CareHub account</p>
 
       <form id="login-form" novalidate autocomplete="on">
         <!-- Email -->
         <div class="form-group">
-          <label class="form-label" for="login-email">Email Address</label>
+          <label class="form-label" for="login-email" data-i18n="login.emailLabel">Email Address</label>
           <div class="input-wrap">
             <i class="fas fa-envelope input-icon"></i>
             <input type="email" id="login-email" class="form-input" placeholder="you@example.com"
@@ -386,7 +390,7 @@
 
         <!-- Password -->
         <div class="form-group">
-          <label class="form-label" for="login-password">Password</label>
+          <label class="form-label" for="login-password" data-i18n="login.passwordLabel">Password</label>
           <div class="input-wrap">
             <i class="fas fa-lock input-icon"></i>
             <input type="password" id="login-password" class="form-input" placeholder="Enter your password"
@@ -404,19 +408,19 @@
             <input type="checkbox" id="remember-me" style="accent-color:#0891b2;" />
             Remember me
           </label>
-          <a href="#" style="font-size:0.82rem;color:#0891b2;font-weight:600;">Forgot password?</a>
+          <a href="#" style="font-size:0.82rem;color:#0891b2;font-weight:600;" data-i18n="login.forgotPassword">Forgot password?</a>
         </div>
 
         <button type="submit" class="btn-submit" id="login-submit-btn">
-          <i class="fas fa-sign-in-alt"></i> Sign In
+          <i class="fas fa-sign-in-alt"></i> <span data-i18n="login.signIn">Sign In</span>
         </button>
       </form>
 
-      <div class="divider">or continue with</div>
+      <div class="divider" data-i18n="login.orContinueWith">or continue with</div>
 
       <button class="demo-btn" id="demo-login-btn" type="button">
         <i class="fas fa-user-circle" style="color:#0891b2;font-size:18px;"></i>
-        Try Demo (No Account Needed)
+        <span data-i18n="login.demoMode">Try Demo Mode</span>
         <span style="font-size:0.7rem;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:99px;font-weight:700;margin-left:4px;">⚠️ Read-only</span>
       </button>
 

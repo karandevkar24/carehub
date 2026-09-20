@@ -513,20 +513,24 @@
       .volume-group { flex: 1; }
     }
   </style>
+  <link rel="stylesheet" href="./css/perf.css" />
+  <!-- i18n: translations data + engine -->
+  <script src="./js/translations.js"></script>
+  <script src="./js/i18n.js"></script>
 </head>
 <body>
 
 <header class="page-header">
   <div class="ph-inner">
-    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
-    <span class="ph-title"><i class="fas fa-book-open" style="color:#f59e0b;margin-right:6px;"></i>Story Time</span>
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> <span data-i18n="nav.back">Dashboard</span></a>
+    <span class="ph-title"><i class="fas fa-book-open" style="color:#f59e0b;margin-right:6px;"></i><span data-i18n="stories.pageHeader">Story Time</span></span>
     <div class="avatar-sm" id="header-avatar"></div>
   </div>
 </header>
 
 <div class="page-hero">
-  <h1>📖 Story Time</h1>
-  <p>Short stories with audio narration &amp; comprehension questions — in 4 languages</p>
+  <h1>📖 <span data-i18n="stories.pageTitle">Story Time</span></h1>
+  <p data-i18n="stories.pageSubtitle">Short audio stories for gentle memory exercise</p>
 </div>
 
 <div class="page-content">

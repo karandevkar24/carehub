@@ -232,20 +232,23 @@
     .emg-call-btn.outline:hover{background:rgba(255,255,255,0.18);}
   </style>
   <link rel="stylesheet" href="./css/perf.css" />
+  <!-- i18n: translations data + engine -->
+  <script src="./js/translations.js"></script>
+  <script src="./js/i18n.js"></script>
 </head>
 <body>
 
 <header class="page-header">
   <div class="ph-inner">
-    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
-    <span class="ph-title"><i class="fas fa-brain" style="color:#f59e0b;margin-right:6px;"></i>Dementia Stage Guide & Safety</span>
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> <span data-i18n="nav.back">Dashboard</span></a>
+    <span class="ph-title"><i class="fas fa-brain" style="color:#f59e0b;margin-right:6px;"></i><span data-i18n="dementia.pageHeader">Dementia Stage Guide & Safety</span></span>
     <div class="avatar-sm" id="header-avatar"></div>
   </div>
 </header>
 
 <div class="page-hero">
-  <h1>🧠 Dementia Stage Guide</h1>
-  <p>Early, Middle, and Late stage signs · Red flags · Home safety checklist</p>
+  <h1>🧠 <span data-i18n="dementia.pageTitle">Dementia Stage Guide & AI Advisor</span></h1>
+  <p data-i18n="dementia.pageSubtitle">Interactive stage guide, safety checklist, and AI Screening Advisor</p>
 </div>
 
 <div class="page-content">

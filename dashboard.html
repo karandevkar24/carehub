@@ -573,6 +573,9 @@
   <link rel="stylesheet" href="./css/perf.css" />
   <!-- Chart.js for dementia trend area chart -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <!-- i18n: translations data + engine (must be plain scripts, not modules) -->
+  <script src="./js/translations.js"></script>
+  <script src="./js/i18n.js"></script>
 </head>
 <body>
 
@@ -586,7 +589,7 @@
     <div class="header-controls">
       <!-- Patient Mode Toggle -->
       <a class="patient-mode-btn" href="patient-view.html" id="patient-mode-btn" title="Switch to simplified patient view">
-        <i class="fas fa-user-circle"></i> <span>Patient View</span>
+        <i class="fas fa-user-circle"></i> <span data-i18n="nav.patientView">Patient View</span>
       </a>
       <div style="position:relative;">
         <button class="notif-btn" id="notif-bell-btn" aria-label="Notifications" title="Notification Center">
@@ -595,20 +598,20 @@
         </button>
         <div class="notif-dropdown" id="notif-dropdown">
           <div class="nd-head">
-            <div class="nd-title"><i class="fas fa-bell"></i> Notifications</div>
+            <div class="nd-title"><i class="fas fa-bell"></i> <span data-i18n="nav.notifications">Notifications</span></div>
             <div class="nd-actions">
               <button class="nd-action-btn" id="nd-mark-read-btn" title="Mark all as read"><i class="fas fa-check-double"></i></button>
               <button class="nd-action-btn" id="nd-clear-btn" title="Clear all"><i class="fas fa-trash"></i></button>
             </div>
           </div>
           <div class="nd-perm-banner" id="nd-perm-banner" style="display:none;">
-            <span><i class="fas fa-info-circle"></i> Enable browser popup alerts</span>
-            <button id="nd-enable-perm-btn">Enable</button>
+            <span><i class="fas fa-info-circle"></i> <span data-i18n="nav.enableAlerts">Enable browser popup alerts</span></span>
+            <button id="nd-enable-perm-btn" data-i18n="nav.enable">Enable</button>
           </div>
           <div class="nd-list" id="notif-items-list"></div>
           <div class="nd-empty" id="notif-empty-state">
             <i class="fas fa-bell-slash"></i>
-            <span>No notifications yet</span>
+            <span data-i18n="nav.noNotifications">No notifications yet</span>
           </div>
         </div>
       </div>
@@ -636,7 +639,7 @@
         </div>
       </div>
       <button class="header-logout-btn" id="header-logout-btn" title="Sign Out">
-        <i class="fas fa-sign-out-alt"></i> <span>Sign Out</span>
+        <i class="fas fa-sign-out-alt"></i> <span data-i18n="nav.signOut">Sign Out</span>
       </button>
     </div>
   </div>
@@ -650,9 +653,9 @@
     <div class="welcome-hero">
       <div class="welcome-copy">
         <div class="welcome-eyebrow">
-          <i class="fas fa-heart"></i> CareHub &mdash; You are not alone
+          <i class="fas fa-heart"></i> <span data-i18n="dashboard.eyebrow">CareHub &mdash; You are not alone</span>
         </div>
-        <div class="welcome-quote">
+        <div class="welcome-quote" data-i18n-html="dashboard.quote">
           &ldquo;You&rsquo;re not alone in this journey.<br>
           We&rsquo;re here to help you <em>care</em>,<br>
           one day at a time.&rdquo;
@@ -660,7 +663,7 @@
         <!-- Secondary context line (kept small + secondary) -->
         <div class="welcome-context">
           <i class="fas fa-user-circle" style="color:#0891b2;font-size:13px;"></i>
-          Welcome back,&nbsp;<span class="ctx-name" id="infographic-name">Caregiver</span><span id="infographic-patient-wrap" style="display:none;"><span class="ctx-sep">&nbsp;&middot;&nbsp;</span>Managing care for&nbsp;<span class="ctx-patient" id="infographic-patient"></span></span>
+          <span data-i18n="dashboard.welcomeBack">Welcome back,</span>&nbsp;<span class="ctx-name" id="infographic-name">Caregiver</span><span id="infographic-patient-wrap" style="display:none;"><span class="ctx-sep">&nbsp;&middot;&nbsp;</span><span data-i18n="dashboard.managingCare">Managing care for</span>&nbsp;<span class="ctx-patient" id="infographic-patient"></span></span>
         </div>
       </div>
 
@@ -682,11 +685,11 @@
       <div class="trend-chart-header">
         <div class="trend-chart-title">
           <i class="fas fa-chart-area"></i>
-          Global Dementia Cases &mdash; Rising Trend &amp; Projections
+          <span data-i18n="dashboard.trendTitle">Global Dementia Cases &mdash; Rising Trend &amp; Projections</span>
         </div>
         <div class="trend-chart-pills">
-          <span class="trend-pill now"><span class="trend-pill-dot"></span>Estimated cases</span>
-          <span class="trend-pill proj"><span class="trend-pill-dot"></span>WHO projection</span>
+          <span class="trend-pill now"><span class="trend-pill-dot"></span><span data-i18n="dashboard.estimatedCases">Estimated cases</span></span>
+          <span class="trend-pill proj"><span class="trend-pill-dot"></span><span data-i18n="dashboard.whoProjection">WHO projection</span></span>
         </div>
       </div>
       <div class="trend-chart-canvas-wrap">
@@ -699,10 +702,10 @@
 
 <!-- TOOLKIT GRID -->
 <div class="toolkit-section">
-  <div class="section-eyebrow"><i class="fas fa-toolbox"></i> Your Toolkit</div>
-  <h2 class="section-title">Caregiver Toolkit</h2>
-  <p class="section-desc">Select any module below to open its full-featured page.</p>
-  <p class="demo-note"><i class="fas fa-info-circle" aria-hidden="true"></i> Demo data shown — real patient profiles are created during onboarding.</p>
+  <div class="section-eyebrow"><i class="fas fa-toolbox"></i> <span data-i18n="dashboard.toolkitEyebrow">Your Toolkit</span></div>
+  <h2 class="section-title" data-i18n="dashboard.toolkitTitle">Caregiver Toolkit</h2>
+  <p class="section-desc" data-i18n="dashboard.toolkitDesc">Select any module below to open its full-featured page.</p>
+  <p class="demo-note"><i class="fas fa-info-circle" aria-hidden="true"></i> <span data-i18n="dashboard.demoNote">Demo data shown — real patient profiles are created during onboarding.</span></p>
 
   <div class="toolkit-grid">
 
@@ -710,10 +713,10 @@
     <a class="t-card card-emergency" href="emergency.html" id="card-sos">
       <div class="card-content">
         <div class="card-icon">&#128680;</div>
-        <div class="card-title">Emergency SOS Directory</div>
-        <div class="card-desc">One-tap access to India's critical helplines — 112, 108, Elder Line, NIMHANS, ARDSI — plus global emergency numbers.</div>
+        <div class="card-title" data-i18n="cards.sos.title">Emergency SOS Directory</div>
+        <div class="card-desc" data-i18n="cards.sos.desc">One-tap access to India's critical helplines — 112, 108, Elder Line, NIMHANS, ARDSI — plus global emergency numbers.</div>
         <div class="card-cta-btn" aria-hidden="true">
-          <span>Open Emergency Hub</span>
+          <span data-i18n="cards.sos.cta">Open Emergency Hub</span>
           <i class="fas fa-arrow-right"></i>
         </div>
       </div>
@@ -723,10 +726,10 @@
     <a class="t-card card-gps" href="doctors.html" id="card-doctors">
       <div class="card-content">
         <div class="card-icon">&#128205;</div>
-        <div class="card-title">Nearby Doctor Finder</div>
-        <div class="card-desc">Find neurologists and dementia specialists near you, filter by specialty, and book appointments instantly.</div>
+        <div class="card-title" data-i18n="cards.doctors.title">Nearby Doctor Finder</div>
+        <div class="card-desc" data-i18n="cards.doctors.desc">Find neurologists and dementia specialists near you, filter by specialty, and book appointments instantly.</div>
         <div class="card-cta-btn" aria-hidden="true">
-          <span>Find Nearby Doctors</span>
+          <span data-i18n="cards.doctors.cta">Find Nearby Doctors</span>
           <i class="fas fa-arrow-right"></i>
         </div>
       </div>
@@ -736,10 +739,10 @@
     <a class="t-card card-dementia" href="dementia.html" id="card-dementia">
       <div class="card-content">
         <div class="card-icon">&#129504;</div>
-        <div class="card-title">Dementia Stage Guide &amp; Safety</div>
-        <div class="card-desc">Interactive guides for Early, Middle, and Late stages with a safety checklist and AI Screening Advisor.</div>
+        <div class="card-title" data-i18n="cards.dementia.title">Dementia Stage Guide &amp; Safety</div>
+        <div class="card-desc" data-i18n="cards.dementia.desc">Interactive guides for Early, Middle, and Late stages with a safety checklist and AI Screening Advisor.</div>
         <div class="card-cta-btn" aria-hidden="true">
-          <span>Open Guide &amp; AI Advisor</span>
+          <span data-i18n="cards.dementia.cta">Open Guide &amp; AI Advisor</span>
           <i class="fas fa-arrow-right"></i>
         </div>
       </div>
@@ -749,10 +752,10 @@
     <a class="t-card card-music" href="music.html" id="card-music">
       <div class="card-content">
         <div class="card-icon">&#127925;</div>
-        <div class="card-title">Caregiver Music Therapy</div>
-        <div class="card-desc">Browser-generated binaural beats and ambient soundscapes for stress relief — no files needed.</div>
+        <div class="card-title" data-i18n="cards.music.title">Caregiver Music Therapy</div>
+        <div class="card-desc" data-i18n="cards.music.desc">Browser-generated binaural beats and ambient soundscapes for stress relief — no files needed.</div>
         <div class="card-cta-btn" aria-hidden="true">
-          <span>Open Music Therapy</span>
+          <span data-i18n="cards.music.cta">Open Music Therapy</span>
           <i class="fas fa-arrow-right"></i>
         </div>
       </div>
@@ -762,10 +765,10 @@
     <a class="t-card card-games" href="games.html" id="card-games">
       <div class="card-content">
         <div class="card-icon">&#129513;</div>
-        <div class="card-title">Cognitive Games Zone</div>
-        <div class="card-desc">Spot-the-object, color-sequence memory, and photo-match games with a progress chart to track cognitive improvement.</div>
+        <div class="card-title" data-i18n="cards.games.title">Cognitive Games Zone</div>
+        <div class="card-desc" data-i18n="cards.games.desc">Spot-the-object, color-sequence memory, and photo-match games with a progress chart to track cognitive improvement.</div>
         <div class="card-cta-btn" aria-hidden="true">
-          <span>Open Games Zone</span>
+          <span data-i18n="cards.games.cta">Open Games Zone</span>
           <i class="fas fa-arrow-right"></i>
         </div>
       </div>
@@ -775,10 +778,10 @@
     <a class="t-card card-stories" href="stories.html" id="card-stories">
       <div class="card-content">
         <div class="card-icon">&#128214;</div>
-        <div class="card-title">Story Time</div>
-        <div class="card-desc">Short audio stories in Hindi, English, Marathi, and Telugu for gentle memory exercise and cognitive engagement.</div>
+        <div class="card-title" data-i18n="cards.stories.title">Story Time</div>
+        <div class="card-desc" data-i18n="cards.stories.desc">Short audio stories in Hindi, English, Marathi, and Telugu for gentle memory exercise and cognitive engagement.</div>
         <div class="card-cta-btn" aria-hidden="true">
-          <span>Open Story Time</span>
+          <span data-i18n="cards.stories.cta">Open Story Time</span>
           <i class="fas fa-arrow-right"></i>
         </div>
       </div>
@@ -792,22 +795,22 @@
   <div class="reminders-card">
     <div class="reminders-hdr">
       <div class="rem-title-group">
-        <h2><i class="fas fa-clock" style="color:#0891b2;"></i> Daily Caregiver Reminders</h2>
-        <p>Set scheduled alerts for patient medication and cognitive brain games. Sends live browser notifications.</p>
+        <h2><i class="fas fa-clock" style="color:#0891b2;"></i> <span data-i18n="reminders.sectionTitle">Daily Caregiver Reminders</span></h2>
+        <p data-i18n="reminders.sectionDesc">Set scheduled alerts for patient medication and cognitive brain games. Sends live browser notifications.</p>
       </div>
       <div class="rem-actions-bar">
         <button class="btn-rem-test" id="btn-test-notif" title="Test browser alert and sound">
-          <i class="fas fa-volume-up"></i> Test Alert
+          <i class="fas fa-volume-up"></i> <span data-i18n="reminders.testAlert">Test Alert</span>
         </button>
         <button class="btn-rem-add" id="btn-open-add-rem">
-          <i class="fas fa-plus"></i> Set Reminder
+          <i class="fas fa-plus"></i> <span data-i18n="reminders.setReminder">Set Reminder</span>
         </button>
       </div>
     </div>
     <div class="rem-filters">
-      <button class="rf-btn active" data-filter="all">All Reminders</button>
-      <button class="rf-btn" data-filter="medication">&#128138; Medication Times</button>
-      <button class="rf-btn" data-filter="game">&#129513; Brain Games</button>
+      <button class="rf-btn active" data-filter="all" data-i18n="reminders.allReminders">All Reminders</button>
+      <button class="rf-btn" data-filter="medication" data-i18n="reminders.medication">&#128138; Medication Times</button>
+      <button class="rf-btn" data-filter="game" data-i18n="reminders.brainGames">&#129513; Brain Games</button>
     </div>
     <div class="reminders-grid" id="reminders-grid"></div>
   </div>
@@ -817,13 +820,13 @@
 <div class="rem-modal-overlay" id="rem-modal-overlay">
   <div class="rem-modal">
     <div class="rm-head">
-      <h3 id="rm-modal-title"><i class="fas fa-bell"></i> Set Daily Reminder</h3>
+      <h3 id="rm-modal-title"><i class="fas fa-bell"></i> <span data-i18n="reminders.modal.title">Set Daily Reminder</span></h3>
       <button class="rm-close" id="rm-close-btn">&times;</button>
     </div>
     <form id="reminder-form">
       <div class="rm-body">
         <div class="rm-field">
-          <label>Quick Presets</label>
+          <label data-i18n="reminders.modal.presets">Quick Presets</label>
           <div class="rm-presets">
             <button type="button" class="rm-preset-btn" data-type="medication" data-title="Morning Donepezil (5mg)" data-time="09:00" data-notes="Take with breakfast">&#128138; Morning Meds</button>
             <button type="button" class="rm-preset-btn" data-type="game" data-title="Memory Match Exercise" data-time="11:30" data-notes="15-min cognitive session">&#129513; Memory Game</button>
@@ -833,39 +836,39 @@
           </div>
         </div>
         <div class="rm-field">
-          <label for="rem-input-type">Reminder Type</label>
+          <label for="rem-input-type" data-i18n="reminders.modal.type">Reminder Type</label>
           <select id="rem-input-type" required>
-            <option value="medication">&#128138; Medication Time</option>
-            <option value="game">&#129513; Cognitive Game Session</option>
-            <option value="custom">&#128276; General Care Reminder</option>
+            <option value="medication" data-i18n="reminders.modal.typeOpts.medication">&#128138; Medication Time</option>
+            <option value="game" data-i18n="reminders.modal.typeOpts.game">&#129513; Cognitive Game Session</option>
+            <option value="custom" data-i18n="reminders.modal.typeOpts.custom">&#128276; General Care Reminder</option>
           </select>
         </div>
         <div class="rm-field">
-          <label for="rem-input-title">Reminder Title / Activity *</label>
-          <input type="text" id="rem-input-title" required placeholder="e.g. Morning Donepezil 5mg or Memory Match" />
+          <label for="rem-input-title" data-i18n="reminders.modal.titleField">Reminder Title / Activity *</label>
+          <input type="text" id="rem-input-title" required placeholder="e.g. Morning Donepezil 5mg or Memory Match" data-i18n-placeholder="reminders.modal.titleField" />
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div class="rm-field">
-            <label for="rem-input-time">Time (24h) *</label>
+            <label for="rem-input-time" data-i18n="reminders.modal.time">Time (24h) *</label>
             <input type="time" id="rem-input-time" required value="09:00" />
           </div>
           <div class="rm-field">
-            <label for="rem-input-schedule">Repeat</label>
+            <label for="rem-input-schedule" data-i18n="reminders.modal.repeat">Repeat</label>
             <select id="rem-input-schedule">
-              <option value="daily">Every Day</option>
-              <option value="weekdays">Weekdays (Mon-Fri)</option>
-              <option value="weekends">Weekends (Sat-Sun)</option>
+              <option value="daily" data-i18n="reminders.modal.repeatOpts.daily">Every Day</option>
+              <option value="weekdays" data-i18n="reminders.modal.repeatOpts.weekdays">Weekdays (Mon-Fri)</option>
+              <option value="weekends" data-i18n="reminders.modal.repeatOpts.weekends">Weekends (Sat-Sun)</option>
             </select>
           </div>
         </div>
         <div class="rm-field">
-          <label for="rem-input-notes">Notes / Instructions (optional)</label>
+          <label for="rem-input-notes" data-i18n="reminders.modal.notes">Notes / Instructions (optional)</label>
           <textarea id="rem-input-notes" rows="2" placeholder="e.g. Take with food, drink full glass of water"></textarea>
         </div>
       </div>
       <div class="rm-foot">
-        <button type="button" class="btn-rem-del" id="rm-cancel-btn" style="padding:6px 14px;">Cancel</button>
-        <button type="submit" class="btn-rem-add" id="rm-save-btn">Save Reminder</button>
+        <button type="button" class="btn-rem-del" id="rm-cancel-btn" style="padding:6px 14px;" data-i18n="reminders.modal.cancel">Cancel</button>
+        <button type="submit" class="btn-rem-add" id="rm-save-btn" data-i18n="reminders.modal.save">Save Reminder</button>
       </div>
     </form>
   </div>

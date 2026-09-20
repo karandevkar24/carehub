@@ -162,22 +162,26 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
 /* Toast */
 #toasts{position:fixed;top:76px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 </style>
+<link rel="stylesheet" href="./css/perf.css" />
+<!-- i18n: translations data + engine -->
+<script src="./js/translations.js"></script>
+<script src="./js/i18n.js"></script>
 </head>
 <body>
 
 <!-- ── Header ─────────────────────────────────────────── -->
 <header class="page-header">
   <div class="ph-inner">
-    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
-    <span class="ph-title"><i class="fas fa-map-marker-alt" style="color:#0891b2;margin-right:6px;"></i>Nearby Doctor Finder</span>
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> <span data-i18n="nav.back">Dashboard</span></a>
+    <span class="ph-title"><i class="fas fa-map-marker-alt" style="color:#0891b2;margin-right:6px;"></i><span data-i18n="doctors.pageHeader">Nearby Doctor Finder</span></span>
     <div class="avatar-sm" id="hdr-avatar">U</div>
   </div>
 </header>
 
 <!-- ── Hero ───────────────────────────────────────────── -->
 <div class="page-hero">
-  <h1>📍 Nearby Doctor Finder</h1>
-  <p>Neurologists, geriatricians &amp; dementia specialists — sorted by distance from you</p>
+  <h1>📍 <span data-i18n="doctors.pageTitle">Nearby Doctor Finder</span></h1>
+  <p data-i18n="doctors.pageSubtitle">Find dementia specialists and neurologists near you</p>
 </div>
 
 <!-- ── Search Bar ─────────────────────────────────────── -->

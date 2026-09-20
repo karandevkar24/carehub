@@ -121,20 +121,23 @@
     @media(max-width:600px){.track-list{grid-template-columns:1fr;}.controls{gap:10px;}}
   </style>
   <link rel="stylesheet" href="./css/perf.css" />
+  <!-- i18n: translations data + engine -->
+  <script src="./js/translations.js"></script>
+  <script src="./js/i18n.js"></script>
 </head>
 <body>
 
 <header class="page-header">
   <div class="ph-inner">
-    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> Dashboard</a>
-    <span class="ph-title"><i class="fas fa-music" style="color:#8b5cf6;margin-right:6px;"></i>Music Therapy</span>
+    <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> <span data-i18n="nav.back">Dashboard</span></a>
+    <span class="ph-title"><i class="fas fa-music" style="color:#8b5cf6;margin-right:6px;"></i><span data-i18n="music.pageHeader">Music Therapy</span></span>
     <div class="avatar-sm" id="header-avatar"></div>
   </div>
 </header>
 
 <div class="page-hero">
-  <h1>🎵 Caregiver Music Therapy</h1>
-  <p>Soft nature voices · Healing tones · Binaural beats — all generated live in your browser</p>
+  <h1>🎵 <span data-i18n="music.pageTitle">Caregiver Music Therapy</span></h1>
+  <p data-i18n="music.pageSubtitle">Binaural beats and ambient soundscapes for calm and focus</p>
 </div>
 
 <div class="page-content">
@@ -146,7 +149,7 @@
   <!-- Player Card -->
   <div class="player-card">
     <div class="now-playing">
-      <div class="np-eyebrow">Now Playing</div>
+      <div class="np-eyebrow" data-i18n="music.nowPlaying">Now Playing</div>
       <div class="np-icon" id="np-icon">🎵</div>
       <div class="np-title" id="np-title">Select a track to begin</div>
       <div class="np-desc"  id="np-desc">Choose any track above or below, then press play</div>
