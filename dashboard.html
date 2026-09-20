@@ -25,25 +25,26 @@
   <!-- FOUC Prevention: hide body until auth confirmed -->
   <style id="auth-hide">body{display:none!important}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CareHub – Caregiver Toolkit Dashboard</title>
+  <title>CareHub - Caregiver Toolkit Dashboard</title>
   <meta name="description" content="Your complete caregiver toolkit for dementia and memory care management." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏥</text></svg>" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127973;</text></svg>" />
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', system-ui, sans-serif;
-      background: #f0f9ff;
+      /* Warm cream instead of cold blue */
+      background: #fdf8f3;
       color: #1e293b;
       min-height: 100vh;
     }
 
-    /* ── HEADER ──────────────────────────────────────── */
+    /* HEADER */
     .site-header {
       position: sticky; top: 0; z-index: 100;
       background: rgba(255,255,255,0.92);
@@ -58,55 +59,50 @@
       display: flex; align-items: center; justify-content: space-between;
       height: 64px; gap: 16px;
     }
-    .logo {
-      display: flex; align-items: center; gap: 10px;
-      text-decoration: none; flex-shrink: 0;
-    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
     .logo-icon {
       width: 38px; height: 38px;
-      background: linear-gradient(135deg, #0891b2, #6366f1);
-      border-radius: 10px;
+      /* Warmer teal-amber gradient */
+      background: linear-gradient(135deg, #0891b2, #f59e0b);
+      border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
       font-size: 17px; color: white;
-      box-shadow: 0 3px 10px rgba(8,145,178,0.35);
+      box-shadow: 0 3px 10px rgba(8,145,178,0.30);
     }
     .logo-text { font-size: 1.2rem; font-weight: 800; color: #0f172a; }
     .logo-text span { color: #0891b2; }
 
-    /* Header controls */
-    .header-controls {
-      display: flex; align-items: center; gap: 12px;
-    }
-
-    /* Header Sign Out button */
-    .header-logout-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
+    /* Patient Mode Toggle Button */
+    .patient-mode-btn {
+      display: inline-flex; align-items: center; gap: 7px;
       padding: 7px 16px;
-      background: #fff1f2;
-      border: 1.5px solid #fecdd3;
-      border-radius: 99px;
-      color: #e11d48;
+      background: #fff7ed; border: 1.5px solid #fed7aa;
+      border-radius: 99px; color: #c2410c;
       font-family: 'Inter', system-ui, sans-serif;
-      font-size: 0.82rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
+      font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s ease; text-decoration: none;
+      white-space: nowrap;
+    }
+    .patient-mode-btn:hover {
+      background: #c2410c; border-color: #c2410c; color: white;
+      transform: translateY(-1px); box-shadow: 0 4px 12px rgba(194,65,12,0.25);
+    }
+    .patient-mode-btn i { font-size: 0.78rem; }
+    .header-controls { display: flex; align-items: center; gap: 12px; }
+    .header-logout-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 16px;
+      background: #fff1f2; border: 1.5px solid #fecdd3;
+      border-radius: 99px; color: #e11d48;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s ease; text-decoration: none;
     }
     .header-logout-btn:hover {
-      background: #e11d48;
-      border-color: #e11d48;
-      color: white;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(225,29,72,0.25);
+      background: #e11d48; border-color: #e11d48; color: white;
+      transform: translateY(-1px); box-shadow: 0 4px 12px rgba(225,29,72,0.25);
     }
-    .header-logout-btn:active {
-      transform: translateY(0);
-    }
-
-    /* Profile chip */
+    .header-logout-btn:active { transform: translateY(0); }
     .profile-chip {
       display: flex; align-items: center; gap: 8px;
       padding: 5px 14px 5px 6px;
@@ -124,8 +120,6 @@
     .user-first-name { font-size: 0.82rem; font-weight: 600; color: #334155; }
     .chevron { font-size: 9px; color: #94a3b8; transition: transform 0.2s; }
     .profile-chip.open .chevron { transform: rotate(180deg); }
-
-    /* Dropdown */
     .profile-dropdown {
       position: absolute; top: calc(100% + 10px); right: 0;
       width: 260px; background: white;
@@ -163,465 +157,442 @@
     }
     .pd-logout:hover { background: #fff1f2; }
 
-    /* ── HERO ─────────────────────────────────────────── */
-    .hero {
-      background: linear-gradient(135deg, #0891b2 0%, #6366f1 60%, #14b8a6 100%);
-      padding: 52px 24px 56px; text-align: center; position: relative; overflow: hidden;
+    /* ═══════════════════════════════════════════════════════════
+       WELCOME HERO — doctor illustration + quote + trend chart
+       ═══════════════════════════════════════════════════════════ */
+    .stats-infographic {
+      background: linear-gradient(150deg, #e0f2fe 0%, #ede9fe 40%, #fce7f3 75%, #fef3c7 100%);
+      padding: 0 0 0;
+      position: relative; overflow: hidden;
     }
-    .hero::before {
+    .stats-infographic::before {
       content: '';
       position: absolute; inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='30' cy='30' r='20' stroke='white' stroke-opacity='0.05' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") repeat;
+      background:
+        radial-gradient(ellipse at 8%  70%, rgba(8,145,178,0.13)  0%, transparent 50%),
+        radial-gradient(ellipse at 92% 10%, rgba(99,102,241,0.10)  0%, transparent 50%),
+        radial-gradient(ellipse at 50% 90%, rgba(236,72,153,0.07)  0%, transparent 55%);
       pointer-events: none;
     }
-    .hero-inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,0.18); backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: white; padding: 4px 14px; border-radius: 99px;
-      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    /* Floating decorative blobs */
+    .stats-infographic::after {
+      content: '';
+      position: absolute;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%);
+      top: -80px; right: 15%;
+      pointer-events: none;
+    }
+    .infographic-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* ── Top hero row: quote side + doctor side ── */
+    .welcome-hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 0;
+      padding: 52px 32px 36px;
+      min-height: 260px;
+    }
+    .welcome-copy { max-width: 560px; }
+    .welcome-eyebrow {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+      color: #0891b2;
+      background: rgba(8,145,178,0.08);
+      border: 1.5px solid rgba(8,145,178,0.18);
+      border-radius: 99px; padding: 5px 14px;
       margin-bottom: 18px;
     }
-    .hero-title {
-      font-size: clamp(1.8rem, 4vw, 2.6rem);
-      font-weight: 900; color: white; line-height: 1.2; margin-bottom: 14px;
+    .welcome-eyebrow i { font-size: 11px; }
+    .welcome-quote {
+      font-size: clamp(1.3rem, 2.6vw, 1.75rem);
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.45;
+      letter-spacing: -0.015em;
+      margin-bottom: 10px;
     }
-    .hero-title .highlight { color: #fde68a; }
-    .hero-subtitle { font-size: 1rem; color: rgba(255,255,255,0.85); line-height: 1.65; }
+    .welcome-quote em {
+      font-style: normal;
+      background: linear-gradient(135deg, #0891b2, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .welcome-context {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #64748b;
+      display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .welcome-context .ctx-name  { font-weight: 700; color: #0891b2; }
+    .welcome-context .ctx-sep   { color: #cbd5e1; }
+    .welcome-context .ctx-patient { font-weight: 700; color: #6366f1; }
 
-    /* ── TOOLKIT GRID ──────────────────────────────────── */
-    .toolkit-section {
-      max-width: 1200px; margin: 0 auto;
-      padding: 52px 24px 80px;
+    /* Doctor illustration */
+    .doctor-illustration {
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-right: 8px;
+      /* Subtle entrance animation */
+      animation: doctorFloat 5s ease-in-out infinite;
     }
+    .doctor-illustration img {
+      width: clamp(140px, 18vw, 230px);
+      height: auto;
+      /* Drop shadow for depth */
+      filter: drop-shadow(0 12px 28px rgba(8,145,178,0.18));
+      display: block;
+    }
+    @keyframes doctorFloat {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-8px); }
+    }
+
+    /* ── Trend chart panel ── */
+    .trend-chart-panel {
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(255,255,255,0.95);
+      border-top: 1.5px solid rgba(255,255,255,0.5);
+      border-radius: 0 0 0 0;
+      padding: 24px 32px 28px;
+      box-shadow: 0 -4px 0 0 rgba(8,145,178,0.06) inset;
+      position: relative;
+    }
+    .trend-chart-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
+    }
+    .trend-chart-title {
+      font-size: 0.78rem; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .trend-chart-title i { color: #6366f1; font-size: 11px; }
+    .trend-chart-pills {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .trend-pill {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.72rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 99px;
+    }
+    .trend-pill.now  { background: rgba(99,102,241,0.1);  color: #6366f1; }
+    .trend-pill.proj { background: rgba(236,72,153,0.1);  color: #db2777; }
+    .trend-pill-dot {
+      width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+    }
+    .trend-pill.now  .trend-pill-dot { background: #6366f1; }
+    .trend-pill.proj .trend-pill-dot { background: #db2777; }
+    .trend-chart-canvas-wrap {
+      position: relative;
+      height: 180px;
+    }
+    #dementiaTrendChart { display: block; width: 100% !important; height: 100% !important; }
+
+    /* Responsive adjustments */
+    .greeting-name    { color: #0891b2; font-weight: 800; }
+    .greeting-patient { color: #6366f1; font-weight: 700; }
+
+    /* TOOLKIT GRID */
+    .toolkit-section { max-width: 1200px; margin: 0 auto; padding: 56px 24px 80px; }
     .section-eyebrow {
       display: inline-flex; align-items: center; gap: 6px;
-      font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
-      color: #0891b2; background: #ecfeff; border: 1px solid #cffafe;
-      padding: 3px 12px; border-radius: 99px; margin-bottom: 10px;
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      /* Warmer amber tones */
+      color: #b45309; background: #fffbeb; border: 1px solid #fde68a;
+      padding: 4px 14px; border-radius: 99px; margin-bottom: 12px;
     }
-    .section-title { font-size: clamp(1.4rem, 2.5vw, 1.85rem); font-weight: 800; color: #0f172a; margin-bottom: 6px; }
-    .section-desc  { font-size: 0.9rem; color: #64748b; margin-bottom: 36px; }
-
+    .section-title { font-size: clamp(1.65rem, 2.8vw, 2.1rem); font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    .section-desc  { font-size: 1.05rem; color: #64748b; margin-bottom: 8px; }
+    /* Demo data note */
+    .demo-note { font-size: 0.76rem; color: #94a3b8; margin-bottom: 32px; display: flex; align-items: center; gap: 5px; font-style: italic; }
     .toolkit-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
     }
 
-    /* ── TOOLKIT CARD ──────────────────────────────────── */
+    /* TOOLKIT CARD */
     .t-card {
-      background: white;
-      border-radius: 20px;
+      background: white; border-radius: 24px;
       border: 1.5px solid #e2e8f0;
-      padding: 28px 26px 24px;
-      cursor: pointer;
-      text-decoration: none;
-      display: block;
+      padding: 36px 30px 30px;
+      cursor: pointer; text-decoration: none; display: block;
       position: relative; overflow: hidden;
       transition: transform 0.25s cubic-bezier(0.4,0,0.2,1),
-                  box-shadow 0.25s cubic-bezier(0.4,0,0.2,1),
-                  border-color 0.25s;
+                  box-shadow 0.25s cubic-bezier(0.4,0,0.2,1), border-color 0.25s;
     }
-    .t-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
-      border-color: transparent;
-    }
-    /* Top accent stripe */
+    .t-card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.12); border-color: transparent; }
     .t-card::before {
       content: ''; position: absolute;
-      top: 0; left: 0; right: 0; height: 4px;
+      top: 0; left: 0; right: 0; height: 5px;
       background: var(--stripe);
-      border-radius: 20px 20px 0 0;
+      border-radius: 24px 24px 0 0;
       opacity: 0; transition: opacity 0.25s;
     }
     .t-card:hover::before { opacity: 1; }
-
-    /* Hover background tint */
     .t-card::after {
       content: ''; position: absolute; inset: 0;
       background: var(--tint);
-      opacity: 0; transition: opacity 0.25s; pointer-events: none;
-      border-radius: 20px;
+      opacity: 0; transition: opacity 0.25s; pointer-events: none; border-radius: 24px;
     }
     .t-card:hover::after { opacity: 1; }
-
     .card-content { position: relative; z-index: 1; }
-
     .card-icon {
-      width: 58px; height: 58px;
-      border-radius: 16px;
+      /* Rounder icon boxes — friendlier, warmer feel */
+      width: 72px; height: 72px; border-radius: 22px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 26px; margin-bottom: 18px;
-      background: var(--icon-bg);
-      transition: transform 0.25s;
+      font-size: 34px; margin-bottom: 20px;
+      background: var(--icon-bg); transition: transform 0.25s;
     }
     .t-card:hover .card-icon { transform: scale(1.1) rotate(-5deg); }
+    .card-title { font-size: 1.3rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
+    /* Reduced text density: one sentence, no tag pills */
+    .card-desc  { font-size: 1rem; color: #475569; line-height: 1.6; margin-bottom: 24px; }
 
-    .card-title { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
-    .card-desc  { font-size: 0.85rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+    /* Full-width accessible CTA button */
+    .card-cta-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; min-height: 54px; padding: 14px 20px;
+      background: var(--cta-bg-solid); color: var(--cta-color-solid);
+      border-radius: 14px; font-size: 1.05rem; font-weight: 800;
+      border: none; cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 3px 10px var(--cta-shadow);
+    }
+    .t-card:hover .card-cta-btn { opacity: 0.93; transform: translateY(-2px); box-shadow: 0 8px 22px var(--cta-shadow); }
+    .card-cta-btn i { font-size: 1rem; transition: transform 0.2s; }
+    .t-card:hover .card-cta-btn i { transform: translateX(4px); }
 
-    .card-tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
-    .tag {
-      font-size: 0.72rem; font-weight: 600; color: var(--tag-color);
-      background: var(--tag-bg); padding: 3px 10px; border-radius: 99px;
+    /*
+     * SEMANTIC 3-COLOR CARD SYSTEM
+     * ─────────────────────────────────────────────────────────────
+     * 🔴 Emergency / Urgent  → coral-red    (Emergency SOS only)
+     * 🔵 Medical / Info      → blue-teal    (Doctor Finder, Dementia Guide)
+     * 🟢 Wellness / Activity → green / soft-purple / warm-amber
+     *                          (Music, Games, Story Time)
+     * ─────────────────────────────────────────────────────────────
+     */
+
+    /* 🔴 EMERGENCY — coral red */
+    .card-emergency {
+      --stripe:          linear-gradient(90deg, #ef4444, #f97316);
+      --tint:            rgba(239,68,68,0.03);
+      --icon-bg:         #fff1f2;
+      --cta-color-solid: white;
+      --cta-bg-solid:    linear-gradient(135deg, #ef4444, #f97316);
+      --cta-shadow:      rgba(239,68,68,0.28);
     }
 
-    .card-cta {
-      display: flex; align-items: center; justify-content: space-between;
-      padding-top: 16px; border-top: 1px solid #f1f5f9;
+    /* 🔵 MEDICAL — blue-teal (Doctor Finder) */
+    .card-gps {
+      --stripe:          linear-gradient(90deg, #0891b2, #0284c7);
+      --tint:            rgba(8,145,178,0.03);
+      --icon-bg:         #ecfeff;
+      --cta-color-solid: white;
+      --cta-bg-solid:    linear-gradient(135deg, #0891b2, #0284c7);
+      --cta-shadow:      rgba(8,145,178,0.28);
     }
-    .card-cta-text { font-size: 0.85rem; font-weight: 700; color: var(--cta-color); }
-    .card-cta-icon {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: var(--cta-bg);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; color: var(--cta-color);
-      transition: transform 0.2s;
-    }
-    .t-card:hover .card-cta-icon { transform: translateX(4px); }
 
-    /* Card colour themes */
-    .card-emergency { --stripe: linear-gradient(90deg,#f43f5e,#fb923c); --tint: rgba(244,63,94,0.03); --icon-bg: #fff1f2; --tag-color: #e11d48; --tag-bg: #fff1f2; --cta-color: #e11d48; --cta-bg: #fee2e2; }
-    .card-gps       { --stripe: linear-gradient(90deg,#0891b2,#6366f1); --tint: rgba(8,145,178,0.03); --icon-bg: #ecfeff; --tag-color: #0891b2; --tag-bg: #ecfeff; --cta-color: #0891b2; --cta-bg: #e0f2fe; }
-    .card-dementia  { --stripe: linear-gradient(90deg,#f59e0b,#ef4444); --tint: rgba(245,158,11,0.03); --icon-bg: #fffbeb; --tag-color: #d97706; --tag-bg: #fffbeb; --cta-color: #d97706; --cta-bg: #fef3c7; }
-    .card-music     { --stripe: linear-gradient(90deg,#8b5cf6,#ec4899); --tint: rgba(139,92,246,0.03); --icon-bg: #f5f3ff; --tag-color: #7c3aed; --tag-bg: #f5f3ff; --cta-color: #7c3aed; --cta-bg: #ede9fe; }
-    .card-games     { --stripe: linear-gradient(90deg,#6366f1,#14b8a6); --tint: rgba(99,102,241,0.03); --icon-bg: #eef2ff; --tag-color: #4f46e5; --tag-bg: #eef2ff; --cta-color: #4f46e5; --cta-bg: #e0e7ff; }
-    .card-stories   { --stripe: linear-gradient(90deg,#f59e0b,#fb923c); --tint: rgba(245,158,11,0.03); --icon-bg: #fffbeb; --tag-color: #d97706; --tag-bg: #fef3c7; --cta-color: #d97706; --cta-bg: #fef3c7; }
+    /* 🔵 MEDICAL — blue-teal (Dementia Guide) */
+    .card-dementia {
+      --stripe:          linear-gradient(90deg, #0284c7, #6366f1);
+      --tint:            rgba(2,132,199,0.03);
+      --icon-bg:         #eff6ff;
+      --cta-color-solid: white;
+      --cta-bg-solid:    linear-gradient(135deg, #0284c7, #6366f1);
+      --cta-shadow:      rgba(2,132,199,0.28);
+    }
 
-    /* ── QUICK STATS ROW ───────────────────────────────── */
-    .stats-row {
-      display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
-      padding: 28px 24px;
-      background: white; border-top: 1px solid #f1f5f9;
-      border-bottom: 1px solid #f1f5f9;
+    /*
+     * 🟢 WELLNESS — ALL THREE use the same calm teal-green family
+     *    Music Therapy · Cognitive Games · Story Time
+     *    Consistent single identity for the wellness category.
+     */
+    .card-music {
+      --stripe:          linear-gradient(90deg, #0d9488, #059669);
+      --tint:            rgba(13,148,136,0.03);
+      --icon-bg:         #f0fdfa;
+      --cta-color-solid: white;
+      --cta-bg-solid:    linear-gradient(135deg, #0d9488, #059669);
+      --cta-shadow:      rgba(13,148,136,0.28);
     }
-    .stat { text-align: center; }
-    .stat-num { font-size: 1.6rem; font-weight: 900; color: #0f172a; }
-    .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 500; margin-top: 2px; }
 
-    /* ── SOS STRIP ─────────────────────────────────────── */
-    .sos-strip {
-      background: linear-gradient(135deg, #1e293b, #0f172a);
-      padding: 16px 24px;
-      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-      justify-content: center;
+    .card-games {
+      --stripe:          linear-gradient(90deg, #0d9488, #059669);
+      --tint:            rgba(13,148,136,0.03);
+      --icon-bg:         #f0fdfa;
+      --cta-color-solid: white;
+      --cta-bg-solid:    linear-gradient(135deg, #0d9488, #059669);
+      --cta-shadow:      rgba(13,148,136,0.28);
     }
-    .sos-strip-label {
-      font-size: 0.78rem; font-weight: 700; color: #fca5a5;
-      display: flex; align-items: center; gap: 6px;
+
+    .card-stories {
+      --stripe:          linear-gradient(90deg, #0d9488, #059669);
+      --tint:            rgba(13,148,136,0.03);
+      --icon-bg:         #f0fdfa;
+      --cta-color-solid: white;
+      --cta-bg-solid:    linear-gradient(135deg, #0d9488, #059669);
+      --cta-shadow:      rgba(13,148,136,0.28);
     }
-    .sos-strip a {
-      padding: 6px 16px;
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 99px; color: white; text-decoration: none;
-      font-size: 0.82rem; font-weight: 700;
-      transition: background 0.2s;
-    }
+
+    /* SOS STRIP */
+    .sos-strip { background: linear-gradient(135deg, #1e293b, #0f172a); padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .sos-strip-label { font-size: 0.78rem; font-weight: 700; color: #fca5a5; display: flex; align-items: center; gap: 6px; }
+    .sos-strip a { padding: 6px 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 99px; color: white; text-decoration: none; font-size: 0.82rem; font-weight: 700; transition: background 0.2s; }
     .sos-strip a:hover { background: rgba(239,68,68,0.3); border-color: #f87171; }
 
-    /* ── FOOTER ─────────────────────────────────────────── */
-    footer {
-      background: #0f172a; color: rgba(255,255,255,0.5);
-      text-align: center; padding: 20px 24px;
-      font-size: 0.78rem; line-height: 1.6;
-    }
+    /* FOOTER */
+    footer { background: #0f172a; color: rgba(255,255,255,0.5); text-align: center; padding: 20px 24px; font-size: 0.78rem; line-height: 1.6; }
     footer span { color: #2dd4bf; }
 
-    /* ── SOS FAB ───────────────────────────────────────── */
-    #sos-fab {
-      position: fixed; bottom: 28px; right: 28px; z-index: 999;
-      display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
-    }
-    .sos-fab-menu {
-      display: none; flex-direction: column; gap: 8px; align-items: flex-end;
-    }
+    /* SOS FAB */
+    #sos-fab { position: fixed; bottom: 28px; right: 28px; z-index: 999; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+    .sos-fab-menu { display: none; flex-direction: column; gap: 8px; align-items: flex-end; }
     .sos-fab-menu.open { display: flex; animation: popIn 0.2s ease; }
-    .sos-fab-item {
-      display: flex; align-items: center; gap: 10px;
-      background: #ffffff; color: #1e293b;
-      padding: 10px 18px; border-radius: 99px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
-      font-size: 0.83rem; font-weight: 700; text-decoration: none;
-      white-space: nowrap; transition: transform 0.15s, background 0.15s;
-    }
+    .sos-fab-item { display: flex; align-items: center; gap: 10px; background: #ffffff; color: #1e293b; padding: 10px 18px; border-radius: 99px; box-shadow: 0 4px 20px rgba(0,0,0,0.18); font-size: 0.83rem; font-weight: 700; text-decoration: none; white-space: nowrap; transition: transform 0.15s, background 0.15s; }
     .sos-fab-item:hover { transform: scale(1.05); background: #fff1f2; }
     .sos-fab-item i { color: #f43f5e; font-size: 15px; }
     .sos-fab-item:hover i { color: #e11d48; }
-    .sos-main-btn {
-      width: 60px; height: 60px;
-      background: linear-gradient(135deg, #f43f5e, #dc2626);
-      border-radius: 50%; border: none;
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 24px;
-      box-shadow: 0 4px 20px rgba(220,38,38,0.55);
-      cursor: pointer; transition: transform 0.2s;
-      animation: pulseSOS 2.5s ease-in-out infinite;
-    }
+    .sos-main-btn { width: 60px; height: 60px; background: linear-gradient(135deg, #f43f5e, #dc2626); border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; box-shadow: 0 4px 20px rgba(220,38,38,0.55); cursor: pointer; transition: transform 0.2s; animation: pulseSOS 2.5s ease-in-out infinite; }
     @keyframes pulseSOS { 0%,100%{box-shadow:0 4px 20px rgba(220,38,38,0.55);}50%{box-shadow:0 4px 36px rgba(220,38,38,0.85);} }
     .sos-main-btn:hover { animation: none; transform: scale(1.1); }
 
-    @media (max-width: 600px) {
+    /* RESPONSIVE */
+    @media (max-width: 820px) {
+      .welcome-hero {
+        grid-template-columns: 1fr;
+        padding: 36px 20px 28px;
+        min-height: auto;
+      }
+      .doctor-illustration { display: none; } /* hide on small screens */
+      .trend-chart-panel { padding: 18px 20px 22px; }
+      .trend-chart-canvas-wrap { height: 150px; }
+    }
+    @media (max-width: 680px) {
       .toolkit-grid { grid-template-columns: 1fr; }
-      .hero-title { font-size: 1.7rem; }
-      .stats-row { gap: 20px; }
       .header-logout-btn span { display: none; }
       .header-logout-btn { padding: 7px 12px; }
+      /* Hide Patient View label text on mobile, keep icon */
+      .patient-mode-btn span { display: none; }
+      .patient-mode-btn { padding: 7px 12px; }
+      .toolkit-section { padding: 40px 16px 60px; }
     }
 
-    /* ── NOTIFICATION CENTER ─────────────────────────── */
-    .notif-btn {
-      width: 40px; height: 40px; border-radius: 50%;
-      border: 1.5px solid #e2e8f0; background: white;
-      display: flex; align-items: center; justify-content: center;
-      color: #475569; font-size: 16px; cursor: pointer;
-      position: relative; transition: all 0.2s;
-    }
+    /* NOTIFICATION CENTER */
+    .notif-btn { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid #e2e8f0; background: white; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 16px; cursor: pointer; position: relative; transition: all 0.2s; }
     .notif-btn:hover { background: #f0fdfa; color: #0891b2; border-color: #0891b2; }
-    .notif-badge {
-      position: absolute; top: -3px; right: -3px;
-      background: #f43f5e; color: white;
-      font-size: 0.65rem; font-weight: 800;
-      min-width: 18px; height: 18px; border-radius: 99px;
-      display: flex; align-items: center; justify-content: center;
-      padding: 0 4px; border: 2px solid white;
-    }
-
-    .notif-dropdown {
-      position: absolute; top: calc(100% + 12px); right: 0;
-      width: 340px; background: rgba(255,255,255,0.96);
-      backdrop-filter: blur(20px);
-      border-radius: 18px; border: 1.5px solid #e2e8f0;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.14);
-      display: none; overflow: hidden; z-index: 250;
-    }
+    .notif-badge { position: absolute; top: -3px; right: -3px; background: #f43f5e; color: white; font-size: 0.65rem; font-weight: 800; min-width: 18px; height: 18px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid white; }
+    .notif-dropdown { position: absolute; top: calc(100% + 12px); right: 0; width: 340px; background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); border-radius: 18px; border: 1.5px solid #e2e8f0; box-shadow: 0 20px 60px rgba(0,0,0,0.14); display: none; overflow: hidden; z-index: 250; }
     .notif-dropdown.open { display: block; animation: popIn 0.2s ease; }
-    .nd-head {
-      padding: 14px 18px; background: linear-gradient(135deg,#0891b2,#6366f1);
-      display: flex; align-items: center; justify-content: space-between;
-      color: white; font-weight: 800; font-size: 0.92rem;
-    }
+    .nd-head { padding: 14px 18px; background: linear-gradient(135deg,#0891b2,#6366f1); display: flex; align-items: center; justify-content: space-between; color: white; font-weight: 800; font-size: 0.92rem; }
     .nd-actions { display: flex; gap: 8px; }
-    .nd-action-btn {
-      background: rgba(255,255,255,0.2); border: none; color: white;
-      width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; transition: background 0.2s;
-    }
+    .nd-action-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: background 0.2s; }
     .nd-action-btn:hover { background: rgba(255,255,255,0.35); }
-
-    .nd-perm-banner {
-      padding: 10px 16px; background: #fffbeb; border-bottom: 1px solid #fef3c7;
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 0.76rem; color: #92400e; font-weight: 600;
-    }
-    .nd-perm-banner button {
-      background: #f59e0b; color: white; border: none;
-      padding: 3px 10px; border-radius: 99px; font-weight: 700;
-      font-size: 0.72rem; cursor: pointer;
-    }
-
+    .nd-perm-banner { padding: 10px 16px; background: #fffbeb; border-bottom: 1px solid #fef3c7; display: flex; align-items: center; justify-content: space-between; font-size: 0.76rem; color: #92400e; font-weight: 600; }
+    .nd-perm-banner button { background: #f59e0b; color: white; border: none; padding: 3px 10px; border-radius: 99px; font-weight: 700; font-size: 0.72rem; cursor: pointer; }
     .nd-list { max-height: 340px; overflow-y: auto; scrollbar-width: thin; }
-    .notif-item {
-      padding: 12px 16px; display: flex; gap: 12px; align-items: flex-start;
-      border-bottom: 1px solid #f1f5f9; transition: background 0.2s; cursor: pointer;
-      position: relative;
-    }
+    .notif-item { padding: 12px 16px; display: flex; gap: 12px; align-items: flex-start; border-bottom: 1px solid #f1f5f9; transition: background 0.2s; cursor: pointer; position: relative; }
     .notif-item:hover { background: #f8fafc; }
     .notif-item.unread { background: #f0fdfa; }
-    .notif-icon-circle {
-      width: 34px; height: 34px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; flex-shrink: 0;
-    }
+    .notif-icon-circle { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
     .notif-text { flex: 1; min-width: 0; }
     .notif-item-title { font-size: 0.84rem; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
     .notif-item-body  { font-size: 0.76rem; color: #64748b; line-height: 1.4; margin-bottom: 4px; }
     .notif-item-time  { font-size: 0.68rem; color: #94a3b8; font-weight: 600; }
-    .unread-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: #0891b2;
-      position: absolute; top: 16px; right: 14px;
-    }
-    .nd-empty {
-      padding: 36px 20px; text-align: center; color: #94a3b8;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-      font-size: 0.82rem; font-weight: 500;
-    }
+    .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #0891b2; position: absolute; top: 16px; right: 14px; }
+    .nd-empty { padding: 36px 20px; text-align: center; color: #94a3b8; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 500; }
     .nd-empty i { font-size: 28px; color: #cbd5e1; }
 
-    /* ── REMINDERS SECTION ───────────────────────────── */
-    .reminders-section {
-      max-width: 1200px; margin: 0 auto 60px;
-      padding: 0 24px;
-    }
-    .reminders-card {
-      background: white; border-radius: 24px;
-      border: 1.5px solid #e2e8f0;
-      padding: 32px 28px;
-      box-shadow: 0 10px 36px rgba(0,0,0,0.05);
-      position: relative; overflow: hidden;
-    }
-    .reminders-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
-      background: linear-gradient(90deg,#0891b2,#6366f1,#ec4899);
-    }
-    .reminders-hdr {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
-    }
-    .rem-title-group h2 {
-      font-size: 1.35rem; font-weight: 800; color: #0f172a;
-      display: flex; align-items: center; gap: 10px;
-    }
+    /* REMINDERS SECTION */
+    .reminders-section { max-width: 1200px; margin: 0 auto 60px; padding: 0 24px; }
+    .reminders-card { background: white; border-radius: 24px; border: 1.5px solid #e2e8f0; padding: 32px 28px; box-shadow: 0 10px 36px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
+    .reminders-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg,#0891b2,#6366f1,#ec4899); }
+    .reminders-hdr { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .rem-title-group h2 { font-size: 1.35rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
     .rem-title-group p { font-size: 0.86rem; color: #64748b; margin-top: 3px; }
     .rem-actions-bar { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn-rem-add {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 9px 20px; border-radius: 99px;
-      background: linear-gradient(135deg,#0891b2,#6366f1);
-      color: white; font-family: 'Inter',sans-serif;
-      font-size: 0.84rem; font-weight: 700; border: none;
-      cursor: pointer; transition: all 0.2s;
-      box-shadow: 0 3px 12px rgba(8,145,178,0.25);
-    }
+    .btn-rem-add { display: inline-flex; align-items: center; gap: 7px; padding: 9px 20px; border-radius: 99px; background: linear-gradient(135deg,#0891b2,#6366f1); color: white; font-family: 'Inter',sans-serif; font-size: 0.84rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 3px 12px rgba(8,145,178,0.25); }
     .btn-rem-add:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(8,145,178,0.35); }
-    .btn-rem-test {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 16px; border-radius: 99px;
-      background: #f0fdfa; border: 1.5px solid #a5f3fc;
-      color: #0891b2; font-family: 'Inter',sans-serif;
-      font-size: 0.82rem; font-weight: 700; cursor: pointer;
-      transition: all 0.2s;
-    }
+    .btn-rem-test { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 99px; background: #f0fdfa; border: 1.5px solid #a5f3fc; color: #0891b2; font-family: 'Inter',sans-serif; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
     .btn-rem-test:hover { background: #0891b2; color: white; border-color: #0891b2; }
-
     .rem-filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-    .rf-btn {
-      padding: 6px 16px; border-radius: 99px; border: 1.5px solid #e2e8f0;
-      background: white; font-family: 'Inter',sans-serif; font-size: 0.8rem;
-      font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s;
-    }
+    .rf-btn { padding: 6px 16px; border-radius: 99px; border: 1.5px solid #e2e8f0; background: white; font-family: 'Inter',sans-serif; font-size: 0.8rem; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s; }
     .rf-btn:hover, .rf-btn.active { background: #0891b2; color: white; border-color: #0891b2; }
-
-    .reminders-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
-    }
-    .rem-item-card {
-      background: #f8fafc; border: 1.5px solid #e2e8f0;
-      border-radius: 16px; padding: 18px 20px;
-      display: flex; gap: 14px; align-items: flex-start;
-      transition: all 0.2s; position: relative;
-    }
+    .reminders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .rem-item-card { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px 20px; display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s; position: relative; }
     .rem-item-card:hover { background: white; border-color: #cbd5e1; box-shadow: 0 6px 20px rgba(0,0,0,0.05); }
     .rem-item-card.inactive { opacity: 0.55; }
-    .rem-icon-box {
-      width: 44px; height: 44px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
-    }
-    .rem-icon-med { background: #fff1f2; color: #f43f5e; }
+    .rem-icon-box { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .rem-icon-med  { background: #fff1f2; color: #f43f5e; }
     .rem-icon-game { background: #eef2ff; color: #6366f1; }
     .rem-info { flex: 1; min-width: 0; }
     .rem-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 8px; }
     .rem-time { font-size: 1.05rem; font-weight: 900; color: #0f172a; }
-    .rem-badge {
-      font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 99px;
-      text-transform: uppercase; letter-spacing: 0.04em;
-    }
-    .badge-med { background: #fee2e2; color: #e11d48; }
+    .rem-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge-med  { background: #fee2e2; color: #e11d48; }
     .badge-game { background: #e0e7ff; color: #4338ca; }
-    .rem-title { font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; line-height: 1.35; }
-    .rem-notes { font-size: 0.77rem; color: #64748b; line-height: 1.4; margin-bottom: 12px; }
+    .rem-title  { font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; line-height: 1.35; }
+    .rem-notes  { font-size: 0.77rem; color: #64748b; line-height: 1.4; margin-bottom: 12px; }
     .rem-bottom-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .rem-schedule-text { font-size: 0.72rem; color: #0891b2; font-weight: 600; display: flex; align-items: center; gap: 4px; }
     .rem-item-actions { display: flex; align-items: center; gap: 8px; }
-    .btn-rem-del {
-      background: none; border: none; color: #94a3b8; cursor: pointer;
-      font-size: 13px; padding: 4px; border-radius: 6px; transition: color 0.2s;
-    }
+    .btn-rem-del { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 13px; padding: 4px; border-radius: 6px; transition: color 0.2s; }
     .btn-rem-del:hover { color: #f43f5e; }
-
-    /* Switch toggle */
-    .switch {
-      position: relative; display: inline-block; width: 38px; height: 22px;
-    }
+    .switch { position: relative; display: inline-block; width: 38px; height: 22px; }
     .switch input { opacity: 0; width: 0; height: 0; }
-    .slider {
-      position: absolute; cursor: pointer; inset: 0;
-      background-color: #cbd5e1; border-radius: 99px; transition: 0.25s;
-    }
-    .slider:before {
-      position: absolute; content: ""; height: 16px; width: 16px;
-      left: 3px; bottom: 3px; background-color: white;
-      border-radius: 50%; transition: 0.25s;
-    }
+    .slider { position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1; border-radius: 99px; transition: 0.25s; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.25s; }
     input:checked + .slider { background-color: #0891b2; }
     input:checked + .slider:before { transform: translateX(16px); }
-
-    /* Modal */
-    .rem-modal-overlay {
-      position: fixed; inset: 0; background: rgba(15,23,42,0.6);
-      backdrop-filter: blur(6px); z-index: 1000; display: none;
-      align-items: center; justify-content: center; padding: 20px;
-    }
+    .rem-modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .rem-modal-overlay.open { display: flex; animation: popIn 0.2s ease; }
-    .rem-modal {
-      background: white; border-radius: 20px; max-width: 480px; width: 100%;
-      border: 1.5px solid #e2e8f0; box-shadow: 0 24px 60px rgba(0,0,0,0.2);
-      overflow: hidden;
-    }
-    .rm-head {
-      padding: 18px 24px; background: linear-gradient(135deg,#0891b2,#6366f1);
-      color: white; display: flex; align-items: center; justify-content: space-between;
-    }
+    .rem-modal { background: white; border-radius: 20px; max-width: 480px; width: 100%; border: 1.5px solid #e2e8f0; box-shadow: 0 24px 60px rgba(0,0,0,0.2); overflow: hidden; }
+    .rm-head { padding: 18px 24px; background: linear-gradient(135deg,#0891b2,#6366f1); color: white; display: flex; align-items: center; justify-content: space-between; }
     .rm-head h3 { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
     .rm-close { background: none; border: none; color: white; font-size: 18px; cursor: pointer; opacity: 0.85; }
     .rm-close:hover { opacity: 1; }
     .rm-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; }
     .rm-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
-    .rm-preset-btn {
-      padding: 4px 10px; border-radius: 99px; border: 1px solid #cffafe;
-      background: #ecfeff; color: #0891b2; font-size: 0.72rem; font-weight: 700;
-      cursor: pointer; transition: all 0.15s;
-    }
+    .rm-preset-btn { padding: 4px 10px; border-radius: 99px; border: 1px solid #cffafe; background: #ecfeff; color: #0891b2; font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: all 0.15s; }
     .rm-preset-btn:hover { background: #0891b2; color: white; }
     .rm-field { display: flex; flex-direction: column; gap: 5px; }
     .rm-field label { font-size: 0.8rem; font-weight: 700; color: #334155; }
-    .rm-field input, .rm-field select, .rm-field textarea {
-      padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px;
-      font-family: 'Inter',sans-serif; font-size: 0.85rem; color: #0f172a; outline: none;
-    }
+    .rm-field input, .rm-field select, .rm-field textarea { padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-family: 'Inter',sans-serif; font-size: 0.85rem; color: #0f172a; outline: none; }
     .rm-field input:focus, .rm-field select:focus, .rm-field textarea:focus { border-color: #0891b2; }
-    .rm-foot {
-      padding: 16px 24px; background: #f8fafc; border-top: 1px solid #f1f5f9;
-      display: flex; justify-content: flex-end; gap: 10px;
-    }
+    .rm-foot { padding: 16px 24px; background: #f8fafc; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; }
   </style>
   <link rel="stylesheet" href="./css/perf.css" />
+  <!-- Chart.js for dementia trend area chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
-<!-- ── HEADER ─────────────────────────────────────────── -->
+<!-- HEADER -->
 <header class="site-header" id="site-header">
   <div class="header-inner">
     <a class="logo" href="dashboard.html">
       <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
       <span class="logo-text">Care<span>Hub</span></span>
     </a>
-
-    <!-- Right Controls: Notifications, Profile chip & Sign Out -->
     <div class="header-controls">
-
-      <!-- Notification Center Bell -->
+      <!-- Patient Mode Toggle -->
+      <a class="patient-mode-btn" href="patient-view.html" id="patient-mode-btn" title="Switch to simplified patient view">
+        <i class="fas fa-user-circle"></i> <span>Patient View</span>
+      </a>
       <div style="position:relative;">
         <button class="notif-btn" id="notif-bell-btn" aria-label="Notifications" title="Notification Center">
           <i class="fas fa-bell"></i>
           <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
         </button>
-
         <div class="notif-dropdown" id="notif-dropdown">
           <div class="nd-head">
             <div class="nd-title"><i class="fas fa-bell"></i> Notifications</div>
@@ -641,34 +612,29 @@
           </div>
         </div>
       </div>
-
-      <!-- Profile chip -->
       <div style="position:relative;">
         <button class="profile-chip" id="profile-chip" aria-label="User menu" aria-expanded="false">
           <div class="avatar" id="header-avatar"></div>
-          <span class="user-first-name" id="header-name">…</span>
+          <span class="user-first-name" id="header-name">...</span>
           <i class="fas fa-chevron-down chevron" id="profile-chevron"></i>
         </button>
-
         <div class="profile-dropdown" id="profile-dropdown">
           <div class="pd-head">
             <div class="pd-avatar-lg" id="pd-avatar"></div>
             <div>
-              <div class="pd-name" id="pd-full-name">–</div>
-              <div class="pd-role" id="pd-role">–</div>
+              <div class="pd-name" id="pd-full-name">-</div>
+              <div class="pd-role" id="pd-role">-</div>
             </div>
           </div>
           <div class="pd-body">
-            <div class="pd-row"><i class="fas fa-envelope"></i><span id="pd-email">–</span></div>
-            <div class="pd-row"><i class="fas fa-user-injured"></i><span>Patient: <strong id="pd-patient">–</strong></span></div>
+            <div class="pd-row"><i class="fas fa-envelope"></i><span id="pd-email">-</span></div>
+            <div class="pd-row"><i class="fas fa-user-injured"></i><span>Patient: <strong id="pd-patient">-</strong></span></div>
             <a href="profile.html" class="pd-row" style="text-decoration:none;font-weight:700;color:#0891b2;"><i class="fas fa-user-cog"></i> Edit Profile &amp; Settings</a>
             <div class="pd-divider"></div>
             <button class="pd-logout" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
           </div>
         </div>
       </div>
-
-      <!-- Prominent Header Sign Out Button -->
       <button class="header-logout-btn" id="header-logout-btn" title="Sign Out">
         <i class="fas fa-sign-out-alt"></i> <span>Sign Out</span>
       </button>
@@ -676,154 +642,144 @@
   </div>
 </header>
 
-<!-- ── HERO ───────────────────────────────────────────── -->
-<section class="hero">
-  <div class="hero-inner">
-    <div class="hero-badge"><i class="fas fa-shield-alt"></i> Caregiver Dashboard</div>
-    <h1 class="hero-title">
-      Hello, <span class="highlight" id="hero-name">Caregiver</span> 👋<br />
-      Choose Your Care Module
-    </h1>
-    <p class="hero-subtitle" id="hero-subtitle">
-      Everything you need to manage, monitor, and support your patient — all in one place.
-    </p>
+<!-- WELCOME HERO (doctor illustration + quote + dementia trend chart) -->
+<section class="stats-infographic" aria-label="Welcome section and dementia trend overview">
+  <div class="infographic-inner">
+
+    <!-- Top row: quote/copy left, doctor illustration right -->
+    <div class="welcome-hero">
+      <div class="welcome-copy">
+        <div class="welcome-eyebrow">
+          <i class="fas fa-heart"></i> CareHub &mdash; You are not alone
+        </div>
+        <div class="welcome-quote">
+          &ldquo;You&rsquo;re not alone in this journey.<br>
+          We&rsquo;re here to help you <em>care</em>,<br>
+          one day at a time.&rdquo;
+        </div>
+        <!-- Secondary context line (kept small + secondary) -->
+        <div class="welcome-context">
+          <i class="fas fa-user-circle" style="color:#0891b2;font-size:13px;"></i>
+          Welcome back,&nbsp;<span class="ctx-name" id="infographic-name">Caregiver</span><span id="infographic-patient-wrap" style="display:none;"><span class="ctx-sep">&nbsp;&middot;&nbsp;</span>Managing care for&nbsp;<span class="ctx-patient" id="infographic-patient"></span></span>
+        </div>
+      </div>
+
+      <!-- Doctor illustration (right-aligned, floating) -->
+      <div class="doctor-illustration" aria-hidden="true">
+        <img
+          src="./assets/doctor.png"
+          alt="Friendly doctor illustration"
+          width="220"
+          height="270"
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+    </div>
+
+    <!-- Dementia trend area chart -->
+    <div class="trend-chart-panel" aria-label="Global dementia cases: historical trend and projection">
+      <div class="trend-chart-header">
+        <div class="trend-chart-title">
+          <i class="fas fa-chart-area"></i>
+          Global Dementia Cases &mdash; Rising Trend &amp; Projections
+        </div>
+        <div class="trend-chart-pills">
+          <span class="trend-pill now"><span class="trend-pill-dot"></span>Estimated cases</span>
+          <span class="trend-pill proj"><span class="trend-pill-dot"></span>WHO projection</span>
+        </div>
+      </div>
+      <div class="trend-chart-canvas-wrap">
+        <canvas id="dementiaTrendChart" role="img" aria-label="Area chart showing rise in global dementia cases from 1990 to 2050 projection"></canvas>
+      </div>
+    </div>
+
   </div>
 </section>
 
-<!-- Quick Stats -->
-<div class="stats-row">
-  <div class="stat"><div class="stat-num">7</div><div class="stat-label">Care Modules</div></div>
-  <div class="stat"><div class="stat-num">55M+</div><div class="stat-label">Dementia Patients Worldwide</div></div>
-  <div class="stat"><div class="stat-num">4.1M</div><div class="stat-label">Affected in India</div></div>
-  <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">Emergency Support</div></div>
-</div>
-
-<!-- ── TOOLKIT GRID ─────────────────────────────────────── -->
+<!-- TOOLKIT GRID -->
 <div class="toolkit-section">
   <div class="section-eyebrow"><i class="fas fa-toolbox"></i> Your Toolkit</div>
   <h2 class="section-title">Caregiver Toolkit</h2>
   <p class="section-desc">Select any module below to open its full-featured page.</p>
+  <p class="demo-note"><i class="fas fa-info-circle" aria-hidden="true"></i> Demo data shown — real patient profiles are created during onboarding.</p>
 
   <div class="toolkit-grid">
 
-    <!-- 1. Emergency SOS -->
+    <!-- 1. Emergency SOS — 🔴 Emergency/Urgent -->
     <a class="t-card card-emergency" href="emergency.html" id="card-sos">
       <div class="card-content">
-        <div class="card-icon">🚨</div>
+        <div class="card-icon">&#128680;</div>
         <div class="card-title">Emergency SOS Directory</div>
-        <div class="card-desc">
-          One-tap access to India's critical helplines — 112, 108, Elder Line, NIMHANS, ARDSI — plus global emergency numbers for 7 countries.
-        </div>
-        <div class="card-tag-row">
-          <span class="tag">112 – National</span>
-          <span class="tag">108 – Ambulance</span>
-          <span class="tag">WhatsApp Share</span>
-        </div>
-        <div class="card-cta">
-          <span class="card-cta-text">Open Emergency Hub</span>
-          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        <div class="card-desc">One-tap access to India's critical helplines — 112, 108, Elder Line, NIMHANS, ARDSI — plus global emergency numbers.</div>
+        <div class="card-cta-btn" aria-hidden="true">
+          <span>Open Emergency Hub</span>
+          <i class="fas fa-arrow-right"></i>
         </div>
       </div>
     </a>
 
-
-    <!-- 2. Nearby Doctor Finder -->
+    <!-- 2. Nearby Doctor Finder — 🔵 Medical/Info -->
     <a class="t-card card-gps" href="doctors.html" id="card-doctors">
       <div class="card-content">
-        <div class="card-icon">📍</div>
+        <div class="card-icon">&#128205;</div>
         <div class="card-title">Nearby Doctor Finder</div>
-        <div class="card-desc">
-          Find neurologists, geriatricians and dementia specialists near you. Filter by specialty and distance, view on a live map, and book appointments instantly.
-        </div>
-        <div class="card-tag-row">
-          <span class="tag">Live Map</span>
-          <span class="tag">GPS Location</span>
-          <span class="tag">Book Appointment</span>
-        </div>
-        <div class="card-cta">
-          <span class="card-cta-text">Find Nearby Doctors</span>
-          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        <div class="card-desc">Find neurologists and dementia specialists near you, filter by specialty, and book appointments instantly.</div>
+        <div class="card-cta-btn" aria-hidden="true">
+          <span>Find Nearby Doctors</span>
+          <i class="fas fa-arrow-right"></i>
         </div>
       </div>
     </a>
 
-
-    <!-- 3. Dementia Guide -->
+    <!-- 3. Dementia Guide — 🔵 Medical/Info -->
     <a class="t-card card-dementia" href="dementia.html" id="card-dementia">
       <div class="card-content">
-        <div class="card-icon">🧠</div>
-        <div class="card-title">Dementia Stage Guide & Safety</div>
-        <div class="card-desc">
-          Clear guides on Early, Middle, and Late dementia stages, interactive safety checklist, plus AI Screening Advisor.
-        </div>
-        <div class="card-tag-row">
-          <span class="tag">3 Stage Guide</span>
-          <span class="tag">Safety Checklist</span>
-          <span class="tag">AI Screening Advisor</span>
-        </div>
-        <div class="card-cta">
-          <span class="card-cta-text">Open Guide &amp; AI Advisor</span>
-          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        <div class="card-icon">&#129504;</div>
+        <div class="card-title">Dementia Stage Guide &amp; Safety</div>
+        <div class="card-desc">Interactive guides for Early, Middle, and Late stages with a safety checklist and AI Screening Advisor.</div>
+        <div class="card-cta-btn" aria-hidden="true">
+          <span>Open Guide &amp; AI Advisor</span>
+          <i class="fas fa-arrow-right"></i>
         </div>
       </div>
     </a>
 
-    <!-- 4. Music Therapy -->
+    <!-- 4. Music Therapy — 🟢 Wellness/Activity -->
     <a class="t-card card-music" href="music.html" id="card-music">
       <div class="card-content">
-        <div class="card-icon">🎵</div>
+        <div class="card-icon">&#127925;</div>
         <div class="card-title">Caregiver Music Therapy</div>
-        <div class="card-desc">
-          Scientifically-tuned binaural beats, 432Hz waves, delta sleep, and ambient rain — generated live in your browser. No files needed.
-        </div>
-        <div class="card-tag-row">
-          <span class="tag">Binaural Beats</span>
-          <span class="tag">432Hz Waves</span>
-          <span class="tag">Stress Relief</span>
-        </div>
-        <div class="card-cta">
-          <span class="card-cta-text">Open Music Therapy</span>
-          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        <div class="card-desc">Browser-generated binaural beats and ambient soundscapes for stress relief — no files needed.</div>
+        <div class="card-cta-btn" aria-hidden="true">
+          <span>Open Music Therapy</span>
+          <i class="fas fa-arrow-right"></i>
         </div>
       </div>
     </a>
 
-    <!-- 5. Cognitive Games -->
+    <!-- 5. Cognitive Games — 🟢 Wellness/Activity -->
     <a class="t-card card-games" href="games.html" id="card-games">
       <div class="card-content">
-        <div class="card-icon">🧩</div>
+        <div class="card-icon">&#129513;</div>
         <div class="card-title">Cognitive Games Zone</div>
-        <div class="card-desc">
-          Spot the object, color sequence memory, and photo match games — with a progress chart to track cognitive improvement.
-        </div>
-        <div class="card-tag-row">
-          <span class="tag">Spot the Object</span>
-          <span class="tag">Photo Match</span>
-          <span class="tag">Progress Chart</span>
-        </div>
-        <div class="card-cta">
-          <span class="card-cta-text">Open Games Zone</span>
-          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        <div class="card-desc">Spot-the-object, color-sequence memory, and photo-match games with a progress chart to track cognitive improvement.</div>
+        <div class="card-cta-btn" aria-hidden="true">
+          <span>Open Games Zone</span>
+          <i class="fas fa-arrow-right"></i>
         </div>
       </div>
     </a>
 
-    <!-- 6. Story Time -->
+    <!-- 6. Story Time — 🟢 Wellness/Activity -->
     <a class="t-card card-stories" href="stories.html" id="card-stories">
       <div class="card-content">
-        <div class="card-icon">📖</div>
+        <div class="card-icon">&#128214;</div>
         <div class="card-title">Story Time</div>
-        <div class="card-desc">
-          Short stories with audio narration and comprehension questions — available in Hindi, English, Marathi, and Telugu for gentle memory exercise.
-        </div>
-        <div class="card-tag-row">
-          <span class="tag">Audio Narration</span>
-          <span class="tag">4 Languages</span>
-          <span class="tag">Memory Questions</span>
-        </div>
-        <div class="card-cta">
-          <span class="card-cta-text">Open Story Time</span>
-          <div class="card-cta-icon"><i class="fas fa-arrow-right"></i></div>
+        <div class="card-desc">Short audio stories in Hindi, English, Marathi, and Telugu for gentle memory exercise and cognitive engagement.</div>
+        <div class="card-cta-btn" aria-hidden="true">
+          <span>Open Story Time</span>
+          <i class="fas fa-arrow-right"></i>
         </div>
       </div>
     </a>
@@ -831,7 +787,7 @@
   </div>
 </div>
 
-<!-- ── DAILY CAREGIVER REMINDERS ─────────────────────── -->
+<!-- DAILY CAREGIVER REMINDERS -->
 <section class="reminders-section" id="reminders-section">
   <div class="reminders-card">
     <div class="reminders-hdr">
@@ -848,18 +804,12 @@
         </button>
       </div>
     </div>
-
-    <!-- Filter tabs -->
     <div class="rem-filters">
       <button class="rf-btn active" data-filter="all">All Reminders</button>
-      <button class="rf-btn" data-filter="medication">💊 Medication Times</button>
-      <button class="rf-btn" data-filter="game">🧩 Brain Games</button>
+      <button class="rf-btn" data-filter="medication">&#128138; Medication Times</button>
+      <button class="rf-btn" data-filter="game">&#129513; Brain Games</button>
     </div>
-
-    <!-- Reminders list -->
-    <div class="reminders-grid" id="reminders-grid">
-      <!-- Injected via JS -->
-    </div>
+    <div class="reminders-grid" id="reminders-grid"></div>
   </div>
 </section>
 
@@ -875,28 +825,25 @@
         <div class="rm-field">
           <label>Quick Presets</label>
           <div class="rm-presets">
-            <button type="button" class="rm-preset-btn" data-type="medication" data-title="Morning Donepezil (5mg)" data-time="09:00" data-notes="Take with breakfast">💊 Morning Meds</button>
-            <button type="button" class="rm-preset-btn" data-type="game" data-title="Memory Match Exercise" data-time="11:30" data-notes="15-min cognitive session">🧩 Memory Game</button>
-            <button type="button" class="rm-preset-btn" data-type="medication" data-title="Afternoon Memantine (10mg)" data-time="14:00" data-notes="Post-lunch dose">💊 Afternoon Meds</button>
-            <button type="button" class="rm-preset-btn" data-type="game" data-title="Word Recall &amp; Cards" data-time="16:00" data-notes="Evening vocabulary workout">🔤 Word Game</button>
-            <button type="button" class="rm-preset-btn" data-type="medication" data-title="Night Medication &amp; Hydration" data-time="20:30" data-notes="With warm water before bed">🌙 Night Meds</button>
+            <button type="button" class="rm-preset-btn" data-type="medication" data-title="Morning Donepezil (5mg)" data-time="09:00" data-notes="Take with breakfast">&#128138; Morning Meds</button>
+            <button type="button" class="rm-preset-btn" data-type="game" data-title="Memory Match Exercise" data-time="11:30" data-notes="15-min cognitive session">&#129513; Memory Game</button>
+            <button type="button" class="rm-preset-btn" data-type="medication" data-title="Afternoon Memantine (10mg)" data-time="14:00" data-notes="Post-lunch dose">&#128138; Afternoon Meds</button>
+            <button type="button" class="rm-preset-btn" data-type="game" data-title="Word Recall &amp; Cards" data-time="16:00" data-notes="Evening vocabulary workout">&#128288; Word Game</button>
+            <button type="button" class="rm-preset-btn" data-type="medication" data-title="Night Medication &amp; Hydration" data-time="20:30" data-notes="With warm water before bed">&#127769; Night Meds</button>
           </div>
         </div>
-
         <div class="rm-field">
           <label for="rem-input-type">Reminder Type</label>
           <select id="rem-input-type" required>
-            <option value="medication">💊 Medication Time</option>
-            <option value="game">🧩 Cognitive Game Session</option>
-            <option value="custom">🔔 General Care Reminder</option>
+            <option value="medication">&#128138; Medication Time</option>
+            <option value="game">&#129513; Cognitive Game Session</option>
+            <option value="custom">&#128276; General Care Reminder</option>
           </select>
         </div>
-
         <div class="rm-field">
           <label for="rem-input-title">Reminder Title / Activity *</label>
           <input type="text" id="rem-input-title" required placeholder="e.g. Morning Donepezil 5mg or Memory Match" />
         </div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div class="rm-field">
             <label for="rem-input-time">Time (24h) *</label>
@@ -911,13 +858,11 @@
             </select>
           </div>
         </div>
-
         <div class="rm-field">
           <label for="rem-input-notes">Notes / Instructions (optional)</label>
           <textarea id="rem-input-notes" rows="2" placeholder="e.g. Take with food, drink full glass of water"></textarea>
         </div>
       </div>
-
       <div class="rm-foot">
         <button type="button" class="btn-rem-del" id="rm-cancel-btn" style="padding:6px 14px;">Cancel</button>
         <button type="submit" class="btn-rem-add" id="rm-save-btn">Save Reminder</button>
@@ -926,28 +871,28 @@
   </div>
 </div>
 
-<!-- ── SOS STRIP ──────────────────────────────────────── -->
+<!-- SOS STRIP -->
 <div class="sos-strip">
   <span class="sos-strip-label"><i class="fas fa-exclamation-triangle"></i> Quick Emergency:</span>
   <a href="tel:112">112</a>
-  <a href="tel:108">108 – Ambulance</a>
-  <a href="tel:14567">14567 – Elder Line</a>
+  <a href="tel:108">108 &ndash; Ambulance</a>
+  <a href="tel:14567">14567 &ndash; Elder Line</a>
   <a href="tel:08046110007">NIMHANS</a>
   <a href="tel:18001024174">ARDSI</a>
 </div>
 
-<!-- ── FOOTER ────────────────────────────────────────── -->
+<!-- FOOTER -->
 <footer>
-  <p>© 2026 <span>CareHub</span> — Built with ❤️ for caregivers everywhere.</p>
+  <p>&copy; 2026 <span>CareHub</span> &mdash; Built with &#10084;&#65039; for caregivers everywhere.</p>
   <p style="margin-top:4px;">For informational purposes only. Not a substitute for professional medical advice.</p>
 </footer>
 
-<!-- ── FLOATING SOS FAB ──────────────────────────────── -->
+<!-- FLOATING SOS FAB -->
 <div id="sos-fab">
   <div class="sos-fab-menu" id="sos-menu">
-    <a class="sos-fab-item" href="tel:112"><i class="fas fa-phone-alt"></i> 112 – National Emergency</a>
-    <a class="sos-fab-item" href="tel:108"><i class="fas fa-ambulance"></i> 108 – Ambulance</a>
-    <a class="sos-fab-item" href="tel:14567"><i class="fas fa-user-shield"></i> 14567 – Elder Line</a>
+    <a class="sos-fab-item" href="tel:112"><i class="fas fa-phone-alt"></i> 112 &ndash; National Emergency</a>
+    <a class="sos-fab-item" href="tel:108"><i class="fas fa-ambulance"></i> 108 &ndash; Ambulance</a>
+    <a class="sos-fab-item" href="tel:14567"><i class="fas fa-user-shield"></i> 14567 &ndash; Elder Line</a>
     <a class="sos-fab-item" href="tel:08046110007"><i class="fas fa-brain"></i> NIMHANS</a>
   </div>
   <button class="sos-main-btn" id="sos-toggle" aria-label="Emergency SOS">
@@ -967,7 +912,7 @@
     toggleReminder, startReminderScheduler
   } from './js/reminders.js';
 
-  // ── Load user session ─────────────────────────────────
+  // Load user session
   const user = await getSession();
   if (!user) {
     window.location.replace('login.html');
@@ -979,8 +924,7 @@
     const displayName = user.name || (user.email ? user.email.split('@')[0] : 'Caregiver');
     const firstName = displayName.split(' ')[0];
 
-    // Avatar with image support
-    const renderAvatar = (el, size) => {
+    const renderAvatar = (el) => {
       if (!el) return;
       if (user.photoURL) {
         el.innerHTML = `<img src="${user.photoURL}" alt="${displayName}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
@@ -992,26 +936,27 @@
     renderAvatar(document.getElementById('header-avatar'));
     renderAvatar(document.getElementById('pd-avatar'));
 
-    document.getElementById('header-name').textContent    = firstName;
-    document.getElementById('pd-full-name').textContent   = displayName;
-    document.getElementById('pd-role').textContent        = (user.role || 'Caregiver') + (user.isDemo ? ' (Demo)' : '');
-    document.getElementById('pd-email').textContent       = user.email || '–';
-    document.getElementById('pd-patient').textContent     = user.patientName || 'Not specified';
-    document.getElementById('hero-name').textContent      = firstName;
+    document.getElementById('header-name').textContent  = firstName;
+    document.getElementById('pd-full-name').textContent = displayName;
+    document.getElementById('pd-role').textContent      = (user.role || 'Caregiver') + (user.isDemo ? ' (Demo)' : '');
+    document.getElementById('pd-email').textContent     = user.email || '-';
+    document.getElementById('pd-patient').textContent   = user.patientName || 'Not specified';
+
+    // Infographic greeting
+    document.getElementById('infographic-name').textContent = firstName;
     if (user.patientName) {
-      document.getElementById('hero-subtitle').textContent =
-        'Managing care for ' + user.patientName + '. Select a module below to get started.';
+      document.getElementById('infographic-patient').textContent = user.patientName;
+      document.getElementById('infographic-patient-wrap').style.display = '';
     }
   }
 
-  // ── NOTIFICATION CENTER ───────────────────────────────
-  const notifBellBtn = document.getElementById('notif-bell-btn');
+  // NOTIFICATION CENTER
+  const notifBellBtn  = document.getElementById('notif-bell-btn');
   const notifDropdown = document.getElementById('notif-dropdown');
-  const permBanner = document.getElementById('nd-perm-banner');
+  const permBanner    = document.getElementById('nd-perm-banner');
 
   updateNotificationCenterUI();
 
-  // Check notification permission
   if ('Notification' in window && Notification.permission === 'default') {
     permBanner.style.display = 'flex';
   }
@@ -1042,7 +987,6 @@
     markAllNotificationsRead();
     showToast('All notifications marked as read', 'success', 2000);
   });
-
   document.getElementById('nd-clear-btn')?.addEventListener('click', () => {
     clearAllNotifications();
     showToast('Notifications cleared', 'success', 2000);
@@ -1066,11 +1010,10 @@
     });
   }
 
-  // Logout buttons
   document.getElementById('logout-btn')?.addEventListener('click', performLogout);
   document.getElementById('header-logout-btn')?.addEventListener('click', performLogout);
 
-  // ── REMINDERS SYSTEM ──────────────────────────────────
+  // REMINDERS SYSTEM
   let activeRemFilter = 'all';
 
   function formatTime12(t24) {
@@ -1085,19 +1028,10 @@
     const grid = document.getElementById('reminders-grid');
     if (!grid) return;
     const reminders = await getReminders();
-
-    const filtered = reminders.filter(r => {
-      if (activeRemFilter === 'all') return true;
-      return r.type === activeRemFilter;
-    });
+    const filtered = reminders.filter(r => activeRemFilter === 'all' ? true : r.type === activeRemFilter);
 
     if (filtered.length === 0) {
-      grid.innerHTML = `
-        <div style="grid-column:1/-1;text-align:center;padding:36px;color:#94a3b8;font-size:0.9rem;">
-          <i class="fas fa-calendar-check" style="font-size:2rem;color:#cbd5e1;margin-bottom:10px;display:block;"></i>
-          No reminders in this category. Click "+ Set Reminder" to create one.
-        </div>
-      `;
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:36px;color:#94a3b8;font-size:0.9rem;"><i class="fas fa-calendar-check" style="font-size:2rem;color:#cbd5e1;margin-bottom:10px;display:block;"></i>No reminders in this category. Click "+ Set Reminder" to create one.</div>`;
       return;
     }
 
@@ -1109,12 +1043,9 @@
       const badgeText = isMed ? 'Medication' : 'Brain Game';
       const schedMap = { daily: 'Daily', weekdays: 'Mon-Fri', weekends: 'Sat-Sun' };
       const schedText = schedMap[r.schedule] || r.schedule || 'Daily';
-
       return `
         <div class="rem-item-card ${r.active ? '' : 'inactive'}" data-id="${r.id}">
-          <div class="rem-icon-box ${iconClass}">
-            <i class="fas ${icon}"></i>
-          </div>
+          <div class="rem-icon-box ${iconClass}"><i class="fas ${icon}"></i></div>
           <div class="rem-info">
             <div class="rem-top-row">
               <span class="rem-time">${formatTime12(r.time)}</span>
@@ -1129,39 +1060,29 @@
                   <input type="checkbox" class="rem-toggle-cb" data-id="${r.id}" ${r.active ? 'checked' : ''} />
                   <span class="slider"></span>
                 </label>
-                <button class="btn-rem-del" data-id="${r.id}" title="Delete reminder">
-                  <i class="fas fa-trash"></i>
-                </button>
+                <button class="btn-rem-del" data-id="${r.id}" title="Delete reminder"><i class="fas fa-trash"></i></button>
               </div>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }).join('');
 
-    // Toggle switch listeners
     grid.querySelectorAll('.rem-toggle-cb').forEach(cb => {
-      cb.addEventListener('change', async e => {
-        const id = cb.dataset.id;
-        const active = cb.checked;
-        await toggleReminder(id, active);
-        showToast(active ? 'Reminder activated ⏰' : 'Reminder paused ⏸️', 'success', 2000);
+      cb.addEventListener('change', async () => {
+        await toggleReminder(cb.dataset.id, cb.checked);
+        showToast(cb.checked ? 'Reminder activated ⏰' : 'Reminder paused ⏸️', 'success', 2000);
         renderRemindersList();
       });
     });
-
-    // Delete listeners
     grid.querySelectorAll('.btn-rem-del').forEach(btn => {
-      btn.addEventListener('click', async e => {
-        const id = btn.dataset.id;
-        await deleteReminder(id);
+      btn.addEventListener('click', async () => {
+        await deleteReminder(btn.dataset.id);
         showToast('Reminder deleted', 'warn', 2000);
         renderRemindersList();
       });
     });
   }
 
-  // Filter tab buttons
   document.querySelectorAll('.rf-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.rf-btn').forEach(b => b.classList.remove('active'));
@@ -1171,18 +1092,13 @@
     });
   });
 
-  // Modal logic
   const modalOverlay = document.getElementById('rem-modal-overlay');
   const openAddBtn   = document.getElementById('btn-open-add-rem');
   const closeBtn     = document.getElementById('rm-close-btn');
   const cancelBtn    = document.getElementById('rm-cancel-btn');
   const remForm      = document.getElementById('reminder-form');
 
-  const openModal = () => {
-    remForm.reset();
-    document.getElementById('rem-input-time').value = '09:00';
-    modalOverlay.classList.add('open');
-  };
+  const openModal  = () => { remForm.reset(); document.getElementById('rem-input-time').value = '09:00'; modalOverlay.classList.add('open'); };
   const closeModal = () => modalOverlay.classList.remove('open');
 
   openAddBtn?.addEventListener('click', openModal);
@@ -1190,32 +1106,29 @@
   cancelBtn?.addEventListener('click', closeModal);
   modalOverlay?.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
 
-  // Quick preset buttons in modal
   document.querySelectorAll('.rm-preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.getElementById('rem-input-type').value = btn.dataset.type;
+      document.getElementById('rem-input-type').value  = btn.dataset.type;
       document.getElementById('rem-input-title').value = btn.dataset.title;
-      document.getElementById('rem-input-time').value = btn.dataset.time;
+      document.getElementById('rem-input-time').value  = btn.dataset.time;
       document.getElementById('rem-input-notes').value = btn.dataset.notes || '';
     });
   });
 
-  // Save reminder submit
   remForm?.addEventListener('submit', async e => {
     e.preventDefault();
-    const type = document.getElementById('rem-input-type').value;
-    const title = document.getElementById('rem-input-title').value;
-    const time = document.getElementById('rem-input-time').value;
-    const schedule = document.getElementById('rem-input-schedule').value;
-    const notes = document.getElementById('rem-input-notes').value;
-
-    await addReminder({ type, title, time, schedule, notes });
+    await addReminder({
+      type:     document.getElementById('rem-input-type').value,
+      title:    document.getElementById('rem-input-title').value,
+      time:     document.getElementById('rem-input-time').value,
+      schedule: document.getElementById('rem-input-schedule').value,
+      notes:    document.getElementById('rem-input-notes').value,
+    });
     closeModal();
     showToast('Reminder added successfully! ⏰', 'success');
     renderRemindersList();
   });
 
-  // Test Notification & Chime button
   document.getElementById('btn-test-notif')?.addEventListener('click', async () => {
     playChime();
     await notify('💊 Medication Time: Donepezil 5mg (Sample Alert)', {
@@ -1226,16 +1139,13 @@
     showToast('🔔 Test notification & audio chime sent!', 'success', 3000);
   });
 
-  // Start background reminder scheduler & initial list render
   renderRemindersList();
   startReminderScheduler();
 
-  // Header scroll shadow
   window.addEventListener('scroll', () => {
     document.getElementById('site-header')?.classList.toggle('scrolled', window.scrollY > 4);
   }, { passive: true });
 
-  // SOS FAB
   const sosMenu   = document.getElementById('sos-menu');
   const sosToggle = document.getElementById('sos-toggle');
   if (sosToggle && sosMenu) {
@@ -1244,5 +1154,183 @@
   }
 </script>
 <script src="./js/page-transition.js"></script>
+
+<!-- Dementia Trend Area Chart Initialization -->
+<script>
+(function initDementiaTrendChart() {
+  const canvas = document.getElementById('dementiaTrendChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  const ctx = canvas.getContext('2d');
+
+  // WHO / Alzheimer's Disease International (ADI) estimates
+  // Sources: ADI World Alzheimer Report 2019, WHO 2023 fact sheet, projections to 2050
+  const labels = ['1990','1995','2000','2005','2010','2015','2019','2023','2030','2040','2050'];
+  const values = [20.2, 24.3, 27.7, 33.0, 38.5, 46.8, 55.2, 57.4, 78.0, 117.0, 152.8];
+  // Split: solid line up to 2023 (index 7), projected dashed from 2023 onwards
+  const solidData  = values.map((v, i) => i <= 7 ? v : null);
+  const projData   = values.map((v, i) => i >= 7 ? v : null);
+
+  // Build gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, 200);
+  grad.addColorStop(0,   'rgba(99,102,241,0.38)');
+  grad.addColorStop(0.5, 'rgba(168,85,247,0.18)');
+  grad.addColorStop(1,   'rgba(236,72,153,0.04)');
+
+  const projGrad = ctx.createLinearGradient(0, 0, 0, 200);
+  projGrad.addColorStop(0,   'rgba(236,72,153,0.28)');
+  projGrad.addColorStop(1,   'rgba(236,72,153,0.02)');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Estimated cases (M)',
+          data: solidData,
+          fill: true,
+          backgroundColor: grad,
+          borderColor: '#6366f1',
+          borderWidth: 2.5,
+          pointRadius: (ctx) => {
+            // Only show points at 1990, 2019, 2023
+            return [0,7].includes(ctx.dataIndex) ? 5 : 0;
+          },
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#6366f1',
+          tension: 0.45,
+          spanGaps: false,
+        },
+        {
+          label: 'WHO Projection (M)',
+          data: projData,
+          fill: true,
+          backgroundColor: projGrad,
+          borderColor: '#db2777',
+          borderWidth: 2.5,
+          segment: { borderDash: () => [6, 4] },
+          pointRadius: (ctx) => {
+            // Show points at 2023 (index 7) and 2050 (index 10)
+            return [7, 10].includes(ctx.dataIndex) ? 5 : 0;
+          },
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#db2777',
+          tension: 0.45,
+          spanGaps: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.9)',
+          titleFont: { family: 'Inter', size: 12, weight: '700' },
+          bodyFont:  { family: 'Inter', size: 11 },
+          padding: 10,
+          cornerRadius: 10,
+          callbacks: {
+            title: (items) => items[0].label,
+            label: (item) => {
+              const v = item.raw;
+              if (v == null) return null;
+              const suffix = item.datasetIndex === 1 ? ' M (projected)' : ' M';
+              return ' ' + v + suffix;
+            }
+          }
+        },
+        // Annotate key data points with labels
+        annotation: undefined
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            font: { family: 'Inter', size: 10, weight: '600' },
+            color: '#94a3b8',
+            maxRotation: 0,
+            // Only show ticks for years we care about
+            callback: function(value, index) {
+              const show = ['1990','2000','2010','2019','2023','2030','2050'];
+              return show.includes(labels[index]) ? labels[index] : '';
+            }
+          }
+        },
+        y: {
+          grid: {
+            display: true,
+            color: 'rgba(148,163,184,0.10)',
+            drawBorder: false,
+          },
+          border: { display: false, dash: [4,4] },
+          ticks: {
+            font: { family: 'Inter', size: 10, weight: '600' },
+            color: '#94a3b8',
+            callback: (v) => v + 'M'
+          },
+          min: 0,
+          suggestedMax: 165,
+        }
+      }
+    }
+  });
+
+  // Draw custom annotation labels for 3 key points: 2019 (55M+), 2023 (57.4M), 2050 (152.8M)
+  // We'll use Chart.js afterDraw plugin
+  Chart.register({
+    id: 'dementiaAnnotations',
+    afterDraw(chart) {
+      const { ctx: c, chartArea, scales } = chart;
+      const annotations = [
+        { label: '55M+ (2019)', xLabel: '2019', y: 55.2,  color: '#6366f1', align: 'left'  },
+        { label: '57M (2023)',  xLabel: '2023', y: 57.4,  color: '#6366f1', align: 'right' },
+        { label: '153M (2050)', xLabel: '2050', y: 152.8, color: '#db2777', align: 'left'  },
+      ];
+      c.save();
+      annotations.forEach(ann => {
+        const xi = labels.indexOf(ann.xLabel);
+        if (xi < 0) return;
+        const px = scales.x.getPixelForValue(xi);
+        const py = scales.y.getPixelForValue(ann.y);
+        // Dot
+        c.beginPath();
+        c.arc(px, py, 4, 0, Math.PI * 2);
+        c.fillStyle = ann.color;
+        c.fill();
+        c.strokeStyle = '#fff';
+        c.lineWidth = 1.5;
+        c.stroke();
+        // Label
+        c.font = '600 10px Inter, system-ui, sans-serif';
+        c.fillStyle = ann.color;
+        c.textBaseline = 'bottom';
+        const textX = ann.align === 'right' ? px + 6 : px - c.measureText(ann.label).width - 6;
+        const textY = py - 6;
+        // Only draw if inside chartArea
+        if (textY > chartArea.top && textX > chartArea.left && textX + c.measureText(ann.label).width < chartArea.right) {
+          // Pill background
+          const tw = c.measureText(ann.label).width + 8;
+          c.fillStyle = ann.color === '#db2777' ? 'rgba(236,72,153,0.12)' : 'rgba(99,102,241,0.12)';
+          if (c.roundRect) {
+            c.beginPath();
+            c.roundRect(textX - 4, textY - 13, tw, 14, 4);
+            c.fill();
+          } else {
+            c.fillRect(textX - 4, textY - 13, tw, 14);
+          }
+          c.fillStyle = ann.color;
+          c.fillText(ann.label, textX, textY);
+        }
+      });
+      c.restore();
+    }
+  });
+})();
+</script>
 </body>
 </html>
