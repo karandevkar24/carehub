@@ -29,40 +29,41 @@ window.addEventListener('pageshow',function(e){
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>"/>
 
 <style>
+/* ── Reset & base ──────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100vh;color:#1e293b}
 
-/* ── Header (matches all other inner pages exactly) ──── */
+/* ── Header ────────────────────────────────────────────── */
 .page-header{background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border-bottom:1px solid #e2e8f0;padding:0 24px;position:sticky;top:0;z-index:1000}
-.ph-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;height:60px}
+.ph-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:16px;height:60px}
 .back-btn{display:flex;align-items:center;gap:7px;color:#64748b;text-decoration:none;font-size:.85rem;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid #e2e8f0;transition:all .2s;white-space:nowrap}
 .back-btn:hover{background:#ecfeff;color:#0891b2;border-color:#0891b2}
 .ph-title{font-size:1rem;font-weight:800;color:#0f172a;flex:1}
 .avatar-sm{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0891b2,#6366f1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;cursor:default;user-select:none}
 
-/* ── Hero ─────────────────────────────────────────────── */
-.page-hero{background:linear-gradient(135deg,#0891b2 0%,#6366f1 60%,#14b8a6 100%);padding:44px 24px;text-align:center;position:relative;overflow:hidden}
+/* ── Hero ──────────────────────────────────────────────── */
+.page-hero{background:linear-gradient(135deg,#0891b2 0%,#6366f1 60%,#14b8a6 100%);padding:40px 24px 56px;text-align:center;position:relative;overflow:hidden}
 .page-hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Ccircle cx='30' cy='30' r='20' stroke='white' stroke-opacity='0.05' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") repeat;pointer-events:none}
 .page-hero h1{font-size:clamp(1.8rem,4vw,2.4rem);font-weight:900;color:#fff;margin-bottom:8px;position:relative}
 .page-hero p{color:rgba(255,255,255,.88);font-size:.95rem;position:relative}
 
-/* ── Search bar ──────────────────────────────────────── */
-.search-wrap{max-width:1200px;margin:-24px auto 0;padding:0 24px;position:relative;z-index:10}
-.search-bar{display:flex;gap:8px;background:#fff;border-radius:16px;padding:10px 14px;box-shadow:0 8px 32px rgba(8,145,178,.15);border:1.5px solid #e0f2fe;flex-wrap:wrap;align-items:center}
-.search-bar i.fa-search{color:#0891b2;flex-shrink:0}
-.s-input{flex:1;min-width:150px;border:none;outline:none;font-family:'Inter',sans-serif;font-size:.9rem;color:#1e293b;padding:4px 6px;background:transparent}
+/* ── Search bar ────────────────────────────────────────── */
+.search-wrap{max-width:1280px;margin:-28px auto 0;padding:0 24px;position:relative;z-index:20}
+.search-bar{display:flex;gap:8px;background:#fff;border-radius:18px;padding:10px 16px;box-shadow:0 8px 40px rgba(8,145,178,.18);border:1.5px solid #e0f2fe;flex-wrap:wrap;align-items:center}
+.search-bar i.fa-search{color:#0891b2;flex-shrink:0;font-size:.9rem}
+.s-input{flex:1;min-width:160px;border:none;outline:none;font-family:'Inter',sans-serif;font-size:.9rem;color:#1e293b;padding:4px 6px;background:transparent}
 .s-input::placeholder{color:#94a3b8}
 .s-select{border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;color:#475569;background:#f8fafc;cursor:pointer;outline:none;transition:border-color .2s}
 .s-select:focus{border-color:#0891b2}
 .btn-locate{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;background:#f0fdfa;color:#0891b2;border:1.5px solid #a5f3fc;border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s}
 .btn-locate:hover{background:#0891b2;color:#fff;border-color:#0891b2}
-.btn-search{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:linear-gradient(135deg,#0891b2,#6366f1);color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform .2s}
-.btn-search:hover{transform:translateY(-1px)}
-.btn-search:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-search{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:linear-gradient(135deg,#0891b2,#6366f1);color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform .2s,box-shadow .2s}
+.btn-search:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(8,145,178,.35)}
+.btn-search:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
 
-/* ── Inline banners ──────────────────────────────────── */
-.banner{display:none;margin:14px 0 0;padding:14px 18px;border-radius:12px;font-size:.85rem;font-weight:600;align-items:flex-start;gap:12px}
+/* ── Inline banners ────────────────────────────────────── */
+.banner{display:none;margin:12px 0 0;padding:14px 18px;border-radius:12px;font-size:.85rem;font-weight:600;align-items:flex-start;gap:12px}
 .banner.show{display:flex}
 .banner.warn{background:#fffbeb;border:1.5px solid #fcd34d;color:#92400e}
 .banner.err{background:#fff1f2;border:1.5px solid #fecdd3;color:#9f1239}
@@ -74,64 +75,100 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
 .manual-go{padding:8px 16px;background:#0891b2;color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer}
 .retry-link{color:#0891b2;text-decoration:underline;cursor:pointer;font-weight:700}
 
-/* ── Layout — stacked: map top, results below ────────── */
-.page-body{max-width:1200px;margin:0 auto;padding:28px 24px 80px}
-.stacked-layout{display:flex;flex-direction:column;gap:20px}
+/* ── Page body & main layout ───────────────────────────── */
+.page-body{max-width:1280px;margin:0 auto;padding:24px 24px 80px}
 
-/* ── Map card ─────────────────────────────────────────── */
-.map-card{background:#fff;border-radius:20px;border:1.5px solid #e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,.06);overflow:hidden}
-.card-hdr{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9}
-.card-hdr-title{font-weight:800;font-size:.92rem;color:#0f172a;display:flex;align-items:center;gap:8px}
-#loc-label{font-size:.78rem;color:#0891b2;font-weight:600;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#map{height:340px;z-index:1;background:#e0f2fe}
-@media(max-width:600px){#map{height:240px}}
+/* Desktop: map left (65%) + panel right (35%) */
+.finder-layout{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start;margin-top:20px}
+@media(max-width:1024px){.finder-layout{grid-template-columns:1fr 340px}}
+@media(max-width:768px){.finder-layout{grid-template-columns:1fr;grid-template-rows:auto auto}}
 
-/* ── Results panel ───────────────────────────────────── */
-.results-panel{display:flex;flex-direction:column}
-.panel-hdr{background:#fff;border-radius:20px 20px 0 0;border:1.5px solid #e2e8f0;border-bottom:none;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+/* ── Map card ──────────────────────────────────────────── */
+.map-card{background:#fff;border-radius:20px;border:1.5px solid #e2e8f0;box-shadow:0 6px 32px rgba(8,145,178,.1);overflow:hidden;position:sticky;top:80px}
+.map-card-hdr{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;background:#fff}
+.map-hdr-left{display:flex;align-items:center;gap:8px}
+.map-hdr-title{font-weight:800;font-size:.92rem;color:#0f172a}
+.map-status-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;animation:dotPulse 2s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.4}}
+#loc-label{font-size:.76rem;color:#0891b2;font-weight:600;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#map{height:560px;z-index:1;background:#e0f2fe}
+@media(max-width:1024px){#map{height:480px}}
+@media(max-width:768px){#map{height:400px}}
+@media(max-width:480px){#map{height:320px}}
+
+/* ── Doctor panel ──────────────────────────────────────── */
+.doc-panel{display:flex;flex-direction:column;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.06);overflow:hidden}
+
+/* Panel header — clickable to collapse */
+.panel-hdr{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;transition:background .15s;border-bottom:1px solid #f1f5f9}
+.panel-hdr:hover{background:#f8fafc}
+.panel-hdr-left{display:flex;align-items:center;gap:10px}
+.panel-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#ecfeff,#e0f2fe);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
 .panel-title{font-size:.95rem;font-weight:800;color:#0f172a}
-.count-badge{font-size:.75rem;color:#0891b2;font-weight:600;background:#ecfeff;padding:3px 10px;border-radius:99px}
-.src-label{font-size:.7rem;color:#94a3b8;margin-top:2px;text-align:right}
-.doc-list{background:#fff;border:1.5px solid #e2e8f0;border-top:none;border-radius:0 0 20px 20px;max-height:600px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#a5f3fc transparent}
+.panel-sub{font-size:.72rem;color:#94a3b8;font-weight:500;margin-top:1px}
+.panel-hdr-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.count-badge{font-size:.73rem;color:#0891b2;font-weight:700;background:#ecfeff;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.collapse-btn{width:28px;height:28px;border-radius:8px;background:#f1f5f9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;transition:all .2s;font-size:.8rem}
+.collapse-btn:hover{background:#e0f2fe;color:#0891b2}
+.chevron{transition:transform .3s ease}
+.panel-hdr.collapsed .chevron{transform:rotate(-180deg)}
+
+/* Src label */
+.src-row{padding:8px 20px 0;display:flex;align-items:center;gap:6px}
+.src-label{font-size:.69rem;color:#94a3b8;font-weight:500}
+
+/* Collapsible body */
+.panel-body{overflow:hidden;max-height:2000px;transition:max-height .35s ease}
+.panel-body.collapsed{max-height:0}
+
+/* Skeleton */
+.skel-wrap{padding:12px 12px 4px}
+.skel{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:400px 100%;border-radius:12px;height:100px;margin-bottom:8px;animation:shimmer 1.4s ease-in-out infinite}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+
+/* Doctor list scroll container */
+.doc-list{max-height:500px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#a5f3fc transparent}
 .doc-list::-webkit-scrollbar{width:4px}
 .doc-list::-webkit-scrollbar-thumb{background:#a5f3fc;border-radius:99px}
 
-/* Skeleton */
-.skel-wrap{padding:12px}
-.skel{background:#f1f5f9;border-radius:12px;height:96px;margin-bottom:8px;animation:pulse 1.4s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
-
-/* Doctor card */
-.doc-card{padding:16px 18px;border-bottom:1px solid #f1f5f9;display:flex;gap:12px;align-items:flex-start;cursor:pointer;transition:background .15s}
+/* ── Doctor card (redesigned) ──────────────────────────── */
+.doc-card{padding:14px 18px;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .15s,border-left .15s;border-left:3px solid transparent;position:relative}
 .doc-card:last-child{border-bottom:none}
-.doc-card:hover,.doc-card.hl{background:#f0fdfa}
-.doc-emoji{font-size:1.9rem;flex-shrink:0;line-height:1;margin-top:2px}
-.doc-body{flex:1;min-width:0}
-.doc-name{font-size:.9rem;font-weight:700;color:#0f172a;margin-bottom:2px}
-.doc-spec{font-size:.74rem;color:#0891b2;font-weight:600;margin-bottom:5px}
-.doc-meta{font-size:.72rem;color:#64748b;display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
-.doc-addr{font-size:.71rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:7px}
-.doc-phone-row{font-size:.74rem;color:#10b981;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:4px}
-.no-phone{font-size:.71rem;color:#94a3b8;font-style:italic;margin-bottom:8px}
-.avail-badge{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px}
+.doc-card:hover{background:#f8fffe;border-left-color:#0891b2}
+.doc-card.hl{background:#f0fdfa;border-left-color:#0891b2}
+.doc-card-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+.doc-avatar{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#ecfeff,#dbeafe);display:flex;align-items:center;justify-content:center;font-size:1.35rem;flex-shrink:0;border:1.5px solid #e0f2fe}
+.doc-info{flex:1;min-width:0}
+.doc-name{font-size:.88rem;font-weight:700;color:#0f172a;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-spec{font-size:.72rem;color:#0891b2;font-weight:600;margin-bottom:4px}
+.doc-avail-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.avail-badge{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px}
 .avail-now{background:#dcfce7;color:#15803d}
 .avail-today{background:#fef3c7;color:#92400e}
 .avail-week{background:#f1f5f9;color:#64748b}
-.doc-btns{display:flex;gap:6px;flex-wrap:wrap}
-.btn-call{padding:5px 12px;background:#f0fdf4;color:#15803d;border:1.5px solid #86efac;border-radius:99px;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all .18s}
+.dist-chip{font-size:.68rem;font-weight:700;color:#6366f1;background:#eef2ff;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.doc-card-meta{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.doc-meta-row{display:flex;align-items:center;gap:6px;font-size:.72rem;color:#64748b}
+.doc-meta-row i{width:12px;text-align:center;color:#94a3b8;flex-shrink:0}
+.doc-meta-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-rating{display:flex;align-items:center;gap:3px;font-size:.71rem;font-weight:600;color:#f59e0b}
+.star{color:#f59e0b}
+.doc-card-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.btn-call{padding:6px 13px;background:#f0fdf4;color:#15803d;border:1.5px solid #86efac;border-radius:99px;font-family:'Inter',sans-serif;font-size:.71rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all .18s}
 .btn-call:hover{background:#15803d;color:#fff;border-color:#15803d}
 .btn-call.off{opacity:.35;pointer-events:none}
-.btn-book{padding:5px 12px;background:linear-gradient(135deg,#0891b2,#6366f1);color:#fff;border:none;border-radius:99px;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:transform .18s}
-.btn-book:hover{transform:translateY(-1px)}
-.dist-pill{font-size:.7rem;font-weight:700;color:#0891b2;background:#ecfeff;padding:3px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;align-self:flex-start}
-.star{color:#f59e0b}
+.btn-book{padding:6px 14px;background:linear-gradient(135deg,#0891b2,#6366f1);color:#fff;border:none;border-radius:99px;font-family:'Inter',sans-serif;font-size:.71rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:transform .18s,box-shadow .18s}
+.btn-book:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(8,145,178,.3)}
+.btn-map-focus{margin-left:auto;width:28px;height:28px;border-radius:8px;background:#f0f9ff;border:1.5px solid #e0f2fe;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0891b2;font-size:.75rem;transition:all .18s;flex-shrink:0}
+.btn-map-focus:hover{background:#0891b2;color:#fff;border-color:#0891b2}
 
-/* Empty state */
-.empty{padding:40px 20px;text-align:center;color:#94a3b8}
-.empty i{font-size:2.5rem;color:#bae6fd;margin-bottom:12px;display:block}
-.empty strong{display:block;color:#475569;font-size:.9rem;margin-bottom:6px}
-.empty p{font-size:.8rem;line-height:1.5}
-.btn-widen{margin-top:14px;padding:8px 20px;background:#0891b2;color:#fff;border:none;border-radius:99px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer}
+/* ── Empty state ───────────────────────────────────────── */
+.empty{padding:36px 20px;text-align:center;color:#94a3b8}
+.empty-icon{font-size:2.8rem;margin-bottom:12px;display:block;opacity:.6}
+.empty strong{display:block;color:#475569;font-size:.9rem;font-weight:700;margin-bottom:6px}
+.empty p{font-size:.8rem;line-height:1.6;color:#94a3b8}
+.btn-widen{margin-top:14px;padding:8px 20px;background:#0891b2;color:#fff;border:none;border-radius:99px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:transform .18s}
+.btn-widen:hover{transform:translateY(-1px)}
 
 /* ── Booking Modal ─────────────────────────────────────── */
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(6px);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -153,12 +190,12 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
 .btn-confirm{width:100%;padding:13px;background:linear-gradient(135deg,#0891b2,#6366f1);color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:16px;box-shadow:0 4px 14px rgba(8,145,178,.28);transition:transform .2s}
 .btn-confirm:hover{transform:translateY(-2px)}
 
-/* Leaflet markers */
+/* ── Leaflet marker styles ─────────────────────────────── */
 .m-user{width:18px;height:18px;background:#0891b2;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(8,145,178,.65)}
-.m-doc{width:36px;height:36px;background:#fff;border-radius:50%;border:3px solid #0891b2;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 3px 12px rgba(8,145,178,.3);transition:transform .2s}
-.m-doc.hl{border-color:#6366f1;transform:scale(1.25)}
+.m-doc{width:38px;height:38px;background:#fff;border-radius:50%;border:3px solid #0891b2;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 14px rgba(8,145,178,.28);transition:transform .2s,border-color .2s,box-shadow .2s}
+.m-doc.hl{border-color:#6366f1;transform:scale(1.3);box-shadow:0 4px 20px rgba(99,102,241,.45)}
 
-/* Toast */
+/* ── Toast ─────────────────────────────────────────────── */
 #toasts{position:fixed;top:76px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 </style>
 <link rel="stylesheet" href="./css/perf.css" />
@@ -168,7 +205,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
 </head>
 <body>
 
-<!-- ── Header ─────────────────────────────────────────── -->
+<!-- ── Header ──────────────────────────────────────────── -->
 <header class="page-header">
   <div class="ph-inner">
     <a class="back-btn" href="dashboard.html"><i class="fas fa-arrow-left"></i> <span data-i18n="nav.back">Dashboard</span></a>
@@ -177,13 +214,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
   </div>
 </header>
 
-<!-- ── Hero ───────────────────────────────────────────── -->
+<!-- ── Hero ────────────────────────────────────────────── -->
 <div class="page-hero">
   <h1>📍 <span data-i18n="doctors.pageTitle">Nearby Doctor Finder</span></h1>
   <p data-i18n="doctors.pageSubtitle">Find dementia specialists and neurologists near you</p>
 </div>
 
-<!-- ── Search Bar ─────────────────────────────────────── -->
+<!-- ── Search Bar ───────────────────────────────────────── -->
 <div class="search-wrap">
   <div class="search-bar">
     <i class="fas fa-search"></i>
@@ -228,41 +265,57 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
   </div>
 </div>
 
-<!-- ── Two-column layout ───────────────────────────────── -->
+<!-- ── Main finder layout: map + doctor panel ───────────── -->
 <div class="page-body">
-  <div class="stacked-layout">
+  <div class="finder-layout">
 
-    <!-- Map -->
-    <div>
-      <div class="map-card">
-        <div class="card-hdr">
-          <div class="card-hdr-title"><i class="fas fa-map-marker-alt" style="color:#0891b2;"></i> <span data-i18n="doctors.liveMap">Live Map</span></div>
-          <span id="loc-label" data-i18n="doctors.detectingLoc">📡 Detecting location…</span>
+    <!-- LEFT: Large map -->
+    <div class="map-card">
+      <div class="map-card-hdr">
+        <div class="map-hdr-left">
+          <span class="map-status-dot"></span>
+          <span class="map-hdr-title"><i class="fas fa-map-marked-alt" style="color:#0891b2;margin-right:6px;"></i><span data-i18n="doctors.liveMap">Live Map</span></span>
         </div>
-        <div id="map"></div>
+        <span id="loc-label" data-i18n="doctors.detectingLoc">📡 Detecting location…</span>
       </div>
+      <div id="map"></div>
     </div>
 
-    <!-- Results -->
-    <div class="results-panel">
-      <div class="panel-hdr">
-        <div class="panel-title" data-i18n="doctors.nearbyDoctors">👨‍⚕️ Nearby Doctors</div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+    <!-- RIGHT: Collapsible doctor panel -->
+    <div class="doc-panel" id="doc-panel">
+
+      <!-- Clickable header — toggles collapse -->
+      <div class="panel-hdr" id="panel-hdr" onclick="togglePanel()">
+        <div class="panel-hdr-left">
+          <div class="panel-icon">👨‍⚕️</div>
+          <div>
+            <div class="panel-title" data-i18n="doctors.nearbyDoctors">Nearby Doctors</div>
+            <div class="panel-sub" id="src-label"></div>
+          </div>
+        </div>
+        <div class="panel-hdr-right">
           <span class="count-badge" id="count" data-i18n="doctors.searching">Searching…</span>
-          <span class="src-label" id="src-label"></span>
+          <button class="collapse-btn" aria-label="Toggle list" onclick="event.stopPropagation();togglePanel()">
+            <i class="fas fa-chevron-up chevron"></i>
+          </button>
         </div>
       </div>
-      <div class="doc-list" id="doc-list">
-        <div class="skel-wrap">
-          <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+
+      <!-- Collapsible body -->
+      <div class="panel-body" id="panel-body">
+        <div class="doc-list" id="doc-list">
+          <div class="skel-wrap">
+            <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+          </div>
         </div>
       </div>
-    </div>
 
-  </div>
-</div>
+    </div><!-- /doc-panel -->
 
-<!-- ── Booking Modal ───────────────────────────────────── -->
+  </div><!-- /finder-layout -->
+</div><!-- /page-body -->
+
+<!-- ── Booking Modal ─────────────────────────────────────── -->
 <div class="modal-bg" id="modal">
   <div class="modal-box">
     <div class="m-hdr">
@@ -311,6 +364,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
     document.getElementById('hdr-avatar').textContent=init||'U';
   }catch(e){}
 })();
+
+// ── Panel collapse toggle ─────────────────────────────────
+function togglePanel(){
+  var hdr=document.getElementById('panel-hdr');
+  var body=document.getElementById('panel-body');
+  hdr.classList.toggle('collapsed');
+  body.classList.toggle('collapsed');
+}
 
 // ── Doctor dataset (20 realistic entries across Indian cities + 3 international) ──
 var DB=[
@@ -426,21 +487,33 @@ function setUPin(la,ln){
 function clrPins(){Object.values(dPins).forEach(function(p){p.remove();});dPins={};}
 function addPin(doc,idx){
   if(!doc.lat||!doc.lng)return;
-  var el='<div class="m-doc">'+doc.emoji+'</div>';
-  var m=L.marker([doc.lat,doc.lng],{icon:L.divIcon({html:el,iconSize:[36,36],iconAnchor:[18,18],className:''})}).addTo(map);
+  var el='<div class="m-doc" data-id="'+doc.id+'">'+doc.emoji+'</div>';
+  var m=L.marker([doc.lat,doc.lng],{icon:L.divIcon({html:el,iconSize:[38,38],iconAnchor:[19,19],className:''})}).addTo(map);
   m.bindPopup('<strong>'+esc(doc.name)+'</strong><br><small>'+esc(doc.spec)+'</small><br><small>'+dtxt(doc.dist)+'</small>');
   m.on('click',function(){hlCard(idx);});
   dPins[doc.id]=m;
 }
+
+// ── Highlight card & marker — bidirectional ───────────────
 function hlCard(idx){
+  // Deselect all cards
   document.querySelectorAll('.doc-card').forEach(function(c){c.classList.remove('hl');});
-  // Also reset marker styles
-  cDocs.forEach(function(d){
-    var el=document.querySelector('.m-doc[data-id="'+d.id+'"]');
-    if(el)el.classList.remove('hl');
-  });
+  // Deselect all marker elements
+  document.querySelectorAll('.m-doc').forEach(function(el){el.classList.remove('hl');});
+  // Select this card
   var c=document.querySelector('.doc-card[data-idx="'+idx+'"]');
-  if(c){c.classList.add('hl');c.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  if(c){
+    c.classList.add('hl');
+    c.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  // Highlight matching marker element
+  var doc=cDocs[idx];
+  if(doc){
+    var mEl=document.querySelector('.m-doc[data-id="'+doc.id+'"]');
+    if(mEl)mEl.classList.add('hl');
+    // Pan map to this doctor
+    if(dPins[doc.id]){map.setView([doc.lat,doc.lng],14);dPins[doc.id].openPopup();}
+  }
 }
 
 // ── Nominatim geocoding (XMLHttpRequest, no module needed) ─
@@ -475,8 +548,16 @@ function render(docs,src){
   document.getElementById('src-label').textContent=src==='live'?'🌐 Live: Google Places + Local':'📚 Local database';
   var list=document.getElementById('doc-list');
 
+  // Ensure panel is expanded when results arrive
+  var hdr=document.getElementById('panel-hdr');
+  var body=document.getElementById('panel-body');
+  if(hdr.classList.contains('collapsed')){
+    hdr.classList.remove('collapsed');
+    body.classList.remove('collapsed');
+  }
+
   if(!docs.length){
-    list.innerHTML='<div class="empty"><i class="fas fa-user-md"></i><strong>No doctors found nearby</strong><p>No results within '+(rkm>=9999?'any distance':rkm+' km')+' for this filter.<br>Try a wider radius or different specialty.</p><button class="btn-widen" id="btn-widen"><i class="fas fa-expand-alt"></i> Wider Radius</button></div>';
+    list.innerHTML='<div class="empty"><span class="empty-icon">🔍</span><strong>No doctors found nearby</strong><p>No results within '+(rkm>=9999?'any distance':rkm+' km')+' for this filter.<br>Try a wider radius or different specialty.</p><button class="btn-widen" id="btn-widen"><i class="fas fa-expand-alt"></i> Wider Radius</button></div>';
     document.getElementById('btn-widen').onclick=function(){
       var sel=document.getElementById('s-rad'),opts=Array.from(sel.options),i=opts.findIndex(function(o){return o.selected;});
       if(i<opts.length-1)sel.selectedIndex=i+1;
@@ -485,46 +566,57 @@ function render(docs,src){
     return;
   }
 
-  var availLabel={'now':'<span class="avail-badge avail-now">✅ Available now</span>','today':'<span class="avail-badge avail-today">🕐 Available today</span>','week':'<span class="avail-badge avail-week">📅 Available this week</span>'};
+  var availLabel={
+    'now':'<span class="avail-badge avail-now">✅ Available now</span>',
+    'today':'<span class="avail-badge avail-today">🕐 Available today</span>',
+    'week':'<span class="avail-badge avail-week">📅 This week</span>'
+  };
 
   list.innerHTML=docs.map(function(d,i){
+    var ratingHtml=d.rating
+      ?'<span class="doc-rating"><i class="fas fa-star star"></i> '+d.rating+'</span>':'';
     return '<div class="doc-card" data-idx="'+i+'">'
-      +'<div class="doc-emoji">'+d.emoji+'</div>'
-      +'<div class="doc-body">'
-        +'<div class="doc-name">'+esc(d.name)+'</div>'
-        +'<div class="doc-spec">'+esc(d.spec)+'</div>'
-        +'<div class="doc-meta">'
-          +(d.rating?'<span><i class="fas fa-star star"></i> '+d.rating+'</span>':'')
-          +(d.hospital?'<span><i class="fas fa-hospital-alt" style="color:#0891b2;"></i> '+esc(d.hospital)+'</span>':'')
-          +(d.city?'<span><i class="fas fa-city" style="color:#94a3b8;"></i> '+esc(d.city)+'</span>':'')
-          +(d.avail?availLabel[d.avail]||'':'')
+      +'<div class="doc-card-top">'
+        +'<div class="doc-avatar">'+d.emoji+'</div>'
+        +'<div class="doc-info">'
+          +'<div class="doc-name">'+esc(d.name)+'</div>'
+          +'<div class="doc-spec">'+esc(d.spec)+'</div>'
+          +'<div class="doc-avail-row">'
+            +(d.avail?availLabel[d.avail]||'':'')
+            +(d.dist!=null?'<span class="dist-chip"><i class="fas fa-location-arrow" style="font-size:.6rem;"></i> '+dtxt(d.dist)+'</span>':'')
+            +ratingHtml
+          +'</div>'
         +'</div>'
-        +(d.addr?'<div class="doc-addr"><i class="fas fa-map-marker-alt" style="color:#0891b2;margin-right:3px;"></i>'+esc(d.addr)+'</div>':'')
-        +(d.phone?'<div class="doc-phone-row"><i class="fas fa-phone-alt"></i> '+esc(d.phone)+'</div>':'<div class="no-phone"><i class="fas fa-phone-slash"></i> No phone listed</div>')
-        +'<div class="doc-btns">'
-          +(d.phone?'<a class="btn-call" href="tel:'+esc(d.phone)+'"><i class="fas fa-phone-alt"></i> Call</a>':'<a class="btn-call off" href="#"><i class="fas fa-phone-alt"></i> Call</a>')
-          +'<button class="btn-book" data-idx="'+i+'"><i class="fas fa-calendar-plus"></i> Book Appointment</button>'
-        +'</div>'
+        +'<button class="btn-map-focus" data-idx="'+i+'" title="Focus on map"><i class="fas fa-map-pin"></i></button>'
       +'</div>'
-      +(d.dist!=null?'<div class="dist-pill">'+dtxt(d.dist)+'</div>':'')
+      +'<div class="doc-card-meta">'
+        +(d.hospital?'<div class="doc-meta-row"><i class="fas fa-hospital-alt"></i><span>'+esc(d.hospital)+'</span></div>':'')
+        +(d.addr?'<div class="doc-meta-row"><i class="fas fa-map-marker-alt"></i><span>'+esc(d.addr)+'</span></div>':'')
+        +(d.phone?'<div class="doc-meta-row"><i class="fas fa-phone-alt" style="color:#10b981;"></i><span style="color:#10b981;font-weight:600;">'+esc(d.phone)+'</span></div>':'')
+      +'</div>'
+      +'<div class="doc-card-actions">'
+        +(d.phone?'<a class="btn-call" href="tel:'+esc(d.phone)+'"><i class="fas fa-phone-alt"></i> Call</a>':'<a class="btn-call off" href="#"><i class="fas fa-phone-slash"></i> No phone</a>')
+        +'<button class="btn-book" data-idx="'+i+'"><i class="fas fa-calendar-plus"></i> Book Appointment</button>'
+      +'</div>'
     +'</div>';
   }).join('');
 
   list.onclick=function(e){
+    var focus=e.target.closest('.btn-map-focus');
     var book=e.target.closest('.btn-book');
     var card=e.target.closest('.doc-card');
-    if(book){openBook(cDocs[parseInt(book.dataset.idx)]);return;}
+    if(focus){e.stopPropagation();hlCard(parseInt(focus.dataset.idx));return;}
+    if(book){e.stopPropagation();openBook(cDocs[parseInt(book.dataset.idx)]);return;}
     if(card){
       var idx=parseInt(card.dataset.idx);
       hlCard(idx);
-      var doc=cDocs[idx];
-      if(doc&&dPins[doc.id]){map.setView([doc.lat,doc.lng],14);dPins[doc.id].openPopup();}
     }
   };
 
   docs.forEach(function(d,i){addPin(d,i);});
   var all=Object.values(dPins).concat(uPin?[uPin]:[]);
   if(all.length){try{map.fitBounds(L.featureGroup(all).getBounds().pad(0.3));}catch(_){}}
+  setTimeout(function(){map.invalidateSize();},100);
 }
 
 // ── Main search ───────────────────────────────────────────
