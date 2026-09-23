@@ -223,11 +223,11 @@
        ===================================================== -->
   <div class="game-selector" id="game-selector">
 
-    <!-- Spot the Object -->
-    <a class="gs-card" href="spot-game.html" id="gs-spot">
-      <div class="gs-icon">&#127807;</div>
-      <div class="gs-title" data-i18n="games.spotTitle">Spot the Object</div>
-      <div class="gs-desc" data-i18n="games.spotDesc">Find the hidden object in a picture. Great for attention and visual focus.</div>
+    <!-- Photo Match -->
+    <a class="gs-card" href="memory-match.html" id="gs-photo">
+      <div class="gs-icon">&#128247;</div>
+      <div class="gs-title" data-i18n="games.photoTitle">Photo Match</div>
+      <div class="gs-desc" data-i18n="games.photoDesc">Match pairs of photos in a classic memory card game.</div>
       <button class="gs-play-btn" tabindex="-1"><i class="fas fa-play"></i> <span data-i18n="games.play">Play</span></button>
     </a>
 
@@ -239,11 +239,11 @@
       <button class="gs-play-btn" tabindex="-1"><i class="fas fa-play"></i> <span data-i18n="games.play">Play</span></button>
     </div>
 
-    <!-- Photo Match -->
-    <a class="gs-card" href="memory-match.html" id="gs-photo">
-      <div class="gs-icon">&#128247;</div>
-      <div class="gs-title" data-i18n="games.photoTitle">Photo Match</div>
-      <div class="gs-desc" data-i18n="games.photoDesc">Match pairs of photos in a classic memory card game.</div>
+    <!-- Spot the Object -->
+    <a class="gs-card" href="spot-game.html" id="gs-spot">
+      <div class="gs-icon">&#127807;</div>
+      <div class="gs-title" data-i18n="games.spotTitle">Spot the Object</div>
+      <div class="gs-desc" data-i18n="games.spotDesc">Find the hidden object in a picture. Great for attention and visual focus.</div>
       <button class="gs-play-btn" tabindex="-1"><i class="fas fa-play"></i> <span data-i18n="games.play">Play</span></button>
     </a>
 
@@ -257,10 +257,10 @@
     <!-- Back + Fullscreen row -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
       <button class="btn-game btn-sm" id="back-to-selector" style="background:#f1f5f9;color:#475569;box-shadow:none;">
-        <i class="fas fa-arrow-left"></i> Back to Games
+        <i class="fas fa-arrow-left"></i> <span data-i18n="games.backToGames">Back to Games</span>
       </button>
       <a href="color-sequence.html" class="btn-game btn-sm" style="text-decoration:none;">
-        <i class="fas fa-expand-arrows-alt"></i> Full Screen
+        <i class="fas fa-expand-arrows-alt"></i> <span data-i18n="games.fullScreen">Full Screen</span>
       </a>
     </div>
 
@@ -268,9 +268,9 @@
 
       <!-- Simplified HUD: just Level + Streak -->
       <div class="game-hud">
-        <div class="game-hud-title">&#127912; Color Sequence</div>
-        <div class="game-hud-badge">Level <span id="cg-lvl-num">1</span></div>
-        <div class="game-hud-streak">Streak: <strong id="cg-streak">0</strong></div>
+        <div class="game-hud-title">&#127912; <span data-i18n="games.colorTitle">Color Sequence</span></div>
+        <div class="game-hud-badge"><span data-i18n="games.level">Level</span> <span id="cg-lvl-num">1</span></div>
+        <div class="game-hud-streak"><span data-i18n="games.streak">Streak</span>: <strong id="cg-streak">0</strong></div>
       </div>
 
       <!-- Hidden spans kept for JS compatibility -->
@@ -288,10 +288,10 @@
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
         <button class="btn-game" id="cg-start-btn" style="min-width:200px;">
-          <i class="fas fa-play"></i> Watch Pattern
+          <i class="fas fa-play"></i> <span data-i18n="games.watchPattern">Watch Pattern</span>
         </button>
         <button class="btn-game" id="cg-replay-btn" style="display:none;background:#f1f5f9;color:#475569;box-shadow:none;">
-          <i class="fas fa-redo"></i> Replay
+          <i class="fas fa-redo"></i> <span data-i18n="games.replay">Replay</span>
         </button>
       </div>
 
@@ -301,34 +301,34 @@
   <!-- Progress Chart -->
   <div class="chart-section" id="progress-section">
     <div class="section-hdr">
-      <div class="section-hdr-title"><i class="fas fa-chart-line" style="color:#0d9488;"></i> Progress Tracker</div>
+      <div class="section-hdr-title"><i class="fas fa-chart-line" style="color:#0d9488;"></i> <span data-i18n="games.progressTitle">Progress Tracker</span></div>
       <div class="filter-bar">
-        <button class="filter-btn active" data-days="7">7 Days</button>
-        <button class="filter-btn" data-days="14">14 Days</button>
-        <button class="filter-btn" data-days="30">30 Days</button>
+        <button class="filter-btn active" data-days="7" data-i18n="games.sevenDays">7 Days</button>
+        <button class="filter-btn" data-days="14" data-i18n="games.fourteenDays">14 Days</button>
+        <button class="filter-btn" data-days="30" data-i18n="games.thirtyDays">30 Days</button>
       </div>
     </div>
 
     <div class="chart-card">
       <div class="game-filter-tabs">
-        <button class="gft active" data-gtype="color">&#127912; Color Sequence</button>
-        <button class="gft" data-gtype="all">&#128202; All Games</button>
+        <button class="gft active" data-gtype="color" data-i18n="games.colorSeq">&#127912; Color Sequence</button>
+        <button class="gft" data-gtype="all" data-i18n="games.allGames">&#128202; All Games</button>
       </div>
 
       <div class="chart-wrap" id="chart-wrap">
         <div class="chart-empty" id="chart-empty">
           <i class="fas fa-chart-line"></i>
-          <span>Play games to build your progress history!</span>
-          <small style="color:#99f6e4;">Sessions are logged automatically after each game.</small>
+          <span data-i18n="games.playToUnlock">Play games to build your progress history!</span>
+          <small style="color:#99f6e4;" data-i18n="games.autoLogged">Sessions are logged automatically after each game.</small>
         </div>
         <canvas id="progress-chart" style="display:none;"></canvas>
       </div>
 
       <div class="stat-pills" id="stat-pills" style="display:none;">
-        <div class="stat-pill"><div class="stat-pill-val" id="stat-sessions">-</div><div class="stat-pill-label">Sessions</div></div>
-        <div class="stat-pill"><div class="stat-pill-val" id="stat-avg">-</div><div class="stat-pill-label">Avg Score</div></div>
-        <div class="stat-pill"><div class="stat-pill-val" id="stat-best">-</div><div class="stat-pill-label">Best Score</div></div>
-        <div class="stat-pill"><div class="stat-pill-val" id="stat-streak">-</div><div class="stat-pill-label">Day Streak</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="stat-sessions">-</div><div class="stat-pill-label" data-i18n="games.sessions">Sessions</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="stat-avg">-</div><div class="stat-pill-label" data-i18n="games.avgScore">Avg Score</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="stat-best">-</div><div class="stat-pill-label" data-i18n="games.bestScore">Best Score</div></div>
+        <div class="stat-pill"><div class="stat-pill-val" id="stat-streak">-</div><div class="stat-pill-label" data-i18n="games.dayStreak">Day Streak</div></div>
       </div>
     </div>
   </div>

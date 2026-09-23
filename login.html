@@ -425,20 +425,20 @@
       </button>
 
       <p class="terms-text" style="margin-top:14px;">
-        Don't have an account?
-        <a href="#" onclick="switchTab('signup')">Create one free</a>
+        <span data-i18n="login.dontHaveAccount">Don't have an account?</span>
+        <a href="#" onclick="switchTab('signup')" data-i18n="login.createOneFree">Create one free</a>
       </p>
     </div>
 
     <!-- ── SIGNUP FORM ── -->
     <div class="form-panel" id="panel-signup" role="tabpanel">
-      <h2 class="form-title">Create your account</h2>
-      <p class="form-subtitle">Join thousands of caregivers using CareHub</p>
+      <h2 class="form-title" data-i18n="login.signupTitle">Create your account</h2>
+      <p class="form-subtitle" data-i18n="login.signupSubtitle">Join thousands of caregivers using CareHub</p>
 
       <form id="signup-form" novalidate autocomplete="on">
         <!-- Full Name -->
         <div class="form-group">
-          <label class="form-label" for="signup-name">Your Full Name <span style="color:#f43f5e;">*</span></label>
+          <label class="form-label" for="signup-name"><span data-i18n="login.nameLabel">Your Full Name</span> <span style="color:#f43f5e;">*</span></label>
           <div class="input-wrap">
             <i class="fas fa-user input-icon"></i>
             <input type="text" id="signup-name" class="form-input" placeholder="e.g. Karan Mehta"
@@ -449,7 +449,7 @@
 
         <!-- Email -->
         <div class="form-group">
-          <label class="form-label" for="signup-email">Email Address <span style="color:#f43f5e;">*</span></label>
+          <label class="form-label" for="signup-email"><span data-i18n="login.emailLabel">Email Address</span> <span style="color:#f43f5e;">*</span></label>
           <div class="input-wrap">
             <i class="fas fa-envelope input-icon"></i>
             <input type="email" id="signup-email" class="form-input" placeholder="you@example.com"
@@ -460,7 +460,7 @@
 
         <!-- Phone -->
         <div class="form-group">
-          <label class="form-label" for="signup-phone">Mobile Number</label>
+          <label class="form-label" for="signup-phone" data-i18n="login.mobileLabel">Mobile Number</label>
           <div class="input-wrap">
             <i class="fas fa-phone input-icon"></i>
             <input type="tel" id="signup-phone" class="form-input" placeholder="+91 98765 43210"
@@ -470,16 +470,16 @@
 
         <!-- Role -->
         <div class="form-group">
-          <label class="form-label">Your Role <span style="color:#f43f5e;">*</span></label>
+          <label class="form-label"><span data-i18n="login.roleLabel">Your Role</span> <span style="color:#f43f5e;">*</span></label>
           <div class="role-grid" id="role-grid" role="group" aria-label="Select your role">
             <button type="button" class="role-btn" data-role="Family Member" id="role-family">
-              <i class="fas fa-home"></i> Family Member
+              <i class="fas fa-home"></i> <span data-i18n="login.roleFamilyMember">Family Member</span>
             </button>
             <button type="button" class="role-btn" data-role="Nurse" id="role-nurse">
-              <i class="fas fa-user-nurse"></i> Nurse
+              <i class="fas fa-user-nurse"></i> <span data-i18n="login.roleNurse">Nurse</span>
             </button>
             <button type="button" class="role-btn" data-role="Professional Caregiver" id="role-professional">
-              <i class="fas fa-hands-helping"></i> Caregiver
+              <i class="fas fa-hands-helping"></i> <span data-i18n="login.roleCaregiver">Caregiver</span>
             </button>
           </div>
           <div class="field-error" id="signup-role-err"><i class="fas fa-exclamation-circle"></i><span></span></div>
@@ -487,7 +487,7 @@
 
         <!-- Patient Name -->
         <div class="form-group">
-          <label class="form-label" for="signup-patient">Patient's Name</label>
+          <label class="form-label" for="signup-patient" data-i18n="login.patientNameLabel">Patient's Name</label>
           <div class="input-wrap">
             <i class="fas fa-user-injured input-icon"></i>
             <input type="text" id="signup-patient" class="form-input" placeholder="Name of person in your care"
@@ -497,7 +497,7 @@
 
         <!-- Password -->
         <div class="form-group">
-          <label class="form-label" for="signup-password">Create Password <span style="color:#f43f5e;">*</span></label>
+          <label class="form-label" for="signup-password"><span data-i18n="login.createPasswordLabel">Create Password</span> <span style="color:#f43f5e;">*</span></label>
           <div class="input-wrap">
             <i class="fas fa-lock input-icon"></i>
             <input type="password" id="signup-password" class="form-input" placeholder="Min. 6 characters"
@@ -514,13 +514,13 @@
         </div>
 
         <button type="submit" class="btn-submit" id="signup-submit-btn">
-          <i class="fas fa-user-plus"></i> Create Account
+          <i class="fas fa-user-plus"></i> <span data-i18n="login.createAccountBtn">Create Account</span>
         </button>
       </form>
 
       <p class="terms-text">
         By signing up you agree to our <a href="#">Terms of Service</a> &amp; <a href="#">Privacy Policy</a>.
-        Already have an account? <a href="#" onclick="switchTab('login')">Sign in</a>
+        <span data-i18n="login.alreadyHaveAccount">Already have an account?</span> <a href="#" onclick="switchTab('login')" data-i18n="login.signIn">Sign in</a>
       </p>
     </div>
   </div>

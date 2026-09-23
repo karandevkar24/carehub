@@ -74,18 +74,17 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
 .manual-go{padding:8px 16px;background:#0891b2;color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer}
 .retry-link{color:#0891b2;text-decoration:underline;cursor:pointer;font-weight:700}
 
-/* ── Layout ──────────────────────────────────────────── */
+/* ── Layout — stacked: map top, results below ────────── */
 .page-body{max-width:1200px;margin:0 auto;padding:28px 24px 80px}
-.two-col{display:grid;grid-template-columns:1fr 400px;gap:20px;align-items:start}
-@media(max-width:880px){.two-col{grid-template-columns:1fr}}
+.stacked-layout{display:flex;flex-direction:column;gap:20px}
 
 /* ── Map card ─────────────────────────────────────────── */
 .map-card{background:#fff;border-radius:20px;border:1.5px solid #e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,.06);overflow:hidden}
 .card-hdr{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9}
 .card-hdr-title{font-weight:800;font-size:.92rem;color:#0f172a;display:flex;align-items:center;gap:8px}
 #loc-label{font-size:.78rem;color:#0891b2;font-weight:600;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#map{height:420px;z-index:1;background:#e0f2fe}
-@media(max-width:880px){#map{height:280px}}
+#map{height:340px;z-index:1;background:#e0f2fe}
+@media(max-width:600px){#map{height:240px}}
 
 /* ── Results panel ───────────────────────────────────── */
 .results-panel{display:flex;flex-direction:column}
@@ -93,7 +92,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
 .panel-title{font-size:.95rem;font-weight:800;color:#0f172a}
 .count-badge{font-size:.75rem;color:#0891b2;font-weight:600;background:#ecfeff;padding:3px 10px;border-radius:99px}
 .src-label{font-size:.7rem;color:#94a3b8;margin-top:2px;text-align:right}
-.doc-list{background:#fff;border:1.5px solid #e2e8f0;border-top:none;border-radius:0 0 20px 20px;max-height:480px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#a5f3fc transparent}
+.doc-list{background:#fff;border:1.5px solid #e2e8f0;border-top:none;border-radius:0 0 20px 20px;max-height:600px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#a5f3fc transparent}
 .doc-list::-webkit-scrollbar{width:4px}
 .doc-list::-webkit-scrollbar-thumb{background:#a5f3fc;border-radius:99px}
 
@@ -188,9 +187,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
 <div class="search-wrap">
   <div class="search-bar">
     <i class="fas fa-search"></i>
-    <input class="s-input" id="s-loc" type="text" placeholder="Search city, area, or address… (e.g. 'Chennai')">
+    <input class="s-input" id="s-loc" type="text" placeholder="Search city, area, or address… (e.g. 'Chennai')" data-i18n-placeholder="doctors.searchPlaceholder">
     <select class="s-select" id="s-spec">
-      <option value="all">🩺 All Specialists</option>
+      <option value="all" data-i18n="doctors.allSpecialists">🩺 All Specialists</option>
       <option value="neurologist">🧠 Neurologist</option>
       <option value="geriatrician">👴 Geriatrician</option>
       <option value="psychiatrist">🧬 Psychiatrist</option>
@@ -202,43 +201,43 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
       <option value="10" selected>10 km</option>
       <option value="25">25 km</option>
       <option value="50">50 km</option>
-      <option value="9999">Worldwide</option>
+      <option value="9999" data-i18n="doctors.worldwide">Worldwide</option>
     </select>
-    <button class="btn-locate" id="btn-locate"><i class="fas fa-crosshairs"></i> My Location</button>
-    <button class="btn-search" id="btn-search"><i class="fas fa-search"></i> Search</button>
+    <button class="btn-locate" id="btn-locate"><i class="fas fa-crosshairs"></i> <span data-i18n="doctors.myLocation">My Location</span></button>
+    <button class="btn-search" id="btn-search"><i class="fas fa-search"></i> <span data-i18n="doctors.search">Search</span></button>
   </div>
 
   <!-- Status / error banners -->
   <div class="banner warn" id="b-denied">
     <i class="fas fa-map-marker-slash" style="margin-top:2px;flex-shrink:0;"></i>
     <div class="banner-body">
-      <div class="banner-title">📍 Location access denied</div>
-      Type your city below to search nearby doctors:
+      <div class="banner-title" data-i18n="doctors.locDeniedTitle">📍 Location access denied</div>
+      <span data-i18n="doctors.locDeniedDesc">Type your city below to search nearby doctors:</span>
       <div class="manual-row">
         <input class="manual-in" id="b-manual" type="text" placeholder="e.g. Chennai, Bangalore, Mumbai…">
-        <button class="manual-go" id="b-go">Search</button>
+        <button class="manual-go" id="b-go" data-i18n="doctors.locDeniedSearch">Search</button>
       </div>
     </div>
   </div>
   <div class="banner err" id="b-offline">
     <i class="fas fa-wifi-slash" style="margin-top:2px;flex-shrink:0;"></i>
     <div class="banner-body">
-      <div class="banner-title">📶 No internet connection</div>
-      Showing doctors from local database. <span class="retry-link" id="b-retry">Retry when online</span>
+      <div class="banner-title" data-i18n="doctors.offlineTitle">📶 No internet connection</div>
+      <span data-i18n="doctors.offlineDesc">Showing doctors from local database.</span> <span class="retry-link" id="b-retry" data-i18n="doctors.offlineRetry">Retry when online</span>
     </div>
   </div>
 </div>
 
 <!-- ── Two-column layout ───────────────────────────────── -->
 <div class="page-body">
-  <div class="two-col">
+  <div class="stacked-layout">
 
     <!-- Map -->
     <div>
       <div class="map-card">
         <div class="card-hdr">
-          <div class="card-hdr-title"><i class="fas fa-map-marker-alt" style="color:#0891b2;"></i> Live Map</div>
-          <span id="loc-label">📡 Detecting location…</span>
+          <div class="card-hdr-title"><i class="fas fa-map-marker-alt" style="color:#0891b2;"></i> <span data-i18n="doctors.liveMap">Live Map</span></div>
+          <span id="loc-label" data-i18n="doctors.detectingLoc">📡 Detecting location…</span>
         </div>
         <div id="map"></div>
       </div>
@@ -247,9 +246,9 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
     <!-- Results -->
     <div class="results-panel">
       <div class="panel-hdr">
-        <div class="panel-title">👨‍⚕️ Nearby Doctors</div>
+        <div class="panel-title" data-i18n="doctors.nearbyDoctors">👨‍⚕️ Nearby Doctors</div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-          <span class="count-badge" id="count">Searching…</span>
+          <span class="count-badge" id="count" data-i18n="doctors.searching">Searching…</span>
           <span class="src-label" id="src-label"></span>
         </div>
       </div>
@@ -268,21 +267,21 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
   <div class="modal-box">
     <div class="m-hdr">
       <div>
-        <h2>Book Appointment</h2>
+        <h2 data-i18n="doctors.bookTitle">Book Appointment</h2>
         <p id="m-doc-name"></p>
       </div>
       <button class="m-close" id="m-close"><i class="fas fa-times"></i></button>
     </div>
     <form id="m-form">
-      <div class="fgrp"><label class="flbl">Patient Name *</label><input class="finput" id="m-patient" placeholder="Full name" required/></div>
-      <div class="fgrp"><label class="flbl">Your Phone *</label><input class="finput" id="m-phone" type="tel" placeholder="+91 98765 43210" required/></div>
-      <div class="fgrp"><label class="flbl">Date *</label><input class="finput" id="m-date" type="date" required/></div>
+      <div class="fgrp"><label class="flbl" data-i18n="doctors.patientName">Patient Name</label> *<input class="finput" id="m-patient" placeholder="Full name" required/></div>
+      <div class="fgrp"><label class="flbl" data-i18n="doctors.yourPhone">Your Phone</label> *<input class="finput" id="m-phone" type="tel" placeholder="+91 98765 43210" required/></div>
+      <div class="fgrp"><label class="flbl" data-i18n="doctors.date">Date</label> *<input class="finput" id="m-date" type="date" required/></div>
       <div class="fgrp">
-        <label class="flbl">Preferred Time Slot</label>
+        <label class="flbl" data-i18n="doctors.timeSlot">Preferred Time Slot</label>
         <div class="slots" id="m-slots"></div>
       </div>
       <div class="fgrp">
-        <label class="flbl">Reason for Visit</label>
+        <label class="flbl" data-i18n="doctors.reasonVisit">Reason for Visit</label>
         <select class="finput" id="m-reason">
           <option value="">Select…</option>
           <option>Memory assessment</option>
@@ -292,7 +291,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f0f9ff;min-height:100v
           <option>Second opinion</option>
         </select>
       </div>
-      <button class="btn-confirm" type="submit"><i class="fas fa-calendar-check"></i> Confirm Appointment</button>
+      <button class="btn-confirm" type="submit"><i class="fas fa-calendar-check"></i> <span data-i18n="doctors.confirmAppt">Confirm Appointment</span></button>
     </form>
   </div>
 </div>
@@ -345,6 +344,12 @@ var DB=[
   // International
   {id:'uk1',emoji:'🧠',name:'Dr. Eleanor Hughes',spec:'Consultant Neurologist',type:'neurologist',hospital:"King's College Hospital",city:'London',addr:'Denmark Hill, London SE5 9RS',phone:'+44 20 3299 9000',rating:4.9,avail:'today',lat:51.4683,lng:-0.0945,slots:['09:00 AM','11:00 AM','02:00 PM']},
   {id:'us1',emoji:'👴',name:'Dr. James Harrington',spec:'Geriatric Medicine & Dementia Care',type:'geriatrician',hospital:'Mayo Clinic',city:'Rochester MN',addr:'200 First St SW, Rochester, MN 55905',phone:'+1 507 284 2511',rating:5.0,avail:'today',lat:44.0224,lng:-92.4668,slots:['08:00 AM','10:00 AM','01:00 PM']},
+  // Baramati (Pune district) — real facilities seeded for offline/no-key fallback
+  {id:'bar1',emoji:'🏥',name:'Giriraj Hospital',spec:'General Hospital & Emergency Care',type:'physician',hospital:'Giriraj Hospital',city:'Baramati',addr:'Katewadi Road, Baramati, Pune 413102',phone:'+91 2112 223456',rating:4.2,avail:'today',lat:18.1481,lng:74.5819,slots:['09:00 AM','11:00 AM','02:00 PM','04:00 PM']},
+  {id:'bar2',emoji:'🏗️',name:'Government Medical College Baramati',spec:'Multi-Speciality Government Hospital',type:'physician',hospital:'Govt. Medical College Baramati',city:'Baramati',addr:'Katewadi, Baramati, Pune 413133',phone:'+91 2112 223000',rating:4.0,avail:'today',lat:18.1587,lng:74.5793,slots:['09:00 AM','12:00 PM','03:00 PM']},
+  {id:'bar3',emoji:'⚕️',name:'Sahyadri Hospital Baramati',spec:'Multi-Speciality Hospital',type:'physician',hospital:'Sahyadri Hospital Baramati',city:'Baramati',addr:'Baramati, Pune 413102',phone:'+91 2112 224000',rating:4.3,avail:'now',lat:18.1520,lng:74.5867,slots:['09:30 AM','11:30 AM','02:30 PM']},
+  // Nashik
+  {id:'nas1',emoji:'🧠',name:'Dr. Sunil Bhosale',spec:'Neurologist',type:'neurologist',hospital:'Wockhardt Hospital Nashik',city:'Nashik',addr:'Wockhardt Hospital, Nashik 422005',phone:'+91 253 660 4444',rating:4.5,avail:'today',lat:20.0063,lng:73.7902,slots:['09:00 AM','11:00 AM','03:00 PM']},
 ];
 
 // ── Haversine ─────────────────────────────────────────────
@@ -354,6 +359,50 @@ function filter(lat,lng,rkm,spec){
   return DB.map(function(d){return Object.assign({},d,{dist:hav(lat,lng,d.lat,d.lng)});})
     .filter(function(d){return (rkm>=9999||d.dist<=rkm)&&(spec==='all'||d.type===spec);})
     .sort(function(a,b){return a.dist-b.dist;});
+}
+
+// ── Google Places API — live search for any location ───────────
+// Set PLACES_API_KEY to your Google Cloud API key to enable live results.
+// Without it the page falls back gracefully to the local DB only.
+var PLACES_API_KEY='';
+function fetchPlaces(lat,lng,radiusM,cb){
+  if(!PLACES_API_KEY){cb(null,[]);return;}
+  var url='https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+    +'?location='+lat+','+lng
+    +'&radius='+Math.min(radiusM,50000)
+    +'&type=hospital'
+    +'&keyword='+encodeURIComponent('neurologist dementia geriatrician doctor')
+    +'&key='+PLACES_API_KEY;
+  var r=new XMLHttpRequest();r.timeout=10000;
+  r.open('GET',url);
+  r.onload=function(){
+    try{var d=JSON.parse(r.responseText);
+      (d.status==='OK'||d.status==='ZERO_RESULTS')?cb(null,d.results||[]):cb(d.status,[]);
+    }catch(e){cb(e,[]);}
+  };
+  r.onerror=r.ontimeout=function(){cb('timeout',[]);};
+  r.send();
+}
+function placesToDocs(places,uLat,uLng){
+  return places.map(function(p,i){
+    var la=p.geometry&&p.geometry.location?p.geometry.location.lat:0;
+    var lo=p.geometry&&p.geometry.location?p.geometry.location.lng:0;
+    var isHosp=(p.types||[]).indexOf('hospital')>=0;
+    return{id:'pl_'+i,emoji:isHosp?'🏥':'⚕️',name:p.name,
+      spec:isHosp?'Hospital / Medical Centre':'Medical Clinic',
+      type:'physician',hospital:p.name,city:'',addr:p.vicinity||'',
+      phone:null,rating:p.rating||null,avail:'week',
+      lat:la,lng:lo,dist:hav(uLat,uLng,la,lo),
+      slots:['09:00 AM','11:00 AM','02:00 PM','04:30 PM'],fromPlaces:true};
+  });
+}
+function mergeResults(localDocs,placesDocs){
+  var seen=localDocs.map(function(d){return d.name.toLowerCase().slice(0,8);});
+  var fresh=placesDocs.filter(function(p){
+    var n=p.name.toLowerCase();
+    return !seen.some(function(s){return n.includes(s)||s.includes(n.slice(0,8));});
+  });
+  return localDocs.concat(fresh).sort(function(a,b){return(a.dist||999)-(b.dist||999);});
 }
 
 // ── State ─────────────────────────────────────────────────
@@ -419,11 +468,11 @@ function hideBanners(){document.querySelectorAll('.banner').forEach(function(b){
 function showBanner(id){hideBanners();var el=document.getElementById(id);if(el)el.classList.add('show');}
 
 // ── Render ────────────────────────────────────────────────
-function render(docs){
+function render(docs,src){
   clrPins();cDocs=docs;
   var rkm=parseInt(document.getElementById('s-rad').value,10)||10;
   document.getElementById('count').textContent=docs.length?docs.length+' found':'0 found';
-  document.getElementById('src-label').textContent='📚 Local database';
+  document.getElementById('src-label').textContent=src==='live'?'🌐 Live: Google Places + Local':'📚 Local database';
   var list=document.getElementById('doc-list');
 
   if(!docs.length){
@@ -490,16 +539,29 @@ function runSearch(){
   setUPin(cLat,cLng);
   map.setView([cLat,cLng],13);
 
-  var docs=filter(cLat,cLng,rkm,spec);
-  render(docs);
-  document.getElementById('btn-search').disabled=false;
-
   revGeocode(cLat,cLng,function(nm){
     document.getElementById('loc-label').textContent='📍 Near '+nm;
     document.getElementById('s-loc').placeholder=nm;
   });
 
-  if(!navigator.onLine)showBanner('b-offline');
+  var localDocs=filter(cLat,cLng,rkm,spec);
+
+  if(!navigator.onLine){
+    render(localDocs,'local');
+    document.getElementById('btn-search').disabled=false;
+    showBanner('b-offline');
+    return;
+  }
+
+  // Try live Places API — merges with local DB, falls back gracefully if key missing or call fails
+  fetchPlaces(cLat,cLng,rkm*1000,function(err,places){
+    if(!err&&places.length){
+      render(mergeResults(localDocs,placesToDocs(places,cLat,cLng)),'live');
+    }else{
+      render(localDocs,'local');
+    }
+    document.getElementById('btn-search').disabled=false;
+  });
 }
 
 // ── Geolocation ───────────────────────────────────────────
