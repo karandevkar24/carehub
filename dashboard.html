@@ -358,6 +358,13 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 34px; margin-bottom: 20px;
       background: var(--icon-bg); transition: transform 0.25s;
+      overflow: hidden;
+    }
+    .card-icon img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      display: block;
+      border-radius: 0;
     }
     .t-card:hover .card-icon { transform: scale(1.1) rotate(-5deg); }
     .card-title { font-size: 1.3rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
@@ -742,7 +749,7 @@
     <a class="t-card card-games card-games-hero" href="games.html" id="card-games">
       <span class="games-hero-badge"><i class="fas fa-star"></i> Most Used</span>
       <div class="card-content">
-        <div class="card-icon">&#129513;</div>
+        <div class="card-icon"><img src="./assets/icons/icon-games.jpg" alt="Cognitive Games icon" loading="lazy"></div>
         <div class="card-title" data-i18n="cards.games.title">Cognitive Games Zone</div>
         <div class="card-desc" data-i18n="cards.games.desc">Spot-the-object, color-sequence memory, and photo-match games with a progress chart to track cognitive improvement.</div>
         <div class="card-cta-btn" aria-hidden="true">
@@ -755,7 +762,7 @@
     <!-- 2. Emergency SOS — 🔴 Emergency/Urgent -->
     <a class="t-card card-emergency" href="emergency.html" id="card-sos">
       <div class="card-content">
-        <div class="card-icon">&#128680;</div>
+        <div class="card-icon"><img src="./assets/icons/icon-sos.jpg" alt="Emergency SOS icon" loading="lazy"></div>
         <div class="card-title" data-i18n="cards.sos.title">Emergency SOS Directory</div>
         <div class="card-desc" data-i18n="cards.sos.desc">One-tap access to India's critical helplines — 112, 108, Elder Line, NIMHANS, ARDSI — plus global emergency numbers.</div>
         <div class="card-cta-btn" aria-hidden="true">
@@ -768,7 +775,7 @@
     <!-- 3. Nearby Doctor Finder — 🔵 Medical/Info -->
     <a class="t-card card-gps" href="doctors.html" id="card-doctors">
       <div class="card-content">
-        <div class="card-icon">&#128205;</div>
+        <div class="card-icon"><img src="./assets/icons/icon-doctors.jpg" alt="Doctor Finder icon" loading="lazy"></div>
         <div class="card-title" data-i18n="cards.doctors.title">Nearby Doctor Finder</div>
         <div class="card-desc" data-i18n="cards.doctors.desc">Find neurologists and dementia specialists near you, filter by specialty, and book appointments instantly.</div>
         <div class="card-cta-btn" aria-hidden="true">
@@ -781,7 +788,7 @@
     <!-- 4. Dementia Stage Guide & Safety — 🔵 Medical/Info -->
     <a class="t-card card-dementia" href="dementia.html" id="card-dementia">
       <div class="card-content">
-        <div class="card-icon">&#129504;</div>
+        <div class="card-icon"><img src="./assets/icons/icon-dementia.jpg" alt="Dementia Guide icon" loading="lazy"></div>
         <div class="card-title" data-i18n="cards.dementia.title">Dementia Stage Guide &amp; Safety</div>
         <div class="card-desc" data-i18n="cards.dementia.desc">Interactive guides for Early, Middle, and Late stages with a safety checklist and AI Screening Advisor.</div>
         <div class="card-cta-btn" aria-hidden="true">
@@ -794,7 +801,7 @@
     <!-- 5. Caregiver Music Therapy — 🟢 Wellness/Activity -->
     <a class="t-card card-music" href="music.html" id="card-music">
       <div class="card-content">
-        <div class="card-icon">&#127925;</div>
+        <div class="card-icon"><img src="./assets/icons/icon-music.jpg" alt="Music Therapy icon" loading="lazy"></div>
         <div class="card-title" data-i18n="cards.music.title">Caregiver Music Therapy</div>
         <div class="card-desc" data-i18n="cards.music.desc">Browser-generated binaural beats and ambient soundscapes for stress relief — no files needed.</div>
         <div class="card-cta-btn" aria-hidden="true">
@@ -807,7 +814,7 @@
     <!-- 6. Story Time — 🟢 Wellness/Activity -->
     <a class="t-card card-stories" href="stories.html" id="card-stories">
       <div class="card-content">
-        <div class="card-icon">&#128214;</div>
+        <div class="card-icon"><img src="./assets/icons/icon-stories.jpg" alt="Story Time icon" loading="lazy"></div>
         <div class="card-title" data-i18n="cards.stories.title">Story Time</div>
         <div class="card-desc" data-i18n="cards.stories.desc">Short audio stories in Hindi, English, Marathi, and Telugu for gentle memory exercise and cognitive engagement.</div>
         <div class="card-cta-btn" aria-hidden="true">
